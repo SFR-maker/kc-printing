@@ -16,10 +16,58 @@ const NAV_LINKS = [
   { label: "Contact", href: "/contact" },
 ];
 
+// Baked in at build time - when empty, Clerk components are never rendered
+const CLERK_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
+// Only rendered when CLERK_KEY is truthy (ClerkProvider is in the tree)
+function ClerkAuthDesktop() {
+  const { isSignedIn } = useUser();
+  if (isSignedIn) {
+    return (
+      <>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/account">My Orders</Link>
+        </Button>
+        <UserButton />
+      </>
+    );
+  }
+  return (
+    <>
+      <Button asChild variant="ghost" size="sm">
+        <Link href="/sign-in">Sign In</Link>
+      </Button>
+      <Button asChild size="sm" className="bg-kc-coral hover:bg-kc-coral/90 text-white">
+        <Link href="/services">Start Order</Link>
+      </Button>
+    </>
+  );
+}
+
+function ClerkAuthMobile({ onClose }: { onClose: () => void }) {
+  const { isSignedIn } = useUser();
+  if (isSignedIn) {
+    return (
+      <Button asChild variant="outline" size="sm" className="w-full">
+        <Link href="/account" onClick={onClose}>My Orders</Link>
+      </Button>
+    );
+  }
+  return (
+    <>
+      <Button asChild variant="outline" size="sm" className="w-full">
+        <Link href="/sign-in" onClick={onClose}>Sign In</Link>
+      </Button>
+      <Button asChild size="sm" className="w-full bg-kc-coral hover:bg-kc-coral/90 text-white">
+        <Link href="/services" onClick={onClose}>Start Order</Link>
+      </Button>
+    </>
+  );
+}
+
 export function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { isSignedIn } = useUser();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-kc-border bg-white/95 backdrop-blur-sm">
@@ -54,7 +102,9 @@ export function Header() {
             <Phone className="h-3.5 w-3.5" />
             (816) 521-0462
           </a>
-          {!isSignedIn ? (
+          {CLERK_KEY ? (
+            <ClerkAuthDesktop />
+          ) : (
             <>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/sign-in">Sign In</Link>
@@ -62,13 +112,6 @@ export function Header() {
               <Button asChild size="sm" className="bg-kc-coral hover:bg-kc-coral/90 text-white">
                 <Link href="/services">Start Order</Link>
               </Button>
-            </>
-          ) : (
-            <>
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/account">My Orders</Link>
-              </Button>
-              <UserButton />
             </>
           )}
         </div>
@@ -105,7 +148,9 @@ export function Header() {
               <Phone className="h-4 w-4" />
               (816) 521-0462
             </a>
-            {!isSignedIn ? (
+            {CLERK_KEY ? (
+              <ClerkAuthMobile onClose={() => setOpen(false)} />
+            ) : (
               <>
                 <Button asChild variant="outline" size="sm" className="w-full">
                   <Link href="/sign-in" onClick={() => setOpen(false)}>Sign In</Link>
@@ -114,10 +159,6 @@ export function Header() {
                   <Link href="/services" onClick={() => setOpen(false)}>Start Order</Link>
                 </Button>
               </>
-            ) : (
-              <Button asChild variant="outline" size="sm" className="w-full">
-                <Link href="/account" onClick={() => setOpen(false)}>My Orders</Link>
-              </Button>
             )}
           </div>
         </div>

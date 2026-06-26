@@ -1,0 +1,374 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  PAID
+  IN_PROGRESS
+  REVIEW
+  REVISION
+  COMPLETE
+  CANCELLED
+  REFUNDED
+}
+
+enum ProjectStatus {
+  PENDING
+  IN_PROGRESS
+  REVIEW
+  REVISION
+  COMPLETE
+}
+
+enum RevisionStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+enum AiType {
+  logo_concepts
+  card_copy
+  postcard_copy
+  banner_headline
+  website_copy
+  seo_meta
+  brand_colors
+  brief_summary
+  order_summary
+  proposal
+}
+
+enum SettingType {
+  STRING
+  JSON
+  BOOL
+  NUMBER
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  name      String?
+  phone     String?
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders          Order[]
+  projects        Project[]
+  uploads         Upload[]
+  aiGenerations   AiGeneration[]
+  revisionRequests RevisionRequest[]
+  brandProfile    BrandProfile?
+  auditLogs       AuditLog[]
+
+  @@index([email])
+  @@index([clerkId])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  category    String
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  options     ProductOption[]
+  packages    PackageTier[]
+  addOns      AddOn[]
+  orderItems  OrderItem[]
+
+  @@index([slug])
+  @@index([category])
+}
+
+model ProductOption {
+  id        String   @id @default(cuid())
+  productId String
+  type      String
+  label     String
+  value     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model PackageTier {
+  id          String   @id @default(cuid())
+  productId   String
+  name        String
+  price       Float
+  features    String[]
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+model AddOn {
+  id          String   @id @default(cuid())
+  productId   String
+  name        String
+  price       Float
+  description String
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model Order {
+  id                   String      @id @default(cuid())
+  userId               String
+  status               OrderStatus @default(DRAFT)
+  total                Float       @default(0)
+  stripeSessionId      String?     @unique
+  stripePaymentStatus  String?
+  couponId             String?
+  notes                String?
+  internalNotes        String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id])
+  coupon  Coupon?     @relation(fields: [couponId], references: [id])
+  items   OrderItem[]
+  project Project?
+  uploads Upload[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([stripeSessionId])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  productId     String
+  packageTierId String?
+  addOnIds      String[]
+  quantity      Int      @default(1)
+  price         Float
+  config        Json     @default("{}")
+  createdAt     DateTime @default(now())
+
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id])
+  packageTier PackageTier? @relation(fields: [packageTierId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Project {
+  id        String        @id @default(cuid())
+  orderId   String        @unique
+  userId    String
+  status    ProjectStatus @default(PENDING)
+  timeline  Json          @default("[]")
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  order            Order             @relation(fields: [orderId], references: [id])
+  user             User              @relation(fields: [userId], references: [id])
+  revisionRequests RevisionRequest[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Upload {
+  id         String   @id @default(cuid())
+  userId     String
+  orderId    String?
+  url        String
+  fileName   String
+  fileType   String
+  fileSize   Int
+  isDeliverable Boolean @default(false)
+  uploadedAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+}
+
+model RevisionRequest {
+  id        String         @id @default(cuid())
+  projectId String
+  userId    String
+  message   String
+  status    RevisionStatus @default(OPEN)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([projectId])
+}
+
+model AiGeneration {
+  id         String   @id @default(cuid())
+  userId     String
+  type       AiType
+  prompt     String
+  response   String
+  model      String   @default("anthropic/claude-haiku-4-5")
+  tokensUsed Int      @default(0)
+  costUsd    Float    @default(0)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model Coupon {
+  id         String     @id @default(cuid())
+  code       String     @unique
+  discount   Float
+  type       CouponType @default(PERCENT)
+  usageLimit Int?
+  usageCount Int        @default(0)
+  expiresAt  DateTime?
+  active     Boolean    @default(true)
+  createdAt  DateTime   @default(now())
+
+  orders Order[]
+
+  @@index([code])
+}
+
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  title       String
+  category    String
+  description String?
+  imageUrl    String
+  link        String?
+  tags        String[]
+  featured    Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([featured])
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  company   String?
+  role      String?
+  text      String
+  rating    Int      @default(5)
+  imageUrl  String?
+  approved  Boolean  @default(false)
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([approved])
+  @@index([featured])
+}
+
+model PageSeo {
+  id             String   @id @default(cuid())
+  path           String   @unique
+  title          String
+  description    String
+  ogTitle        String?
+  ogDescription  String?
+  ogImage        String?
+  updatedAt      DateTime @updatedAt
+
+  @@index([path])
+}
+
+model SiteSetting {
+  id        String      @id @default(cuid())
+  key       String      @unique
+  value     String
+  type      SettingType @default(STRING)
+  updatedAt DateTime    @updatedAt
+
+  @@index([key])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+model BrandProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  businessName String?
+  industry     String?
+  colors       String[]
+  fonts        String[]
+  logoUrl      String?
+  mission      String?
+  audience     String?
+  tone         String?
+  competitors  String[]
+  inspiration  String[]
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}

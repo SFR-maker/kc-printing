@@ -1,10 +1,7 @@
 import "dotenv/config";
-import { PrismaClient } from "../app/generated/prisma";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = new (PrismaClient as any)({ adapter });
+const db = new PrismaClient();
 
 async function main() {
   console.log("Seeding KC Printing database...");

@@ -1,15 +1,21 @@
-import { PrismaClient } from "@/app/generated/prisma";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 
-function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL ?? "";
-  const adapter = new PrismaPg({ connectionString });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new (PrismaClient as any)({ adapter });
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
 }
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+function createClient(): PrismaClient {
+  return new PrismaClient();
+}
 
-export const db: PrismaClient = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+export const db: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    if (!global.__prisma) {
+      global.__prisma = createClient();
+    }
+    const client = global.__prisma;
+    const value = (client as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});

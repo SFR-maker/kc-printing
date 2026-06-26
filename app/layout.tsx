@@ -35,18 +35,24 @@ export const metadata: Metadata = {
   },
 };
 
+const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider>
-      <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-        <body className="min-h-full flex flex-col bg-kc-bg text-kc-dark">
-          <TooltipProvider>{children}</TooltipProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+  const htmlContent = (
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-kc-bg text-kc-dark">
+        <TooltipProvider>{children}</TooltipProvider>
+      </body>
+    </html>
   );
+
+  if (!clerkPublishableKey) {
+    return htmlContent;
+  }
+
+  return <ClerkProvider publishableKey={clerkPublishableKey}>{htmlContent}</ClerkProvider>;
 }

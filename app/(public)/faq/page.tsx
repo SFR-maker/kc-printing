@@ -52,11 +52,14 @@ const FAQS = [
 export default function FaqPage() {
   return (
     <div>
-      <section className="bg-kc-dark text-white section-pad">
-        <div className="container-tight text-center max-w-2xl">
-          <Badge className="mb-4 bg-kc-coral/20 text-kc-coral border-kc-coral/30 hover:bg-kc-coral/20">FAQ</Badge>
-          <h1 className="text-4xl sm:text-5xl font-black mb-4">Frequently Asked Questions</h1>
-          <p className="text-white/70 text-lg">
+      <section className="relative overflow-hidden bg-kc-bg section-pad">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute left-1/2 -top-32 h-96 w-96 -translate-x-1/2 rounded-full bg-violet-500/[0.07] blur-3xl" />
+        </div>
+        <div className="container-tight relative z-10 text-center max-w-2xl">
+          <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">FAQ</Badge>
+          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Frequently Asked Questions</h1>
+          <p className="text-lg text-kc-muted">
             Everything you need to know about ordering, design, files, and billing.
           </p>
         </div>
@@ -88,14 +91,17 @@ export default function FaqPage() {
             </div>
           ))}
 
-          <div className="rounded-xl bg-kc-teal text-white p-6 text-center">
-            <h3 className="text-lg font-bold mb-2">Still Have Questions?</h3>
-            <p className="text-white/80 text-sm mb-4">
-              Call or text us at (816) 521-0462 or send a message and we will get back to you quickly.
-            </p>
-            <Button asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
-              <Link href="/contact">Contact Us</Link>
-            </Button>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-violet-card p-8 text-center text-white">
+            <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/[0.04] blur-2xl" />
+            <div className="relative z-10">
+              <h3 className="mb-2 text-lg font-bold">Still Have Questions?</h3>
+              <p className="mb-5 text-sm text-white/80">
+                Call or text us at (816) 521-0462 or send a message and we will get back to you quickly.
+              </p>
+              <Button asChild className="rounded-xl bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow">
+                <Link href="/contact">Contact Us</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>

@@ -27,44 +27,46 @@ const LEGAL = [
 
 export function Footer() {
   return (
-    <footer className="bg-kc-dark text-white">
-      <div className="container-tight px-4 py-12 sm:px-6 lg:px-8">
+    <footer className="border-t border-kc-border bg-kc-bg">
+      <div className="container-tight px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kc-teal">
-                <span className="text-lg font-black text-kc-coral leading-none">KC</span>
+            <div className="mb-5 flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-kc-teal shadow-violet-glow">
+                <span className="text-base font-black text-white leading-none">KC</span>
               </div>
               <div className="flex flex-col leading-tight">
-                <span className="text-sm font-bold tracking-widest text-white uppercase">Printing</span>
-                <span className="text-[9px] font-medium tracking-wider text-white/50 uppercase">Design Studio</span>
+                <span className="text-sm font-bold tracking-widest text-kc-dark uppercase">Printing</span>
+                <span className="text-[9px] font-medium tracking-wider text-kc-muted uppercase">Design Studio</span>
               </div>
             </div>
-            <p className="text-sm text-white/60 leading-relaxed mb-4">
+            <p className="mb-5 text-sm leading-relaxed text-kc-muted">
               Premium online print and design services. Fast turnaround, print-ready files, AI-assisted creative direction.
             </p>
-            <div className="space-y-2">
-              <a href="tel:+18165210462" className="flex items-center gap-2 text-sm text-white/60 hover:text-kc-coral transition-colors">
+            <div className="space-y-2.5">
+              <a href="tel:+18165210462" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">
                 <Phone className="h-3.5 w-3.5 shrink-0" />
                 (816) 521-0462
               </a>
-              <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 text-sm text-white/60 hover:text-kc-coral transition-colors">
+              <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">
                 <Mail className="h-3.5 w-3.5 shrink-0" />
                 kansasdesigners@gmail.com
               </a>
-              <a href="https://kcprinting.com" className="flex items-center gap-2 text-sm text-white/60 hover:text-kc-coral transition-colors">
+              <a href="https://kcprinting.com" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">
                 <Globe className="h-3.5 w-3.5 shrink-0" />
                 kcprinting.com
               </a>
             </div>
           </div>
 
+          {/* Services */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Services</h3>
-            <ul className="space-y-2">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-kc-muted/60">Services</h3>
+            <ul className="space-y-2.5">
               {SERVICES.map((s) => (
                 <li key={s.href}>
-                  <Link href={s.href} className="text-sm text-white/60 hover:text-kc-coral transition-colors">
+                  <Link href={s.href} className="text-sm text-kc-muted hover:text-kc-teal transition-colors">
                     {s.label}
                   </Link>
                 </li>
@@ -72,12 +74,13 @@ export function Footer() {
             </ul>
           </div>
 
+          {/* Company */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Company</h3>
-            <ul className="space-y-2">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-kc-muted/60">Company</h3>
+            <ul className="space-y-2.5">
               {COMPANY.map((c) => (
                 <li key={c.href}>
-                  <Link href={c.href} className="text-sm text-white/60 hover:text-kc-coral transition-colors">
+                  <Link href={c.href} className="text-sm text-kc-muted hover:text-kc-teal transition-colors">
                     {c.label}
                   </Link>
                 </li>
@@ -85,37 +88,35 @@ export function Footer() {
             </ul>
           </div>
 
+          {/* Service Areas */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-4">Service Areas</h3>
-            <ul className="space-y-1.5 text-sm text-white/60 mb-6">
-              <li>Kansas City, MO</li>
-              <li>Overland Park, KS</li>
-              <li>Dallas, TX</li>
-              <li>Plano, TX</li>
-              <li>Addison, TX</li>
-              <li>Nationwide Online</li>
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-kc-muted/60">Service Areas</h3>
+            <ul className="mb-6 space-y-2 text-sm text-kc-muted">
+              {["Kansas City, MO", "Overland Park, KS", "Dallas, TX", "Plano, TX", "Addison, TX", "Nationwide Online"].map((city) => (
+                <li key={city}>{city}</li>
+              ))}
             </ul>
             <div className="flex gap-3">
-              <a href="#" aria-label="Instagram" className="text-white/40 hover:text-kc-coral transition-colors">
+              <a href="#" aria-label="Instagram" className="rounded-lg border border-kc-border p-1.5 text-kc-muted hover:border-kc-teal/30 hover:text-kc-teal transition-colors">
                 <Share2 className="h-4 w-4" />
               </a>
-              <a href="#" aria-label="Facebook" className="text-white/40 hover:text-kc-coral transition-colors">
+              <a href="#" aria-label="Facebook" className="rounded-lg border border-kc-border p-1.5 text-kc-muted hover:border-kc-teal/30 hover:text-kc-teal transition-colors">
                 <Users className="h-4 w-4" />
               </a>
-              <a href="#" aria-label="Twitter" className="text-white/40 hover:text-kc-coral transition-colors">
+              <a href="#" aria-label="Twitter" className="rounded-lg border border-kc-border p-1.5 text-kc-muted hover:border-kc-teal/30 hover:text-kc-teal transition-colors">
                 <MessageCircle className="h-4 w-4" />
               </a>
             </div>
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/40">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-kc-border pt-6 sm:flex-row">
+          <p className="text-xs text-kc-muted">
             {new Date().getFullYear()} KC Printing. All rights reserved. Fully online design studio.
           </p>
-          <nav className="flex gap-4">
+          <nav className="flex gap-5">
             {LEGAL.map((l) => (
-              <Link key={l.href} href={l.href} className="text-xs text-white/40 hover:text-white/70 transition-colors">
+              <Link key={l.href} href={l.href} className="text-xs text-kc-muted hover:text-kc-dark transition-colors">
                 {l.label}
               </Link>
             ))}

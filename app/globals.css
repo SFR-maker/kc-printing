@@ -5,19 +5,21 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* KC Printing brand palette */
-  --color-kc-teal:       #097C87;
-  --color-kc-teal-light: #23CED9;
-  --color-kc-coral:      #FCA47C;
-  --color-kc-yellow:     #F9D779;
-  --color-kc-sage:       #A1CCA6;
-  --color-kc-dark:       #0A1628;
-  --color-kc-bg:         #F4FAFA;
-  --color-kc-surface:    #ffffff;
-  --color-kc-border:     #D1EAE8;
-  --color-kc-muted:      #4A7A80;
+  /* KC Printing — Prestige palette (violet × orange × warm cream) */
+  --color-kc-bg:          #FAFAF8;   /* warm off-white — like quality paper stock */
+  --color-kc-surface:     #FFFFFF;
+  --color-kc-teal:        #7C3AED;   /* PRIMARY: deep violet — creative, premium */
+  --color-kc-teal-light:  #A78BFA;   /* violet-400 — hover / lighter accents */
+  --color-kc-coral:       #F97316;   /* CTA: vibrant orange — warm, energetic */
+  --color-kc-yellow:      #FBBF24;   /* amber — stars, badges, highlights */
+  --color-kc-sage:        #10B981;   /* emerald — success, live indicators */
+  --color-kc-dark:        #0C0A09;   /* near-black — TEXT only (not backgrounds) */
+  --color-kc-border:      #E5E5E5;   /* neutral zinc border */
+  --color-kc-muted:       #737373;   /* muted gray text */
+  --color-kc-violet-tint: #F5F3FF;   /* very light violet — alt section bg */
+  --color-kc-orange-tint: #FFF7ED;   /* very light orange — warm section bg */
 
-  /* shadcn semantic tokens mapped to KC palette */
+  /* shadcn semantic tokens */
   --color-background:          var(--background);
   --color-foreground:          var(--foreground);
   --color-card:                var(--card);
@@ -66,75 +68,75 @@
 }
 
 :root {
-  --background:            oklch(0.975 0.005 187);
-  --foreground:            oklch(0.12 0.025 220);
+  --background:            oklch(0.99 0.003 80);   /* warm off-white */
+  --foreground:            oklch(0.10 0.008 60);    /* warm near-black */
   --card:                  oklch(1 0 0);
-  --card-foreground:       oklch(0.12 0.025 220);
+  --card-foreground:       oklch(0.10 0.008 60);
   --popover:               oklch(1 0 0);
-  --popover-foreground:    oklch(0.12 0.025 220);
+  --popover-foreground:    oklch(0.10 0.008 60);
 
-  /* primary = KC teal #097C87 */
-  --primary:               oklch(0.46 0.09 197);
+  /* primary = violet #7C3AED */
+  --primary:               oklch(0.47 0.27 293);
   --primary-foreground:    oklch(1 0 0);
 
-  /* secondary = KC coral #FCA47C */
-  --secondary:             oklch(0.80 0.10 37);
-  --secondary-foreground:  oklch(0.12 0.025 220);
+  /* secondary = orange #F97316 */
+  --secondary:             oklch(0.72 0.18 50);
+  --secondary-foreground:  oklch(1 0 0);
 
-  --muted:                 oklch(0.94 0.015 187);
-  --muted-foreground:      oklch(0.48 0.06 197);
-  --accent:                oklch(0.88 0.06 145);
-  --accent-foreground:     oklch(0.12 0.025 220);
+  --muted:                 oklch(0.96 0.004 80);
+  --muted-foreground:      oklch(0.50 0.006 60);
+  --accent:                oklch(0.96 0.004 80);
+  --accent-foreground:     oklch(0.10 0.008 60);
   --destructive:           oklch(0.577 0.245 27.325);
-  --border:                oklch(0.88 0.025 187);
-  --input:                 oklch(0.92 0.015 187);
-  --ring:                  oklch(0.46 0.09 197);
+  --border:                oklch(0.91 0.002 60);
+  --input:                 oklch(0.94 0.002 60);
+  --ring:                  oklch(0.47 0.27 293);
 
-  --chart-1: oklch(0.46 0.09 197);
-  --chart-2: oklch(0.80 0.10 37);
-  --chart-3: oklch(0.86 0.10 87);
-  --chart-4: oklch(0.68 0.08 145);
-  --chart-5: oklch(0.60 0.12 197);
+  --chart-1: oklch(0.47 0.27 293);
+  --chart-2: oklch(0.72 0.18 50);
+  --chart-3: oklch(0.80 0.15 85);
+  --chart-4: oklch(0.60 0.15 160);
+  --chart-5: oklch(0.55 0.20 293);
 
   --radius: 0.625rem;
 
-  --sidebar:                    oklch(0.12 0.025 220);
-  --sidebar-foreground:         oklch(0.98 0.005 187);
-  --sidebar-primary:            oklch(0.46 0.09 197);
+  --sidebar:                    oklch(0.10 0.008 60);
+  --sidebar-foreground:         oklch(0.98 0.002 60);
+  --sidebar-primary:            oklch(0.47 0.27 293);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent:             oklch(0.20 0.04 220);
-  --sidebar-accent-foreground:  oklch(0.98 0.005 187);
-  --sidebar-border:             oklch(0.25 0.03 220);
-  --sidebar-ring:               oklch(0.46 0.09 197);
+  --sidebar-accent:             oklch(0.18 0.01 60);
+  --sidebar-accent-foreground:  oklch(0.98 0.002 60);
+  --sidebar-border:             oklch(0.22 0.008 60);
+  --sidebar-ring:               oklch(0.47 0.27 293);
 }
 
 .dark {
-  --background:            oklch(0.10 0.02 220);
-  --foreground:            oklch(0.98 0.005 187);
-  --card:                  oklch(0.15 0.025 220);
-  --card-foreground:       oklch(0.98 0.005 187);
-  --popover:               oklch(0.15 0.025 220);
-  --popover-foreground:    oklch(0.98 0.005 187);
-  --primary:               oklch(0.60 0.10 197);
-  --primary-foreground:    oklch(0.10 0.02 220);
-  --secondary:             oklch(0.80 0.10 37);
-  --secondary-foreground:  oklch(0.10 0.02 220);
-  --muted:                 oklch(0.22 0.03 220);
-  --muted-foreground:      oklch(0.65 0.05 197);
-  --accent:                oklch(0.25 0.04 220);
-  --accent-foreground:     oklch(0.98 0.005 187);
+  --background:            oklch(0.10 0.008 60);
+  --foreground:            oklch(0.98 0.002 60);
+  --card:                  oklch(0.15 0.01 60);
+  --card-foreground:       oklch(0.98 0.002 60);
+  --popover:               oklch(0.15 0.01 60);
+  --popover-foreground:    oklch(0.98 0.002 60);
+  --primary:               oklch(0.65 0.22 293);
+  --primary-foreground:    oklch(0.10 0.008 60);
+  --secondary:             oklch(0.72 0.18 50);
+  --secondary-foreground:  oklch(0.10 0.008 60);
+  --muted:                 oklch(0.22 0.008 60);
+  --muted-foreground:      oklch(0.62 0.006 60);
+  --accent:                oklch(0.22 0.008 60);
+  --accent-foreground:     oklch(0.98 0.002 60);
   --destructive:           oklch(0.704 0.191 22.216);
   --border:                oklch(1 0 0 / 10%);
   --input:                 oklch(1 0 0 / 15%);
-  --ring:                  oklch(0.60 0.10 197);
-  --sidebar:               oklch(0.10 0.02 220);
-  --sidebar-foreground:    oklch(0.98 0.005 187);
-  --sidebar-primary:       oklch(0.60 0.10 197);
-  --sidebar-primary-foreground: oklch(0.10 0.02 220);
-  --sidebar-accent:        oklch(0.18 0.03 220);
-  --sidebar-accent-foreground: oklch(0.98 0.005 187);
+  --ring:                  oklch(0.65 0.22 293);
+  --sidebar:               oklch(0.10 0.008 60);
+  --sidebar-foreground:    oklch(0.98 0.002 60);
+  --sidebar-primary:       oklch(0.65 0.22 293);
+  --sidebar-primary-foreground: oklch(0.10 0.008 60);
+  --sidebar-accent:        oklch(0.18 0.008 60);
+  --sidebar-accent-foreground: oklch(0.98 0.002 60);
   --sidebar-border:        oklch(1 0 0 / 10%);
-  --sidebar-ring:          oklch(0.60 0.10 197);
+  --sidebar-ring:          oklch(0.65 0.22 293);
 }
 
 @layer base {
@@ -156,16 +158,40 @@
   .container-tight {
     @apply mx-auto max-w-7xl;
   }
-  .gradient-teal {
-    background: linear-gradient(135deg, #097C87 0%, #23CED9 100%);
-  }
-  .gradient-coral {
-    background: linear-gradient(135deg, #FCA47C 0%, #F9D779 100%);
-  }
-  .text-gradient-teal {
-    background: linear-gradient(135deg, #097C87 0%, #23CED9 100%);
+
+  /* Brand gradient — violet to orange */
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #7C3AED 0%, #C026D3 50%, #F97316 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  .text-gradient-violet {
+    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 40%, #4F46E5 100%);
+  }
+  .bg-gradient-violet-card {
+    background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 50%, #4338CA 100%);
+  }
+  .gradient-coral {
+    background: linear-gradient(135deg, #F97316 0%, #FBBF24 100%);
+  }
+
+  /* Glows for CTAs */
+  .shadow-orange-glow {
+    box-shadow: 0 4px 28px -4px rgba(249, 115, 22, 0.40);
+  }
+  .shadow-violet-glow {
+    box-shadow: 0 4px 28px -4px rgba(124, 58, 237, 0.35);
+  }
+
+  /* Card hover glow */
+  .hover-card-lift {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-8px_rgba(124,58,237,0.15)] hover:border-kc-teal/25;
   }
 }

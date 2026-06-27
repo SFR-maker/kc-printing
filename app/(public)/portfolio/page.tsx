@@ -24,11 +24,14 @@ const CATEGORIES = ["All", "Logo Design", "Business Cards", "Website Design", "V
 export default function PortfolioPage() {
   return (
     <div>
-      <section className="bg-kc-dark text-white section-pad">
-        <div className="container-tight text-center">
-          <Badge className="mb-4 bg-kc-coral/20 text-kc-coral border-kc-coral/30 hover:bg-kc-coral/20">Portfolio</Badge>
-          <h1 className="text-4xl sm:text-5xl font-black mb-4">Work We Are Proud Of</h1>
-          <p className="text-white/70 text-lg max-w-xl mx-auto">
+      <section className="relative overflow-hidden bg-kc-bg section-pad">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute left-1/2 -top-32 h-96 w-96 -translate-x-1/2 rounded-full bg-violet-500/[0.07] blur-3xl" />
+        </div>
+        <div className="container-tight relative z-10 text-center">
+          <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">Portfolio</Badge>
+          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Work We Are Proud Of</h1>
+          <p className="mx-auto max-w-xl text-lg text-kc-muted">
             Business cards, logos, postcards, banners, and websites for clients across Kansas City and nationwide.
           </p>
         </div>

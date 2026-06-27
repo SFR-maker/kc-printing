@@ -123,14 +123,18 @@ export default function PricingPage() {
         ))}
       </div>
 
-      <div className="mt-16 rounded-2xl bg-kc-dark text-white p-8 sm:p-12 text-center">
-        <h2 className="text-2xl sm:text-3xl font-black mb-3">Have a Custom Project?</h2>
-        <p className="text-white/70 mb-6 max-w-xl mx-auto">
-          Not sure which package fits? Contact us for a free quote. We handle custom projects at fair prices with no surprises.
-        </p>
-        <Button asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
-          <Link href="/contact">Get a Free Quote</Link>
-        </Button>
+      <div className="relative mt-16 overflow-hidden rounded-3xl bg-gradient-violet-card p-8 text-center text-white sm:p-12">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/[0.04] blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-16 left-16 h-48 w-48 rounded-full bg-orange-500/[0.10] blur-2xl" />
+        <div className="relative z-10">
+          <h2 className="mb-3 text-2xl font-black sm:text-3xl">Have a Custom Project?</h2>
+          <p className="mx-auto mb-6 max-w-xl text-white/80">
+            Not sure which package fits? Contact us for a free quote. We handle custom projects at fair prices with no surprises.
+          </p>
+          <Button asChild className="rounded-xl bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow">
+            <Link href="/contact">Get a Free Quote</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

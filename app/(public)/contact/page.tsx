@@ -60,11 +60,14 @@ export default function ContactPage() {
 
   return (
     <div>
-      <section className="bg-kc-dark text-white section-pad">
-        <div className="container-tight max-w-2xl">
-          <Badge className="mb-4 bg-kc-coral/20 text-kc-coral border-kc-coral/30 hover:bg-kc-coral/20">Contact Us</Badge>
-          <h1 className="text-4xl sm:text-5xl font-black mb-4">Let&apos;s Talk About Your Project</h1>
-          <p className="text-white/70 text-lg leading-relaxed">
+      <section className="relative overflow-hidden bg-kc-bg section-pad">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-violet-500/[0.07] blur-3xl" />
+        </div>
+        <div className="container-tight relative z-10 max-w-2xl">
+          <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">Contact Us</Badge>
+          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Let&apos;s Talk About Your Project</h1>
+          <p className="text-lg leading-relaxed text-kc-muted">
             Call, text, or fill out the form below. We respond to all inquiries within a few hours during business days.
           </p>
         </div>

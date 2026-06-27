@@ -13,11 +13,14 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div>
-      <section className="bg-kc-dark text-white section-pad">
-        <div className="container-tight max-w-3xl">
-          <Badge className="mb-4 bg-kc-coral/20 text-kc-coral border-kc-coral/30 hover:bg-kc-coral/20">About Us</Badge>
-          <h1 className="text-4xl sm:text-5xl font-black mb-6">A Design Studio Built for the Modern Business Owner</h1>
-          <p className="text-lg text-white/70 leading-relaxed">
+      <section className="relative overflow-hidden bg-kc-bg section-pad">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-violet-500/[0.07] blur-3xl" />
+        </div>
+        <div className="container-tight relative z-10 max-w-3xl">
+          <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">About Us</Badge>
+          <h1 className="mb-6 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">A Design Studio Built for the Modern Business Owner</h1>
+          <p className="text-lg leading-relaxed text-kc-muted">
             KC Printing is a fully online print and design studio based in Kansas City, MO. We help small and mid-size businesses across the country get professional design work done fast, at a fair price, without the overhead of a traditional agency.
           </p>
         </div>
@@ -74,23 +77,28 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="section-pad bg-kc-teal text-white">
-        <div className="container-tight text-center">
-          <h2 className="text-3xl font-black mb-4">Get in Touch</h2>
-          <p className="text-white/80 mb-8 max-w-xl mx-auto">
-            Have a project in mind? Call, text, or send us a message. We respond quickly.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
-            <a href="tel:+18165210462" className="flex items-center gap-2 text-white hover:text-kc-coral transition-colors">
-              <Phone className="h-4 w-4" /> (816) 521-0462
-            </a>
-            <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 text-white hover:text-kc-coral transition-colors">
-              <Mail className="h-4 w-4" /> kansasdesigners@gmail.com
-            </a>
+      <section className="section-pad bg-kc-bg">
+        <div className="container-tight">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-violet-card px-8 py-12 text-white text-center sm:px-12">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/[0.04] blur-2xl" />
+            <div className="relative z-10">
+              <h2 className="mb-4 text-3xl font-black">Get in Touch</h2>
+              <p className="mx-auto mb-8 max-w-xl text-white/80">
+                Have a project in mind? Call, text, or send us a message. We respond quickly.
+              </p>
+              <div className="mb-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <a href="tel:+18165210462" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+                  <Phone className="h-4 w-4" /> (816) 521-0462
+                </a>
+                <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+                  <Mail className="h-4 w-4" /> kansasdesigners@gmail.com
+                </a>
+              </div>
+              <Button asChild className="rounded-xl bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow">
+                <Link href="/contact">Send a Message <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              </Button>
+            </div>
           </div>
-          <Button asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
-            <Link href="/contact">Send a Message <ArrowRight className="ml-2 h-4 w-4" /></Link>
-          </Button>
         </div>
       </section>
     </div>

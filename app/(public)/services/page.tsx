@@ -133,18 +133,22 @@ export default function ServicesPage() {
         ))}
       </div>
 
-      <div className="rounded-2xl bg-kc-dark text-white p-8 sm:p-12 text-center">
-        <h2 className="text-2xl sm:text-3xl font-black mb-3">Not Sure Where to Start?</h2>
-        <p className="text-white/70 mb-6 max-w-xl mx-auto">
-          Call or text us at (816) 521-0462 and we will help you choose the right package for your project and budget.
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-3">
-          <Button asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
-            <Link href="/contact">Get a Free Quote</Link>
-          </Button>
-          <Button asChild variant="outline" className="border-white/30 text-white hover:bg-white/10">
-            <Link href="/pricing">Compare All Pricing</Link>
-          </Button>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-violet-card p-8 text-center text-white sm:p-12">
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/[0.04] blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-16 left-16 h-48 w-48 rounded-full bg-orange-500/[0.10] blur-2xl" />
+        <div className="relative z-10">
+          <h2 className="mb-3 text-2xl font-black sm:text-3xl">Not Sure Where to Start?</h2>
+          <p className="mx-auto mb-6 max-w-xl text-white/80">
+            Call or text us at (816) 521-0462 and we will help you choose the right package for your project and budget.
+          </p>
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button asChild className="rounded-xl bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow">
+              <Link href="/contact">Get a Free Quote</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-xl border-white/30 text-white hover:bg-white/10">
+              <Link href="/pricing">Compare All Pricing</Link>
+            </Button>
+          </div>
         </div>
       </div>
     </div>

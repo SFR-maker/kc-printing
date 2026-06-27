@@ -11,21 +11,25 @@ export function ServicePageContent({ service }: { service: ServiceDef }) {
   return (
     <>
       {/* Hero */}
-      <section className="bg-kc-dark text-white section-pad">
-        <div className="container-tight">
+      <section className="relative overflow-hidden bg-kc-bg section-pad">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-violet-500/[0.07] blur-3xl" />
+          <div className="absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-orange-400/[0.06] blur-3xl" />
+        </div>
+        <div className="container-tight relative z-10">
           <div className="max-w-3xl">
-            <Badge className="mb-4 bg-kc-coral/20 text-kc-coral border-kc-coral/30 hover:bg-kc-coral/20">
+            <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">
               {service.name}
             </Badge>
-            <h1 className="text-4xl sm:text-5xl font-black mb-4">{service.tagline}</h1>
-            <p className="text-lg text-white/70 leading-relaxed mb-8">{service.description}</p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button asChild size="lg" className="bg-kc-coral hover:bg-kc-coral/90 text-white">
+            <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">{service.tagline}</h1>
+            <p className="mb-8 text-lg leading-relaxed text-kc-muted">{service.description}</p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Button asChild size="lg" className="bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow rounded-xl">
                 <Link href={`/services/${service.slug}/order`}>
                   Order Now <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
+              <Button asChild size="lg" variant="outline" className="rounded-xl border-kc-border text-kc-dark hover:bg-kc-surface">
                 <Link href="/contact">Get a Free Quote</Link>
               </Button>
             </div>

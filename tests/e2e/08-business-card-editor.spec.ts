@@ -26,10 +26,16 @@ test.describe("Business card design studio", () => {
     await expect(page.locator("canvas").first()).toBeVisible();
   });
 
-  test("26 - blank editor loads with empty canvas and tool panel", async ({ page }) => {
+  test("26 - blank editor loads with empty canvas and tool panel", async ({ page }, testInfo) => {
     await page.goto("/services/business-cards/design/new");
     await expect(page.locator("text=Text").first()).toBeVisible({ timeout: 15000 });
-    await expect(page.locator("text=Add QR Code")).toBeVisible();
+    if (testInfo.project.name === "mobile-chrome") {
+      // Tools live in bottom sheets on mobile rather than an always-visible panel; "Add QR Code"
+      // only appears once its sheet is opened, so just confirm the tab bar itself is present.
+      await expect(page.getByRole("button", { name: "QR", exact: true })).toBeVisible();
+    } else {
+      await expect(page.locator("text=Add QR Code")).toBeVisible();
+    }
     await expect(page.locator("canvas").first()).toBeVisible();
   });
 
@@ -53,9 +59,13 @@ test.describe("Business card design studio", () => {
   test("29 - zoom controls change zoom percentage", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === "mobile-chrome", "Desktop TopCommandBar; mobile zoom lives in the overflow menu, covered in 09-business-card-ux.spec.ts");
     await page.goto("/services/business-cards/design/new");
-    await expect(page.locator("text=100%")).toBeVisible({ timeout: 15000 });
+    // The canvas auto-fits to the available space on load, so zoom won't always read exactly
+    // 100% — capture whatever it starts at and just confirm zooming in actually changes it.
+    const zoomText = page.locator("text=/^\\d+%$/");
+    await expect(zoomText).toBeVisible({ timeout: 15000 });
+    const before = await zoomText.textContent();
     await page.locator('button[aria-label="Zoom in"]').click();
-    await expect(page.locator("text=100%")).not.toBeVisible();
+    await expect(zoomText).not.toHaveText(before ?? "");
   });
 
   test("30 - export downloads a PDF file", async ({ page }, testInfo) => {

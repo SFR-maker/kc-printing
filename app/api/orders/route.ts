@@ -12,6 +12,7 @@ const schema = z.object({
   brandColors: z.string().optional(),
   notes: z.string().optional(),
   quantity: z.number().int().min(1).default(1),
+  cardDesignId: z.string().optional(),
 });
 
 export async function POST(req: Request) {

@@ -3,11 +3,7 @@ import { test, expect } from "@playwright/test";
 const SERVICES = [
   { slug: "business-cards", name: "Business Cards" },
   { slug: "postcards", name: "Postcards" },
-  { slug: "logo-design", name: "Logo Design" },
-  { slug: "web-design", name: "Website Design" },
-  { slug: "roll-up-banners", name: "Roll-Up Banner" },
-  { slug: "vinyl-banners", name: "Vinyl Banner" },
-  { slug: "print-design", name: "Print" },
+  { slug: "banners", name: "Banners" },
 ];
 
 test.describe("Service pages", () => {

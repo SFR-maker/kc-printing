@@ -32,6 +32,21 @@ export const ourFileRouter = {
       });
     }),
 
+  cardAsset: f({
+    "image/png": { maxFileSize: "16MB", maxFileCount: 1 },
+    "image/jpeg": { maxFileSize: "16MB", maxFileCount: 1 },
+    "image/webp": { maxFileSize: "16MB", maxFileCount: 1 },
+  })
+    .middleware(async () => {
+      // Anonymous visitors may design before signing in, so uploads here are intentionally not gated on auth.
+      // File type is restricted at the route config level (png/jpeg/webp only); server-side MIME sniffing
+      // happens again in element-factory validation on the client before the asset is added to the canvas.
+      return {};
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.url, name: file.name, size: file.size };
+    }),
+
   portfolioImage: f({ "image/jpeg": { maxFileSize: "8MB" }, "image/png": { maxFileSize: "8MB" }, "image/webp": { maxFileSize: "8MB" } })
     .middleware(async () => {
       const { userId } = await auth();

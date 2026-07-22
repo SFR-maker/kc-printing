@@ -28,6 +28,8 @@ async function getClerkHandler() {
     "/api/contact(.*)",
     "/api/stripe/webhook(.*)",
     "/api/uploadthing(.*)",
+    "/api/card-templates(.*)",
+    "/api/card-designs/export(.*)",
   ]);
 
   const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);

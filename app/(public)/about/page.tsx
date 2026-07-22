@@ -31,7 +31,7 @@ export default function AboutPage() {
           <div>
             <h2 className="text-3xl font-black text-kc-dark mb-4">What We Do</h2>
             <p className="text-kc-muted leading-relaxed mb-4">
-              We specialize in print and digital design services: business cards, postcards, vinyl banners, roll-up banners, logo design, and website design. Every order is handled by real designers who care about your brand.
+              We specialize in three things and do them well: business cards, postcards, and banners (roll-up stands and vinyl). Every order is handled by real designers who care about your brand.
             </p>
             <p className="text-kc-muted leading-relaxed mb-4">
               We use AI tools to speed up the creative process, but every design is reviewed and refined by a human. You get the speed of automation with the quality of professional design.
@@ -44,7 +44,7 @@ export default function AboutPage() {
             {[
               { value: "50+", label: "Clients Served" },
               { value: "4.9", label: "Average Rating" },
-              { value: "7", label: "Design Services" },
+              { value: "3", label: "Design Services" },
               { value: "24hr", label: "Rush Turnaround" },
             ].map((stat) => (
               <div key={stat.label} className="rounded-xl bg-kc-bg border border-kc-border p-6 text-center">

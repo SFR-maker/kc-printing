@@ -25,11 +25,7 @@ type FormValues = z.infer<typeof schema>;
 const SERVICES = [
   "Business Cards",
   "Postcards",
-  "Logo Design",
-  "Website Design",
-  "Roll-Up Banners",
-  "Vinyl Banners",
-  "Print and Brand Design",
+  "Banners",
   "Other / Not Sure",
 ];
 

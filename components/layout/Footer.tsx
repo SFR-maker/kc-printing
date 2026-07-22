@@ -4,11 +4,7 @@ import { Phone, Mail, Globe, Share2, Users, MessageCircle } from "lucide-react";
 const SERVICES = [
   { label: "Business Cards", href: "/services/business-cards" },
   { label: "Postcards", href: "/services/postcards" },
-  { label: "Logo Design", href: "/services/logo-design" },
-  { label: "Website Design", href: "/services/web-design" },
-  { label: "Roll-Up Banners", href: "/services/roll-up-banners" },
-  { label: "Vinyl Banners", href: "/services/vinyl-banners" },
-  { label: "Print Design", href: "/services/print-design" },
+  { label: "Banners", href: "/services/banners" },
 ];
 
 const COMPANY = [

@@ -9,28 +9,24 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export const metadata: Metadata = {
   title: "KC Printing - Premium Print and Design Services Online | Kansas City",
   description:
-    "Custom business cards, postcards, banners, logo design, and website design. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
+    "Custom business cards, postcards, and banners. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
 };
 
 const SERVICES = [
   { name: "Business Cards", href: "/services/business-cards", icon: "🪪", price: "from $39", desc: "Standard, square, slim, circle, and leaf shapes. 14-32pt paper options." },
   { name: "Postcards", href: "/services/postcards", icon: "📬", price: "from $49", desc: "Multiple sizes, front and back, EDDM-ready for marketing campaigns." },
-  { name: "Logo Design", href: "/services/logo-design", icon: "✦", price: "from $100", desc: "Professional logos with full ownership. All formats: EPS, PDF, SVG, PNG." },
-  { name: "Website Design", href: "/services/web-design", icon: "🌐", price: "from $299", desc: "SEO-optimized, mobile-ready websites. One page to full e-commerce." },
-  { name: "Roll-Up Banners", href: "/services/roll-up-banners", icon: "🎯", price: "from $79", desc: "Retractable banner stand designs with print-ready bleed and safe zones." },
-  { name: "Vinyl Banners", href: "/services/vinyl-banners", icon: "🏷", price: "from $79", desc: "Large format banners from 2x4 to 4x10. Mesh, gloss, and matte vinyl." },
-  { name: "Print Design", href: "/services/print-design", icon: "🖨", price: "from $59", desc: "Flyers, brochures, letterheads, and general brand design services." },
+  { name: "Banners", href: "/services/banners", icon: "🎯", price: "from $79", desc: "Roll-up stands and large format vinyl banners with print-ready bleed and safe zones." },
 ];
 
 const TESTIMONIALS = [
   { name: "Maria Torres", company: "Torres Bakery", text: "KC Printing delivered a stunning business card design in less than 24 hours. The colors were perfect and the file was print-ready.", rating: 5 },
-  { name: "James Whitfield", company: "Whitfield Law Group", text: "We needed a complete rebrand with logo and postcards. The team nailed it on the first concept. Professional, fast, and priced fairly.", rating: 5 },
-  { name: "Sandra Bell", company: "Bell Dental Group", text: "Our new website design increased patient inquiries from the first week. Clean, professional, and exactly what a dental office needs.", rating: 5 },
+  { name: "James Whitfield", company: "Whitfield Law Group", text: "We needed new business cards and postcards for our rebrand. The team nailed it on the first concept. Professional, fast, and priced fairly.", rating: 5 },
+  { name: "Alicia Nguyen", company: "Bloom Wellness Spa", text: "Our retractable banner and matching business cards look incredible at trade shows. Clients always ask where we got them designed.", rating: 5 },
 ];
 
 const FAQS = [
   { q: "How does the ordering process work?", a: "Choose your service and package, upload your brand files or notes, and our designers get to work. You receive your first draft within 1-3 business days. Request revisions and download your final print-ready files when approved." },
-  { q: "What file formats do you deliver?", a: "Design files are delivered print-ready. Business cards and postcards come as PDF with proper bleed. Logos are delivered as EPS, PDF, high-resolution JPG, transparent PNG, and SVG. Website designs come as Figma files or HTML handoff." },
+  { q: "What file formats do you deliver?", a: "All design files are delivered print-ready. Business cards, postcards, and banners come as a print-ready PDF with proper bleed, plus a high-resolution JPG and PNG." },
   { q: "Do I need to provide any files?", a: "Not required but helpful. You can upload logos, brand colors, existing materials, or inspiration. If you have nothing, our AI-assisted brief tool will help capture your vision before the designer starts." },
   { q: "Can I request revisions?", a: "Yes. Every package includes a set number of included revisions ranging from 4 to 8 depending on the tier. Additional revisions are available at a flat rate if you need more." },
   { q: "Do you serve businesses outside Kansas City?", a: "Absolutely. KC Printing is a fully online design studio serving businesses in Kansas City, Dallas, Plano, Addison, Overland Park, and clients nationwide. All ordering and file delivery is done digitally." },
@@ -63,7 +59,7 @@ export default function HomePage() {
 
           {/* Sub */}
           <p className="mb-10 max-w-2xl text-xl leading-relaxed text-kc-muted">
-            Business cards, postcards, banners, logos, and websites. Fast turnaround, AI-assisted creative direction, and print-ready files delivered online.
+            Business cards, postcards, and banners. Fast turnaround, AI-assisted creative direction, and print-ready files delivered online.
           </p>
 
           {/* CTAs */}
@@ -193,7 +189,7 @@ export default function HomePage() {
                 </Badge>
                 <h2 className="mb-4 text-3xl font-black sm:text-4xl">AI Helps. Humans Perfect It.</h2>
                 <p className="text-lg leading-relaxed text-white/80">
-                  Every order includes optional AI tools to generate copy, suggest brand colors, create logo concepts, and write SEO-optimized content. A human designer reviews every output before anything reaches you.
+                  Every order includes optional AI tools to generate copy and suggest brand colors for your business cards, postcards, or banners. A human designer reviews every output before anything reaches you.
                 </p>
               </div>
               <div className="grid w-full max-w-xs grid-cols-2 gap-3 shrink-0">

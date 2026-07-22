@@ -8,12 +8,12 @@ test.describe("Public pages", () => {
     await expect(hero).toBeVisible();
   });
 
-  test("2 - homepage has 7 service links", async ({ page }) => {
+  test("2 - homepage has service links for all 3 products", async ({ page }) => {
     await page.goto("/");
     const links = page.locator('a[href*="/services/"]');
     await expect(links.first()).toBeVisible();
     const count = await links.count();
-    expect(count).toBeGreaterThanOrEqual(7);
+    expect(count).toBeGreaterThanOrEqual(6);
   });
 
   test("3 - mobile nav opens and closes", async ({ page }) => {

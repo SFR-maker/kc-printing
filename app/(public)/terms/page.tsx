@@ -13,7 +13,7 @@ export default function TermsPage() {
       <div className="prose prose-sm max-w-none text-kc-muted space-y-6">
         <section>
           <h2 className="text-lg font-bold text-kc-dark mb-2">1. Services</h2>
-          <p>KC Printing provides online design services including business cards, postcards, banners, logo design, and website design. All services are provided on a project basis with pricing as published on our website or as agreed in a custom quote.</p>
+          <p>KC Printing provides online design services including business cards, postcards, and banners. All services are provided on a project basis with pricing as published on our website or as agreed in a custom quote.</p>
         </section>
         <section>
           <h2 className="text-lg font-bold text-kc-dark mb-2">2. Payment</h2>

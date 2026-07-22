@@ -3,7 +3,8 @@ import { SERVICES } from "@/lib/service-data";
 import { ProductBuilder } from "@/components/builder/ProductBuilder";
 const service = SERVICES["business-cards"];
 
-export default function OrderPage({ searchParams }: { searchParams: Promise<{ package?: string }> }) {
+export default async function OrderPage({ searchParams }: { searchParams: Promise<{ package?: string; designId?: string }> }) {
   if (!service) notFound();
-  return <ProductBuilder service={service} defaultPackage={undefined} />;
+  const { package: pkg, designId } = await searchParams;
+  return <ProductBuilder service={service} defaultPackage={pkg} cardDesignId={designId} />;
 }

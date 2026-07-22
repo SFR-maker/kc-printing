@@ -32,7 +32,7 @@ const FAQS = [
   {
     category: "Files and Formats",
     items: [
-      { q: "What file formats are delivered?", a: "Business cards and print pieces: print-ready PDF, high-resolution JPG, and PNG. Logos: EPS, PDF, high-resolution JPG, transparent PNG, SVG. Website designs: Figma files and HTML." },
+      { q: "What file formats are delivered?", a: "Business cards, postcards, and banners are delivered as a print-ready PDF with proper bleed, plus a high-resolution JPG and PNG." },
       { q: "Are files print-ready?", a: "Yes. All print files include proper bleed, are set to CMYK color mode, and are at the correct resolution (300-350 DPI for small formats, 72-150 DPI for large format). They are ready to upload directly to any commercial printer." },
       { q: "What file formats can I upload?", a: "We accept TIF, TIFF, EPS, AI, PSD, BMP, GIF, JPG, PNG, and PDF. Files should ideally be at 300 DPI or higher. Logos should be vector files (AI, EPS, or PDF) for best results." },
       { q: "How do I download my completed files?", a: "Completed files are available in your account dashboard under My Orders. You will also receive an email notification when your files are ready to download." },
@@ -42,7 +42,7 @@ const FAQS = [
     category: "Billing and Refunds",
     items: [
       { q: "What is your refund policy?", a: "If design work has not started, you can request a full refund within 24 hours of placing your order. Once work has begun, refunds are prorated based on completed work. See our full Refund Policy for details." },
-      { q: "Are there any recurring charges?", a: "Only if you subscribe to the monthly maintenance add-on for website design. All other services are one-time payments." },
+      { q: "Are there any recurring charges?", a: "No. All services are one-time payments with no subscriptions or recurring charges." },
       { q: "Do you offer discounts for bulk orders?", a: "Yes. If you need multiple products or are a repeat customer, contact us for a custom quote. We offer bundled pricing for businesses ordering multiple services." },
       { q: "Can I use a coupon code?", a: "Yes. Enter your coupon code at checkout. Only one coupon can be applied per order." },
     ],

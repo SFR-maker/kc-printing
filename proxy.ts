@@ -10,32 +10,15 @@ async function getClerkHandler() {
   if (_handler) return _handler;
   const { clerkMiddleware, createRouteMatcher } = await import("@clerk/nextjs/server");
 
-  const isPublicRoute = createRouteMatcher([
-    "/",
-    "/services(.*)",
-    "/pricing(.*)",
-    "/portfolio(.*)",
-    "/about(.*)",
-    "/contact(.*)",
-    "/faq(.*)",
-    "/terms(.*)",
-    "/privacy(.*)",
-    "/refund-policy(.*)",
-    "/success(.*)",
-    "/cancel(.*)",
-    "/sign-in(.*)",
-    "/sign-up(.*)",
-    "/api/contact(.*)",
-    "/api/stripe/webhook(.*)",
-    "/api/uploadthing(.*)",
-    "/api/card-templates(.*)",
-    "/api/card-designs/export(.*)",
-  ]);
-
+  // Only /account and /admin actually require a signed-in user (both also check auth() again at
+  // the page level as a second layer). Everything else — including any route not listed here —
+  // falls through to normal Next.js routing, so a genuine 404 renders instead of every unmatched
+  // URL bouncing to /sign-in.
+  const isAccountRoute = createRouteMatcher(["/account(.*)"]);
   const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
 
   _handler = clerkMiddleware(async (auth, request) => {
-    if (isPublicRoute(request)) return;
+    if (!isAccountRoute(request) && !isAdminRoute(request)) return;
 
     const { userId, sessionClaims } = await auth();
 

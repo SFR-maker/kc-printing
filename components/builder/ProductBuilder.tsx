@@ -496,6 +496,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
 
           {step < STEPS.length - 1 ? (
             <Button
+              key="next-button"
               type="button"
               onClick={goNext}
               className="bg-kc-teal hover:bg-kc-teal/90 text-white"
@@ -503,13 +504,14 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               Next <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : submitError?.startsWith("You'll need to sign in") ? (
-            <Button asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
+            <Button key="sign-in-button" asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
               <a href={`/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}>
                 Sign In to Continue <ArrowRight className="ml-2 h-4 w-4" />
               </a>
             </Button>
           ) : (
             <Button
+              key="submit-button"
               type="submit"
               disabled={submitting}
               className="bg-kc-coral hover:bg-kc-coral/90 text-white"

@@ -31,11 +31,12 @@ type FormValues = z.infer<typeof schema>;
 interface ProductBuilderProps {
   service: ServiceDef;
   defaultPackage?: string;
+  cardDesignId?: string;
 }
 
 const STEPS = ["Package", "Options", "Details", "Review"];
 
-export function ProductBuilder({ service, defaultPackage }: ProductBuilderProps) {
+export function ProductBuilder({ service, defaultPackage, cardDesignId }: ProductBuilderProps) {
   const [step, setStep] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
@@ -74,11 +75,9 @@ export function ProductBuilder({ service, defaultPackage }: ProductBuilderProps)
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          type: service.slug === "logo-design" ? "logo_concepts" :
-                service.slug === "business-cards" ? "card_copy" :
+          type: service.slug === "business-cards" ? "card_copy" :
                 service.slug === "postcards" ? "postcard_copy" :
-                service.slug.includes("banner") ? "banner_headline" :
-                service.slug === "web-design" ? "website_copy" : "brief_summary",
+                service.slug === "banners" ? "banner_headline" : "brief_summary",
           payload: {
             businessName: values.businessName,
             service: service.name,
@@ -104,7 +103,7 @@ export function ProductBuilder({ service, defaultPackage }: ProductBuilderProps)
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ service: service.slug, ...typed }),
+        body: JSON.stringify({ service: service.slug, cardDesignId, ...typed }),
       });
       const result = await res.json() as { orderId?: string; error?: string };
       if (result.orderId) {
@@ -125,6 +124,14 @@ export function ProductBuilder({ service, defaultPackage }: ProductBuilderProps)
     <div className="section-pad container-tight max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-kc-dark mb-2">Order {service.name}</h1>
+        {cardDesignId && (
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-kc-teal/30 bg-kc-teal/5 px-4 py-2.5 text-sm">
+            <span className="text-kc-dark">Using your custom design from the Design Studio.</span>
+            <a href={`/services/business-cards/design/${cardDesignId}`} className="font-semibold text-kc-teal hover:underline">
+              Edit design
+            </a>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-2">

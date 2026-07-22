@@ -7,7 +7,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import type { ServiceDef } from "@/lib/service-data";
 import { formatDollars } from "@/lib/utils";
 
-export function ServicePageContent({ service }: { service: ServiceDef }) {
+interface ServicePageContentProps {
+  service: ServiceDef;
+  designStudioHref?: string;
+}
+
+export function ServicePageContent({ service, designStudioHref }: ServicePageContentProps) {
   return (
     <>
       {/* Hero */}
@@ -24,13 +29,23 @@ export function ServicePageContent({ service }: { service: ServiceDef }) {
             <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">{service.tagline}</h1>
             <p className="mb-8 text-lg leading-relaxed text-kc-muted">{service.description}</p>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow rounded-xl">
-                <Link href={`/services/${service.slug}/order`}>
-                  Order Now <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
+              {designStudioHref ? (
+                <Button asChild size="lg" className="bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow rounded-xl">
+                  <Link href={designStudioHref}>
+                    Design It Yourself <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild size="lg" className="bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow rounded-xl">
+                  <Link href={`/services/${service.slug}/order`}>
+                    Order Now <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
               <Button asChild size="lg" variant="outline" className="rounded-xl border-kc-border text-kc-dark hover:bg-kc-surface">
-                <Link href="/contact">Get a Free Quote</Link>
+                <Link href={designStudioHref ? `/services/${service.slug}/order` : "/contact"}>
+                  {designStudioHref ? "Order Without Designing" : "Get a Free Quote"}
+                </Link>
               </Button>
             </div>
           </div>

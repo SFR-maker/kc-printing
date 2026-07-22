@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Design Services - Business Cards, Banners, Logos, Websites",
+  title: "Design Services - Business Cards, Postcards, Banners",
   description:
-    "Browse all KC Printing services: business cards, postcards, vinyl banners, roll-up banners, logo design, website design, and general print design.",
+    "Browse all KC Printing services: business cards, postcards, and banners (roll-up stands and vinyl).",
 };
 
 const SERVICES = [
@@ -35,59 +35,15 @@ const SERVICES = [
     color: "bg-kc-coral/5 border-kc-coral/20",
   },
   {
-    slug: "logo-design",
-    name: "Logo Design",
-    icon: "✦",
-    tag: "Branding",
-    price: "from $100",
-    description:
-      "Professional logos with full ownership transfer. All formats delivered: EPS, PDF, high-resolution JPG, transparent PNG, and SVG.",
-    highlights: ["Full ownership transfer", "All file formats", "Brand color palette", "Up to 8 revisions"],
-    color: "bg-kc-yellow/10 border-kc-yellow/30",
-  },
-  {
-    slug: "web-design",
-    name: "Website Design",
-    icon: "🌐",
-    tag: "Web",
-    price: "from $299",
-    description:
-      "SEO-optimized, mobile-ready website design. From one-page landing pages to full e-commerce and booking systems.",
-    highlights: ["Mobile responsive", "SEO-optimized", "AI content package", "Maintenance available"],
-    color: "bg-kc-teal/5 border-kc-teal/20",
-  },
-  {
-    slug: "roll-up-banners",
-    name: "Roll-Up Banners",
+    slug: "banners",
+    name: "Banners",
     icon: "🎯",
     tag: "Print",
     price: "from $79",
     description:
-      "Retractable banner stand designs from 24x81 to 36x81 in. Print-ready files with correct bleed and safe zone guidelines.",
-    highlights: ["3 standard sizes", "Table-top option", "Bleed and safe zone included", "Up to 8 revisions"],
+      "Roll-up retractable stands and large format vinyl banners for trade shows, storefronts, and outdoor promotions.",
+    highlights: ["Roll-up and vinyl formats", "Bleed and safe zone included", "Grommet placement spec", "Up to 8 revisions"],
     color: "bg-kc-sage/10 border-kc-sage/30",
-  },
-  {
-    slug: "vinyl-banners",
-    name: "Vinyl Banners",
-    icon: "🏷",
-    tag: "Print",
-    price: "from $79",
-    description:
-      "Large format vinyl banner designs for events, storefronts, and outdoor promotions. Multiple sizes and materials.",
-    highlights: ["Sizes 2x4 to 4x10", "Mesh, gloss, and matte", "Grommet placement spec", "Up to 8 revisions"],
-    color: "bg-kc-coral/5 border-kc-coral/20",
-  },
-  {
-    slug: "print-design",
-    name: "Print and Brand Design",
-    icon: "🖨",
-    tag: "Print",
-    price: "from $59",
-    description:
-      "Flyers, brochures, letterheads, rack cards, and general brand design. Print-ready files for any printer.",
-    highlights: ["Single and multi-page", "Any print format", "Brand consistency", "Up to 8 revisions"],
-    color: "bg-kc-yellow/10 border-kc-yellow/30",
   },
 ];
 

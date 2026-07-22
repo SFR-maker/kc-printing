@@ -9,7 +9,7 @@ import { formatDollars } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Transparent Pricing for All Design Services",
   description:
-    "Clear, upfront pricing for business cards, postcards, banners, logos, and websites. No hidden fees. Multiple packages to fit any budget.",
+    "Clear, upfront pricing for business cards, postcards, and banners. No hidden fees. Multiple packages to fit any budget.",
 };
 
 const ALL_SERVICES = [
@@ -32,48 +32,12 @@ const ALL_SERVICES = [
     ],
   },
   {
-    name: "Logo Design",
-    href: "/services/logo-design",
-    packages: [
-      { name: "Basic", price: 100, features: ["Text-based mark", "Up to 4 revisions", "4 formats"] },
-      { name: "Plus", price: 250, features: ["Detailed mark", "Up to 6 revisions", "5 formats"] },
-      { name: "Deluxe", price: 350, features: ["Illustrated logo", "Up to 8 revisions", "Brand guide"] },
-    ],
-  },
-  {
-    name: "Website Design",
-    href: "/services/web-design",
-    packages: [
-      { name: "One Page", price: 299, features: ["Single page", "Up to 4 revisions", "Mobile-ready"] },
-      { name: "5-Page Business", price: 599, features: ["5 pages", "Up to 6 revisions", "SEO structure"] },
-      { name: "Full SEO Site", price: 899, features: ["10 pages", "Up to 8 revisions", "Schema markup"] },
-    ],
-  },
-  {
-    name: "Roll-Up Banners",
-    href: "/services/roll-up-banners",
+    name: "Banners",
+    href: "/services/banners",
     packages: [
       { name: "Silver", price: 79, features: ["1-2 images", "Up to 4 revisions", "PDF with bleed"] },
       { name: "Gold", price: 139, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
       { name: "Platinum", price: 199, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
-    ],
-  },
-  {
-    name: "Vinyl Banners",
-    href: "/services/vinyl-banners",
-    packages: [
-      { name: "Silver", price: 79, features: ["1-2 images", "Up to 4 revisions", "PDF with bleed"] },
-      { name: "Gold", price: 139, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
-      { name: "Platinum", price: 199, features: ["5+ images", "Up to 8 revisions", "Grommet spec"] },
-    ],
-  },
-  {
-    name: "Print and Brand Design",
-    href: "/services/print-design",
-    packages: [
-      { name: "Silver", price: 59, features: ["Single page", "Up to 4 revisions", "PDF"] },
-      { name: "Gold", price: 99, features: ["Two-sided", "Up to 6 revisions", "PDF and PNG"] },
-      { name: "Platinum", price: 149, features: ["Multi-page", "Up to 8 revisions", "Full bundle"] },
     ],
   },
 ];

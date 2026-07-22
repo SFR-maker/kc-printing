@@ -12,5 +12,5 @@ export const metadata: Metadata = {
 
 export default function ServicePage() {
   if (!service) notFound();
-  return <ServicePageContent service={service} />;
+  return <ServicePageContent service={service} designStudioHref="/services/business-cards/design" />;
 }

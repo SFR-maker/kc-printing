@@ -15,33 +15,13 @@ test.describe("Product builder", () => {
     }
   });
 
-  test("17 - logo design order page loads", async ({ page }) => {
-    await page.goto("/services/logo-design/order");
-    await expect(page.locator("h1")).toBeVisible();
-  });
-
-  test("18 - web design order page loads", async ({ page }) => {
-    await page.goto("/services/web-design/order");
-    await expect(page.locator("h1")).toBeVisible();
-  });
-
-  test("19 - postcards order page loads", async ({ page }) => {
+  test("17 - postcards order page loads", async ({ page }) => {
     await page.goto("/services/postcards/order");
     await expect(page.locator("h1")).toBeVisible();
   });
 
-  test("20 - roll-up banners order page loads", async ({ page }) => {
-    await page.goto("/services/roll-up-banners/order");
-    await expect(page.locator("h1")).toBeVisible();
-  });
-
-  test("21 - vinyl banners order page loads", async ({ page }) => {
-    await page.goto("/services/vinyl-banners/order");
-    await expect(page.locator("h1")).toBeVisible();
-  });
-
-  test("22 - print design order page loads", async ({ page }) => {
-    await page.goto("/services/print-design/order");
+  test("18 - banners order page loads", async ({ page }) => {
+    await page.goto("/services/banners/order");
     await expect(page.locator("h1")).toBeVisible();
   });
 });

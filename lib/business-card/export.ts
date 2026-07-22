@@ -1,6 +1,8 @@
 import sharp from "sharp";
+import path from "path";
 import { renderSideToSvg, resolveSideImages } from "./render-svg";
 import { BLEED_PX_HEIGHT, BLEED_PX_WIDTH, BLEED_HEIGHT_IN, BLEED_WIDTH_IN, DPI } from "./print-spec";
+import { EDITOR_FONTS } from "./fonts";
 import type { CardSide } from "./schema";
 
 // svg-to-pdfkit and pdfkit have no first-party ESM types; both are widely used, stable CJS packages.
@@ -16,6 +18,22 @@ const SVGtoPDF = (svgToPdfModule.default ?? svgToPdfModule) as (doc: unknown, sv
 const POINTS_PER_INCH = 72;
 const PAGE_WIDTH_PT = BLEED_WIDTH_IN * POINTS_PER_INCH;
 const PAGE_HEIGHT_PT = BLEED_HEIGHT_IN * POINTS_PER_INCH;
+
+/**
+ * Registers every curated editor font with the pdfkit document under its exact family name, so
+ * svg-to-pdfkit's internal `doc.font(familyName)` calls (driven by the `font-family` attribute on
+ * each <text> in our rendered SVG) resolve to the real typeface instead of silently falling back to
+ * Helvetica — keeping the exported PDF visually consistent with what the editor shows on screen.
+ */
+function registerEditorFonts(doc: InstanceType<typeof PDFDocument>): void {
+  for (const font of EDITOR_FONTS) {
+    try {
+      doc.registerFont(font.family, path.join(process.cwd(), "lib/business-card/fonts-ttf", font.file));
+    } catch {
+      // Missing/corrupt font file — that text falls back to Helvetica rather than failing the export.
+    }
+  }
+}
 
 export interface RasterExportResult {
   buffer: Buffer;
@@ -47,6 +65,7 @@ export async function exportCardPdf(front: CardSide, back: CardSide): Promise<Pd
   const backSvg = renderSideToSvg(resolvedBack);
 
   const doc = new PDFDocument({ size: [PAGE_WIDTH_PT, PAGE_HEIGHT_PT], margin: 0, autoFirstPage: false });
+  registerEditorFonts(doc);
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
 

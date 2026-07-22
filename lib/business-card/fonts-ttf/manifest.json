@@ -1,0 +1,170 @@
+[
+  {
+    "family": "Inter",
+    "weight": "700",
+    "file": "inter.ttf",
+    "bytes": 66788
+  },
+  {
+    "family": "Montserrat",
+    "weight": "700",
+    "file": "montserrat.ttf",
+    "bytes": 48520
+  },
+  {
+    "family": "Poppins",
+    "weight": "700",
+    "file": "poppins.ttf",
+    "bytes": 15816
+  },
+  {
+    "family": "Raleway",
+    "weight": "700",
+    "file": "raleway.ttf",
+    "bytes": 49512
+  },
+  {
+    "family": "Roboto",
+    "weight": "700",
+    "file": "roboto.ttf",
+    "bytes": 44864
+  },
+  {
+    "family": "Open Sans",
+    "weight": "700",
+    "file": "open-sans.ttf",
+    "bytes": 35292
+  },
+  {
+    "family": "Oswald",
+    "weight": "700",
+    "file": "oswald.ttf",
+    "bytes": 26740
+  },
+  {
+    "family": "Space Grotesk",
+    "weight": "700",
+    "file": "space-grotesk.ttf",
+    "bytes": 31928
+  },
+  {
+    "family": "Josefin Sans",
+    "weight": "700",
+    "file": "josefin-sans.ttf",
+    "bytes": 27492
+  },
+  {
+    "family": "Barlow Condensed",
+    "weight": "700",
+    "file": "barlow-condensed.ttf",
+    "bytes": 53916
+  },
+  {
+    "family": "Work Sans",
+    "weight": "700",
+    "file": "work-sans.ttf",
+    "bytes": 48324
+  },
+  {
+    "family": "Nunito",
+    "weight": "700",
+    "file": "nunito.ttf",
+    "bytes": 39040
+  },
+  {
+    "family": "Playfair Display",
+    "weight": "700",
+    "file": "playfair-display.ttf",
+    "bytes": 53700
+  },
+  {
+    "family": "Merriweather",
+    "weight": "700",
+    "file": "merriweather.ttf",
+    "bytes": 130104
+  },
+  {
+    "family": "Lora",
+    "weight": "700",
+    "file": "lora.ttf",
+    "bytes": 47112
+  },
+  {
+    "family": "Libre Baskerville",
+    "weight": "700",
+    "file": "libre-baskerville.ttf",
+    "bytes": 45708
+  },
+  {
+    "family": "Cormorant Garamond",
+    "weight": "700",
+    "file": "cormorant-garamond.ttf",
+    "bytes": 76604
+  },
+  {
+    "family": "Cinzel",
+    "weight": "700",
+    "file": "cinzel.ttf",
+    "bytes": 33792
+  },
+  {
+    "family": "Prata",
+    "weight": "400",
+    "file": "prata.ttf",
+    "bytes": 44312
+  },
+  {
+    "family": "Bebas Neue",
+    "weight": "400",
+    "file": "bebas-neue.ttf",
+    "bytes": 34860
+  },
+  {
+    "family": "Great Vibes",
+    "weight": "400",
+    "file": "great-vibes.ttf",
+    "bytes": 91032
+  },
+  {
+    "family": "Pacifico",
+    "weight": "400",
+    "file": "pacifico.ttf",
+    "bytes": 77560
+  },
+  {
+    "family": "Lobster",
+    "weight": "400",
+    "file": "lobster.ttf",
+    "bytes": 102644
+  },
+  {
+    "family": "Dancing Script",
+    "weight": "700",
+    "file": "dancing-script.ttf",
+    "bytes": 52220
+  },
+  {
+    "family": "Caveat",
+    "weight": "700",
+    "file": "caveat.ttf",
+    "bytes": 112788
+  },
+  {
+    "family": "Abril Fatface",
+    "weight": "400",
+    "file": "abril-fatface.ttf",
+    "bytes": 32188
+  },
+  {
+    "family": "Anton",
+    "weight": "400",
+    "file": "anton.ttf",
+    "bytes": 43604
+  },
+  {
+    "family": "Righteous",
+    "weight": "400",
+    "file": "righteous.ttf",
+    "bytes": 31632
+  }
+]

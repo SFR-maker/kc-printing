@@ -33,7 +33,8 @@ test.describe("Business card design studio", () => {
     await expect(page.locator("canvas").first()).toBeVisible();
   });
 
-  test("27 - adding text updates the canvas and enables undo", async ({ page }) => {
+  test("27 - adding text updates the canvas and enables undo", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "mobile-chrome", "Desktop-only left panel; mobile equivalent covered in 09-business-card-ux.spec.ts");
     await page.goto("/services/business-cards/design/new");
     await page.getByRole("button", { name: "Heading", exact: true }).click();
     await page.waitForTimeout(300);
@@ -41,21 +42,24 @@ test.describe("Business card design studio", () => {
     await expect(undoBtn).toBeEnabled();
   });
 
-  test("28 - switching between front and back works", async ({ page }) => {
+  test("28 - switching between front and back works", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "mobile-chrome", "Desktop TopCommandBar; mobile equivalent covered in 09-business-card-ux.spec.ts");
     await page.goto("/services/business-cards/design/new");
     await page.waitForTimeout(300);
     await page.locator("button", { hasText: "Back" }).click();
     await expect(page.locator("button", { hasText: "Back" })).toHaveClass(/bg-white/);
   });
 
-  test("29 - zoom controls change zoom percentage", async ({ page }) => {
+  test("29 - zoom controls change zoom percentage", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "mobile-chrome", "Desktop TopCommandBar; mobile zoom lives in the overflow menu, covered in 09-business-card-ux.spec.ts");
     await page.goto("/services/business-cards/design/new");
     await expect(page.locator("text=100%")).toBeVisible({ timeout: 15000 });
     await page.locator('button[aria-label="Zoom in"]').click();
     await expect(page.locator("text=100%")).not.toBeVisible();
   });
 
-  test("30 - export downloads a PDF file", async ({ page }) => {
+  test("30 - export downloads a PDF file", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "mobile-chrome", "Desktop TopCommandBar; mobile export lives in the overflow menu, covered in 09-business-card-ux.spec.ts");
     await page.goto("/services/business-cards/design/t-real-estate-centered-stack");
     await page.waitForTimeout(500);
     const downloadPromise = page.waitForEvent("download", { timeout: 20000 });

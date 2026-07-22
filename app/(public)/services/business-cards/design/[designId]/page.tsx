@@ -25,6 +25,7 @@ export default async function BusinessCardEditorPage({ params }: { params: Promi
 
   let initialDesign: CardDesign;
   let savedDesignId: string | null = null;
+  let templatePalette: string[] | null = null;
 
   if (rawId === "new") {
     initialDesign = blankCardDesign();
@@ -39,6 +40,7 @@ export default async function BusinessCardEditorPage({ params }: { params: Promi
       front: CardSideSchema.parse(template.front),
       back: CardSideSchema.parse(template.back),
     };
+    templatePalette = template.palette;
   } else {
     const design = await db.cardDesign.findUnique({ where: { id: rawId } });
     if (!design) notFound();
@@ -59,5 +61,5 @@ export default async function BusinessCardEditorPage({ params }: { params: Promi
     savedDesignId = design.id;
   }
 
-  return <CardEditor initialDesign={initialDesign} designId={savedDesignId} isSignedIn={isSignedIn} />;
+  return <CardEditor initialDesign={initialDesign} designId={savedDesignId} isSignedIn={isSignedIn} templatePalette={templatePalette} />;
 }

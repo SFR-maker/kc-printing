@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { CardDesign, CardElement, CardSide } from "./schema";
 import { blankCardDesign } from "./schema";
+import { recolorSide } from "./recolor";
 
 export type SideKey = "front" | "back";
 
@@ -23,8 +24,13 @@ interface EditorState {
   showGrid: boolean;
   dirty: boolean;
   designId: string | null;
+  /** The 3-color palette the current template was authored with, if any — tracked separately from
+   * the design content so color-variant swatches know which exact hex values to remap from, and is
+   * updated to the new palette after each swap so repeated variant clicks keep working correctly. */
+  activePalette: string[] | null;
 
-  loadDesign: (design: CardDesign, designId?: string | null) => void;
+  loadDesign: (design: CardDesign, designId?: string | null, palette?: string[] | null) => void;
+  applyColorVariant: (newPalette: string[]) => void;
   setActiveSide: (side: SideKey) => void;
   setSelected: (ids: string[]) => void;
   toggleSelected: (id: string) => void;
@@ -49,7 +55,7 @@ interface EditorState {
   setZoom: (zoom: number) => void;
   toggleGuides: () => void;
   toggleGrid: () => void;
-  resetToTemplate: (front: CardSide, back: CardSide) => void;
+  resetToTemplate: (front: CardSide, back: CardSide, palette?: string[] | null) => void;
   markSaved: () => void;
 }
 
@@ -73,9 +79,24 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   showGrid: false,
   dirty: false,
   designId: null,
+  activePalette: null,
 
-  loadDesign: (design, designId = null) =>
-    set({ design, designId, past: [], future: [], selectedIds: [], dirty: false, activeSide: "front" }),
+  loadDesign: (design, designId = null, palette = null) =>
+    set({ design, designId, activePalette: palette, past: [], future: [], selectedIds: [], dirty: false, activeSide: "front" }),
+
+  applyColorVariant: (newPalette) => {
+    const s = get();
+    const from = s.activePalette;
+    if (!from) return;
+    const history = snapshot(s.design);
+    set({
+      design: { ...s.design, front: recolorSide(s.design.front, from, newPalette), back: recolorSide(s.design.back, from, newPalette) },
+      activePalette: newPalette,
+      past: [...s.past, history].slice(-MAX_HISTORY),
+      future: [],
+      dirty: true,
+    });
+  },
 
   setActiveSide: (side) => set({ activeSide: side, selectedIds: [] }),
   setSelected: (ids) => set({ selectedIds: ids }),
@@ -247,11 +268,12 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   toggleGuides: () => set((s) => ({ showGuides: !s.showGuides })),
   toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
 
-  resetToTemplate: (front, back) => {
+  resetToTemplate: (front, back, palette = null) => {
     const s = get();
     const history = snapshot(s.design);
     set({
       design: { ...s.design, front: structuredClone(front), back: structuredClone(back) },
+      activePalette: palette,
       past: [...s.past, history].slice(-MAX_HISTORY),
       future: [],
       selectedIds: [],

@@ -27,7 +27,7 @@ const BaseElementSchema = z.object({
 export const TextElementSchema = BaseElementSchema.extend({
   type: z.literal("text"),
   text: z.string(),
-  fontFamily: z.string().default("Geist Sans"),
+  fontFamily: z.string().default("Inter"),
   fontSizePt: z.number().positive().default(14),
   fontWeight: z.enum(["400", "500", "600", "700", "800", "900"]).default("400"),
   italic: z.boolean().default(false),

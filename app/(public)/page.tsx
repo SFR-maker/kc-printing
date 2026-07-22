@@ -1,147 +1,136 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Star, Zap, Shield, Clock, CheckCircle2, Phone, Mail } from "lucide-react";
+import { ArrowRight, Star, Phone, Mail, FileCheck, Users2, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { PrintStack } from "@/components/sections/PrintStack";
+import { db } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "KC Printing - Premium Print and Design Services Online | Kansas City",
+  title: "KC Printing - Business Cards, Postcards & Banners | Kansas City",
   description:
     "Custom business cards, postcards, and banners. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
 };
 
-const SERVICES = [
-  { name: "Business Cards", href: "/services/business-cards", icon: "🪪", price: "from $39", desc: "Standard, square, slim, circle, and leaf shapes. 14-32pt paper options." },
-  { name: "Postcards", href: "/services/postcards", icon: "📬", price: "from $49", desc: "Multiple sizes, front and back, EDDM-ready for marketing campaigns." },
-  { name: "Banners", href: "/services/banners", icon: "🎯", price: "from $79", desc: "Roll-up stands and large format vinyl banners with print-ready bleed and safe zones." },
-];
+// Homepage pulls live testimonials from the DB (see below) — revalidate periodically so a newly
+// approved testimonial shows up without requiring a full redeploy.
+export const revalidate = 3600;
 
-const TESTIMONIALS = [
-  { name: "Maria Torres", company: "Torres Bakery", text: "KC Printing delivered a stunning business card design in less than 24 hours. The colors were perfect and the file was print-ready.", rating: 5 },
-  { name: "James Whitfield", company: "Whitfield Law Group", text: "We needed new business cards and postcards for our rebrand. The team nailed it on the first concept. Professional, fast, and priced fairly.", rating: 5 },
-  { name: "Alicia Nguyen", company: "Bloom Wellness Spa", text: "Our retractable banner and matching business cards look incredible at trade shows. Clients always ask where we got them designed.", rating: 5 },
+const SERVICES = [
+  {
+    name: "Business Cards",
+    href: "/services/business-cards",
+    price: "from $39",
+    sizes: "Standard, square, slim, circle, or leaf shapes",
+    bestFor: "Networking, trade shows, front-desk stacks",
+    accent: "bg-kc-teal",
+  },
+  {
+    name: "Postcards",
+    href: "/services/postcards",
+    price: "from $49",
+    sizes: "3×5 up to 6×11, EDDM-ready",
+    bestFor: "Mailers, promotions, seasonal campaigns",
+    accent: "bg-kc-coral",
+  },
+  {
+    name: "Banners",
+    href: "/services/banners",
+    price: "from $79",
+    sizes: "Roll-up stands or vinyl, 24″ up to 10 ft",
+    bestFor: "Storefronts, trade shows, events",
+    accent: "bg-kc-yellow",
+  },
 ];
 
 const FAQS = [
-  { q: "How does the ordering process work?", a: "Choose your service and package, upload your brand files or notes, and our designers get to work. You receive your first draft within 1-3 business days. Request revisions and download your final print-ready files when approved." },
-  { q: "What file formats do you deliver?", a: "All design files are delivered print-ready. Business cards, postcards, and banners come as a print-ready PDF with proper bleed, plus a high-resolution JPG and PNG." },
-  { q: "Do I need to provide any files?", a: "Not required but helpful. You can upload logos, brand colors, existing materials, or inspiration. If you have nothing, our AI-assisted brief tool will help capture your vision before the designer starts." },
-  { q: "Can I request revisions?", a: "Yes. Every package includes a set number of included revisions ranging from 4 to 8 depending on the tier. Additional revisions are available at a flat rate if you need more." },
-  { q: "Do you serve businesses outside Kansas City?", a: "Absolutely. KC Printing is a fully online design studio serving businesses in Kansas City, Dallas, Plano, Addison, Overland Park, and clients nationwide. All ordering and file delivery is done digitally." },
+  { q: "How does the ordering process work?", a: "Choose your product and package, upload your artwork or notes, and our designers get to work. You'll see your first draft within 1-3 business days. Request revisions and download your print-ready files once you approve." },
+  { q: "What file formats do you deliver?", a: "Business cards, postcards, and banners all come as a print-ready PDF with proper bleed, plus a high-resolution JPG and PNG — ready to send to any print shop, including ours." },
+  { q: "I don't have a finished design. Can you still help?", a: "Yes. Upload a logo, some brand colors, or just tell us what you're going for, and our AI-assisted brief tool helps capture the direction before a real designer starts the layout." },
+  { q: "Can I request revisions?", a: "Yes. Every package includes 4 to 8 revisions depending on the tier. Need more than that? Additional revisions are available at a flat rate." },
+  { q: "Do you serve businesses outside Kansas City?", a: "We do. KC Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide — all ordering and file delivery happens online." },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Real customer testimonials only, moderated via /admin/testimonials. No fallback fake
+  // quotes — the section below renders nothing until real reviews exist and are approved.
+  const testimonials = await db.testimonial.findMany({
+    where: { approved: true, featured: true },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+  });
+
   return (
     <>
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-kc-bg">
-        {/* Ambient gradient orbs */}
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute -left-40 -top-40 h-[700px] w-[700px] rounded-full bg-violet-500/[0.07] blur-3xl" />
-          <div className="absolute -right-40 top-10 h-[600px] w-[600px] rounded-full bg-orange-400/[0.06] blur-3xl" />
-          <div className="absolute bottom-0 left-1/2 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-violet-400/[0.04] blur-3xl" />
-        </div>
+      <section className="bg-kc-bg">
+        <div className="container-tight grid grid-cols-1 items-center gap-12 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-2 lg:px-8 lg:pb-24 lg:pt-20">
+          <div>
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-kc-border bg-kc-surface px-3.5 py-1 text-xs font-semibold uppercase tracking-wide text-kc-muted">
+              Kansas City, MO · Serving clients nationwide online
+            </div>
 
-        <div className="container-tight relative z-10 px-4 pb-12 pt-20 sm:px-6 lg:px-8 lg:pt-28">
-          {/* Trust pill */}
-          <div className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-kc-border bg-kc-surface px-4 py-1.5 text-sm font-medium text-kc-muted shadow-sm">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-kc-sage" />
-            Kansas City&apos;s Favorite Online Design Studio
+            <h1 className="mb-6 max-w-lg text-4xl font-black leading-[1.08] tracking-tight text-kc-dark sm:text-5xl lg:text-[3.4rem]">
+              Business cards, postcards, and banners — designed and printed right.
+            </h1>
+
+            <p className="mb-8 max-w-md text-lg leading-relaxed text-kc-muted">
+              Pick a product, tell us what you&apos;re going for, and a real designer builds your print-ready file. No design software required.
+            </p>
+
+            <div className="mb-10 flex flex-wrap gap-3">
+              <Button asChild size="lg" className="h-13 rounded-md bg-kc-coral px-8 text-base font-semibold text-white hover:bg-kc-coral/90">
+                <Link href="/services">
+                  Browse Products <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="h-13 rounded-md border-kc-border px-7 text-base text-kc-dark hover:bg-kc-surface">
+                <Link href="/services/business-cards/design">Start Designing</Link>
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-kc-muted">
+              <span className="flex items-center gap-1.5"><FileCheck className="h-4 w-4 text-kc-teal" /> Print-ready files included</span>
+              <span className="flex items-center gap-1.5"><Users2 className="h-4 w-4 text-kc-teal" /> Real designers, not templates</span>
+              <span className="flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-kc-teal" /> No contracts or minimums</span>
+            </div>
           </div>
 
-          {/* Headline */}
-          <h1 className="mb-8 max-w-4xl text-5xl font-black leading-[1.02] tracking-tight text-kc-dark sm:text-7xl lg:text-[88px]">
-            Print and Design<br />
-            <span className="text-gradient-brand">Built to Win.</span>
-          </h1>
-
-          {/* Sub */}
-          <p className="mb-10 max-w-2xl text-xl leading-relaxed text-kc-muted">
-            Business cards, postcards, and banners. Fast turnaround, AI-assisted creative direction, and print-ready files delivered online.
-          </p>
-
-          {/* CTAs */}
-          <div className="mb-12 flex flex-wrap gap-4">
-            <Button
-              asChild
-              size="lg"
-              className="h-14 rounded-xl bg-kc-coral px-10 text-base font-semibold text-white shadow-orange-glow hover:bg-kc-coral/90"
-            >
-              <Link href="/services">
-                Start Your Order <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="h-14 rounded-xl border-kc-border px-8 text-base text-kc-dark hover:bg-kc-surface"
-            >
-              <Link href="/portfolio">See Our Work</Link>
-            </Button>
-          </div>
-
-          {/* Trust indicators */}
-          <div className="flex flex-wrap items-center gap-6 text-sm text-kc-muted">
-            {["No contracts or minimums", "Print-ready files included", "24hr rush available"].map((t) => (
-              <span key={t} className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-kc-sage" />
-                {t}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Stats bar */}
-        <div className="container-tight px-4 pb-16 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 gap-8 border-t border-kc-border pt-10 sm:grid-cols-4">
-            {[
-              { value: "50+", label: "Clients Served" },
-              { value: "4.9★", label: "Average Rating" },
-              { value: "98%", label: "Quality Score" },
-              { value: "24hr", label: "Rush Available" },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <div className="text-3xl font-black text-kc-teal">{stat.value}</div>
-                <div className="mt-1 text-sm text-kc-muted">{stat.label}</div>
-              </div>
-            ))}
-          </div>
+          <PrintStack />
         </div>
       </section>
 
-      {/* ── Services Grid ── */}
+      {/* ── Products ── */}
       <section className="section-pad bg-kc-surface">
         <div className="container-tight">
-          <div className="mb-14 text-center">
-            <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">Everything Your Brand Needs</Badge>
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl lg:text-5xl">
-              One Studio.<br className="sm:hidden" /> Every Format.
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-kc-muted">
-              Print and digital design, all in one place. Original files, real designers, real results.
-            </p>
+          <div className="mb-10 max-w-xl">
+            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Three products. Done well.</h2>
+            <p className="mt-3 text-kc-muted">We keep the catalog focused so every order gets real attention from a designer who knows the format.</p>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             {SERVICES.map((service) => (
-              <Link key={service.href} href={service.href} className="group">
-                <Card className="h-full border-kc-border hover-card-lift">
-                  <CardContent className="flex h-full flex-col p-6">
-                    <div className="mb-4 text-3xl">{service.icon}</div>
-                    <div className="mb-2 flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-kc-dark group-hover:text-kc-teal transition-colors">{service.name}</h3>
-                      <Badge variant="secondary" className="shrink-0 border-0 bg-kc-violet-tint text-kc-teal text-xs">
-                        {service.price}
-                      </Badge>
+              <Link key={service.href} href={service.href} className="group block overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
+                <div className={`h-1.5 w-full ${service.accent}`} />
+                <div className="p-6">
+                  <div className="mb-3 flex items-baseline justify-between gap-2">
+                    <h3 className="text-lg font-bold text-kc-dark">{service.name}</h3>
+                    <span className="shrink-0 text-sm font-semibold text-kc-teal">{service.price}</span>
+                  </div>
+                  <dl className="space-y-1.5 text-sm text-kc-muted">
+                    <div className="flex gap-1.5">
+                      <dt className="shrink-0 font-medium text-kc-dark/70">Sizes:</dt>
+                      <dd>{service.sizes}</dd>
                     </div>
-                    <p className="flex-1 text-sm leading-relaxed text-kc-muted">{service.desc}</p>
-                    <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-kc-teal">
-                      Get started <ArrowRight className="h-3 w-3" />
+                    <div className="flex gap-1.5">
+                      <dt className="shrink-0 font-medium text-kc-dark/70">Best for:</dt>
+                      <dd>{service.bestFor}</dd>
                     </div>
-                  </CardContent>
-                </Card>
+                  </dl>
+                  <div className="mt-5 flex items-center gap-1 text-sm font-semibold text-kc-teal">
+                    View {service.name} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </div>
               </Link>
             ))}
           </div>
@@ -151,21 +140,18 @@ export default function HomePage() {
       {/* ── How It Works ── */}
       <section className="section-pad bg-kc-bg">
         <div className="container-tight">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl lg:text-5xl">How It Works</h2>
-            <p className="mx-auto mt-4 max-w-xl text-kc-muted">From idea to print-ready file in three simple steps.</p>
+          <div className="mb-12 max-w-xl">
+            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">How it works</h2>
+            <p className="mt-3 text-kc-muted">From idea to print-ready file in three steps.</p>
           </div>
-          <div className="grid grid-cols-1 gap-12 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
             {[
-              { step: "01", title: "Choose Your Service and Package", desc: "Select the service you need, pick a package tier, and add any extras. Our live price calculator shows your total instantly." },
-              { step: "02", title: "Share Your Brand Info", desc: "Upload existing files, fill out a short brand questionnaire, or use our AI brief tool. Designers review everything before starting." },
-              { step: "03", title: "Review, Revise, and Download", desc: "Get your first draft within 1-3 business days. Request revisions, approve the final design, and download your print-ready files." },
+              { step: "01", title: "Choose your product and package", desc: "Pick the product and tier you need, and add any extras. The price updates as you go, so there's no guessing." },
+              { step: "02", title: "Upload your artwork or ask for help", desc: "Have a finished file? Upload it. Starting from scratch? Our AI brief tool and design team help you get there." },
+              { step: "03", title: "Review, revise, and download", desc: "Your first draft arrives in 1-3 business days. Request changes, approve the final version, and download your print-ready files." },
             ].map((item) => (
-              <div key={item.step} className="relative flex flex-col">
-                <div className="mb-4 text-7xl font-black text-kc-teal/10 leading-none select-none">{item.step}</div>
-                <div className="-mt-8 mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-kc-teal text-white text-sm font-black shadow-violet-glow">
-                  {item.step}
-                </div>
+              <div key={item.step} className="border-t-2 border-kc-dark/10 pt-5">
+                <div className="mb-2 text-sm font-black tracking-widest text-kc-coral">{item.step}</div>
                 <h3 className="mb-2 text-lg font-bold text-kc-dark">{item.title}</h3>
                 <p className="text-sm leading-relaxed text-kc-muted">{item.desc}</p>
               </div>
@@ -174,79 +160,72 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── AI Feature — gradient card ── */}
-      <section className="section-pad bg-kc-surface">
-        <div className="container-tight">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-violet-card px-8 py-12 text-white sm:px-12 lg:px-16 lg:py-16">
-            {/* Orbs inside card */}
-            <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/[0.04] blur-2xl" />
-            <div className="pointer-events-none absolute -bottom-24 left-20 h-72 w-72 rounded-full bg-orange-500/[0.10] blur-2xl" />
+      {/* ── Design help ── */}
+      <section className="section-pad-tight bg-kc-violet-tint">
+        <div className="container-tight grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.2fr_1fr]">
+          <div>
+            <h2 className="mb-3 text-2xl font-black tracking-tight text-kc-dark sm:text-3xl">
+              Have the idea but not the finished file?
+            </h2>
+            <p className="max-w-xl text-kc-muted">
+              You don&apos;t need to be a designer to order from us. Tell us what you&apos;re picturing, upload a logo or a few reference images, and a real person will build the layout — the AI brief tool just helps you get your thoughts down first.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+            <Button asChild size="lg" className="rounded-md bg-kc-teal text-white hover:bg-kc-teal/90">
+              <Link href="/services/business-cards/design">Start Designing</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="rounded-md border-kc-teal/30 bg-white text-kc-dark hover:bg-white/80">
+              <Link href="/contact">Get Design Help</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
-            <div className="relative z-10 flex flex-col items-start gap-10 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-2xl">
-                <Badge className="mb-5 border-white/20 bg-white/10 text-white hover:bg-white/10">
-                  AI-Assisted Creative Direction
-                </Badge>
-                <h2 className="mb-4 text-3xl font-black sm:text-4xl">AI Helps. Humans Perfect It.</h2>
-                <p className="text-lg leading-relaxed text-white/80">
-                  Every order includes optional AI tools to generate copy and suggest brand colors for your business cards, postcards, or banners. A human designer reviews every output before anything reaches you.
-                </p>
+      {/* ── Testimonials (real, admin-moderated — hidden until at least one exists) ── */}
+      {testimonials.length > 0 && (
+        <section className="section-pad bg-kc-surface">
+          <div className="container-tight">
+            <div className="mb-10 grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+              <div>
+                <div className="mb-3 flex gap-0.5">
+                  {Array.from({ length: testimonials[0].rating }).map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-kc-yellow text-kc-yellow" />
+                  ))}
+                </div>
+                <blockquote className="text-2xl font-medium leading-snug text-kc-dark">
+                  &ldquo;{testimonials[0].text}&rdquo;
+                </blockquote>
+                <div className="mt-4 text-sm text-kc-muted">
+                  <span className="font-semibold text-kc-dark">{testimonials[0].name}</span>
+                  {testimonials[0].company ? ` · ${testimonials[0].company}` : ""}
+                </div>
               </div>
-              <div className="grid w-full max-w-xs grid-cols-2 gap-3 shrink-0">
-                {[
-                  { icon: <Zap className="h-4 w-4" />, label: "AI Copy Generator" },
-                  { icon: <Shield className="h-4 w-4" />, label: "Human Review" },
-                  { icon: <Clock className="h-4 w-4" />, label: "Fast Turnaround" },
-                  { icon: <CheckCircle2 className="h-4 w-4" />, label: "Print-Ready Files" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 backdrop-blur-sm">
-                    <span className="text-kc-yellow">{item.icon}</span>
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </div>
-                ))}
-              </div>
+
+              {testimonials.length > 1 && (
+                <div className="space-y-4 divide-y divide-kc-border lg:border-l lg:border-kc-border lg:pl-8">
+                  {testimonials.slice(1).map((t) => (
+                    <div key={t.id} className="pt-4 first:pt-0">
+                      <p className="text-sm leading-relaxed text-kc-dark">&ldquo;{t.text}&rdquo;</p>
+                      <div className="mt-2 text-xs text-kc-muted">{t.name}{t.company ? ` · ${t.company}` : ""}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* ── Testimonials ── */}
-      <section className="section-pad bg-kc-bg">
-        <div className="container-tight">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">What Clients Say</h2>
-            <p className="mx-auto mt-4 max-w-xl text-kc-muted">Real results for real businesses across Kansas City and beyond.</p>
-          </div>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {TESTIMONIALS.map((t) => (
-              <Card key={t.name} className="border-kc-border hover-card-lift">
-                <CardContent className="p-7">
-                  <div className="mb-4 flex gap-0.5">
-                    {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-kc-yellow text-kc-yellow" />
-                    ))}
-                  </div>
-                  <p className="mb-5 text-sm leading-relaxed text-kc-dark">&ldquo;{t.text}&rdquo;</p>
-                  <div>
-                    <div className="text-sm font-semibold text-kc-dark">{t.name}</div>
-                    <div className="text-xs text-kc-muted">{t.company}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── FAQ ── */}
-      <section className="section-pad bg-kc-surface">
+      <section className="section-pad bg-kc-bg">
         <div className="container-tight max-w-3xl">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Frequently Asked Questions</h2>
+          <div className="mb-10">
+            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Frequently asked questions</h2>
           </div>
           <Accordion className="space-y-3">
             {FAQS.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="rounded-xl border border-kc-border px-5">
+              <AccordionItem key={i} value={`faq-${i}`} className="rounded-md border border-kc-border px-5">
                 <AccordionTrigger className="text-left font-semibold text-kc-dark hover:text-kc-teal hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
@@ -256,8 +235,8 @@ export default function HomePage() {
               </AccordionItem>
             ))}
           </Accordion>
-          <div className="mt-8 text-center">
-            <Button asChild variant="outline" className="border-kc-border text-kc-dark hover:bg-kc-bg hover:border-kc-teal/30">
+          <div className="mt-8">
+            <Button asChild variant="outline" className="border-kc-border text-kc-dark hover:bg-kc-surface hover:border-kc-teal/30">
               <Link href="/faq">View All FAQs</Link>
             </Button>
           </div>
@@ -265,30 +244,29 @@ export default function HomePage() {
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="section-pad bg-kc-bg">
-        <div className="container-tight">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="mb-6 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">
-              Ready to Get <span className="text-gradient-brand">Started?</span>
-            </h2>
-            <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-kc-muted">
-              No contracts, no minimums. Just great design, delivered fast. Call, text, or start an order online.
-            </p>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Button asChild size="lg" className="h-14 w-full rounded-xl bg-kc-coral px-10 text-base font-semibold text-white shadow-orange-glow hover:bg-kc-coral/90 sm:w-auto">
-                <Link href="/services">Browse All Services <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-14 w-full rounded-xl border-kc-border px-8 text-base text-kc-dark hover:bg-kc-surface sm:w-auto">
-                <Link href="/contact">Get a Free Quote</Link>
-              </Button>
+      <section className="bg-kc-teal">
+        <div className="container-tight px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+          <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
+            <div>
+              <h2 className="max-w-xl text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl">
+                Ready to order? Pick a product and let&apos;s get started.
+              </h2>
+              <div className="mt-6 flex flex-wrap items-center gap-5 text-sm text-white/80">
+                <a href="tel:+18165210462" className="flex items-center gap-2 hover:text-white transition-colors">
+                  <Phone className="h-4 w-4" /> (816) 521-0462
+                </a>
+                <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 hover:text-white transition-colors">
+                  <Mail className="h-4 w-4" /> kansasdesigners@gmail.com
+                </a>
+              </div>
             </div>
-            <div className="mt-8 flex flex-col items-center justify-center gap-4 text-sm text-kc-muted sm:flex-row sm:gap-8">
-              <a href="tel:+18165210462" className="flex items-center gap-2 hover:text-kc-teal transition-colors">
-                <Phone className="h-4 w-4" /> (816) 521-0462
-              </a>
-              <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 hover:text-kc-teal transition-colors">
-                <Mail className="h-4 w-4" /> kansasdesigners@gmail.com
-              </a>
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <Button asChild size="lg" className="h-13 w-full rounded-md bg-kc-coral px-8 text-base font-semibold text-white hover:bg-kc-coral/90 sm:w-auto">
+                <Link href="/services">Browse All Products</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="h-13 w-full rounded-md border-white/30 bg-transparent px-7 text-base text-white hover:bg-white/10 sm:w-auto">
+                <Link href="/contact">Request a Quote</Link>
+              </Button>
             </div>
           </div>
         </div>

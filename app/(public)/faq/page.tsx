@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -23,7 +22,7 @@ const FAQS = [
   {
     category: "Design Process",
     items: [
-      { q: "How long does the design take?", a: "Standard turnaround is 2-4 business days for most projects. Rush delivery (24-48 hours) is available as an add-on. Website design projects take 7-14 business days depending on complexity." },
+      { q: "How long does the design take?", a: "Standard turnaround is 2-4 business days for most projects. Rush delivery (24-48 hours) is available as an add-on." },
       { q: "How do revisions work?", a: "After you receive your first draft, you can submit revision requests through your account dashboard. Each package includes a set number of revisions (4-8 depending on tier). Additional revisions beyond your included count are available at a flat rate." },
       { q: "What if I am not happy with the design?", a: "We work with you until you are satisfied within the included revisions. If you are still not happy after all revisions are used, we offer additional revisions at a discounted rate for existing customers." },
       { q: "Do I need to provide any materials?", a: "Not required but helpful. You can upload your logo, brand colors, photos, or inspiration images. If starting from scratch, our AI brief tool helps capture your brand vision. The more context you provide, the better the first draft." },
@@ -52,13 +51,9 @@ const FAQS = [
 export default function FaqPage() {
   return (
     <div>
-      <section className="relative overflow-hidden bg-kc-bg section-pad">
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute left-1/2 -top-32 h-96 w-96 -translate-x-1/2 rounded-full bg-violet-500/[0.07] blur-3xl" />
-        </div>
-        <div className="container-tight relative z-10 text-center max-w-2xl">
-          <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">FAQ</Badge>
-          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Frequently Asked Questions</h1>
+      <section className="section-pad-tight bg-kc-bg">
+        <div className="container-tight max-w-2xl">
+          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Frequently asked questions</h1>
           <p className="text-lg text-kc-muted">
             Everything you need to know about ordering, design, files, and billing.
           </p>
@@ -91,17 +86,14 @@ export default function FaqPage() {
             </div>
           ))}
 
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-violet-card p-8 text-center text-white">
-            <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/[0.04] blur-2xl" />
-            <div className="relative z-10">
-              <h3 className="mb-2 text-lg font-bold">Still Have Questions?</h3>
-              <p className="mb-5 text-sm text-white/80">
-                Call or text us at (816) 521-0462 or send a message and we will get back to you quickly.
-              </p>
-              <Button asChild className="rounded-xl bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow">
-                <Link href="/contact">Contact Us</Link>
-              </Button>
-            </div>
+          <div className="rounded-md bg-kc-teal p-8 text-center text-white">
+            <h3 className="mb-2 text-lg font-bold">Still have questions?</h3>
+            <p className="mb-5 text-sm text-white/80">
+              Call or text us at (816) 521-0462 or send a message and we&apos;ll get back to you quickly.
+            </p>
+            <Button asChild className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
+              <Link href="/contact">Contact Us</Link>
+            </Button>
           </div>
         </div>
       </section>

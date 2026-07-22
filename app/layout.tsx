@@ -16,11 +16,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "KC Printing - Premium Print and Design Services Online",
+    default: "KC Printing - Business Cards, Postcards & Banners, Designed Online",
     template: "%s | KC Printing",
   },
   description:
-    "Custom business cards, postcards, banners, logo design, and website design. Fast online ordering, print-ready files, AI-assisted creative direction. Serving Kansas City, Dallas, Plano, and nationwide.",
+    "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   openGraph: {
     type: "website",

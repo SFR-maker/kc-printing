@@ -36,11 +36,11 @@ export function AdminPortfolioForm() {
         <form onSubmit={submit} className="flex gap-3 flex-wrap">
           <div className="space-y-1">
             <Label className="text-xs">Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Logo Design" className="h-8 text-sm border-kc-border w-40" required />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Business Cards" className="h-8 text-sm border-kc-border w-40" required />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Category</Label>
-            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Logo Design" className="h-8 text-sm border-kc-border w-36" required />
+            <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="business-cards" className="h-8 text-sm border-kc-border w-36" required />
           </div>
           <div className="space-y-1 flex-1 min-w-48">
             <Label className="text-xs">Image URL</Label>

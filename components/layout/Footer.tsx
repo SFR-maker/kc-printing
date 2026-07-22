@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Phone, Mail, Globe, Share2, Users, MessageCircle } from "lucide-react";
+import { Phone, Mail, Globe } from "lucide-react";
 
 const SERVICES = [
   { label: "Business Cards", href: "/services/business-cards" },
@@ -29,7 +29,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="mb-5 flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-kc-teal shadow-violet-glow">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kc-teal">
                 <span className="text-base font-black text-white leading-none">KC</span>
               </div>
               <div className="flex flex-col leading-tight">
@@ -38,7 +38,7 @@ export function Footer() {
               </div>
             </div>
             <p className="mb-5 text-sm leading-relaxed text-kc-muted">
-              Premium online print and design services. Fast turnaround, print-ready files, AI-assisted creative direction.
+              Business cards, postcards, and banners, designed by a real person and delivered print-ready. Ordered entirely online.
             </p>
             <div className="space-y-2.5">
               <a href="tel:+18165210462" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">
@@ -87,22 +87,11 @@ export function Footer() {
           {/* Service Areas */}
           <div>
             <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-kc-muted/60">Service Areas</h3>
-            <ul className="mb-6 space-y-2 text-sm text-kc-muted">
+            <ul className="space-y-2 text-sm text-kc-muted">
               {["Kansas City, MO", "Overland Park, KS", "Dallas, TX", "Plano, TX", "Addison, TX", "Nationwide Online"].map((city) => (
                 <li key={city}>{city}</li>
               ))}
             </ul>
-            <div className="flex gap-3">
-              <a href="#" aria-label="Instagram" className="rounded-lg border border-kc-border p-1.5 text-kc-muted hover:border-kc-teal/30 hover:text-kc-teal transition-colors">
-                <Share2 className="h-4 w-4" />
-              </a>
-              <a href="#" aria-label="Facebook" className="rounded-lg border border-kc-border p-1.5 text-kc-muted hover:border-kc-teal/30 hover:text-kc-teal transition-colors">
-                <Users className="h-4 w-4" />
-              </a>
-              <a href="#" aria-label="Twitter" className="rounded-lg border border-kc-border p-1.5 text-kc-muted hover:border-kc-teal/30 hover:text-kc-teal transition-colors">
-                <MessageCircle className="h-4 w-4" />
-              </a>
-            </div>
           </div>
         </div>
 

@@ -161,43 +161,16 @@ async function main() {
     },
   });
 
-  // Portfolio items
-  const portfolioItems = [
-    { title: "Green Leaf Catering", category: "business-cards", description: "Elegant business card design with leaf motif and earth tones.", imageUrl: "/portfolio/catering-cards.jpg", tags: ["business-cards", "print"], featured: true, sortOrder: 1 },
-    { title: "KC Food Festival 2025", category: "banners", description: "8ft x 4ft event banner for annual food festival in Kansas City.", imageUrl: "/portfolio/food-festival-banner.jpg", tags: ["banner", "event", "KC"], featured: true, sortOrder: 2 },
-  ];
-
-  for (const item of portfolioItems) {
-    await db.portfolioItem.upsert({
-      where: { id: item.title.replace(/\s+/g, "-").toLowerCase() },
-      update: {},
-      create: { id: item.title.replace(/\s+/g, "-").toLowerCase(), ...item },
-    });
-  }
-
-  // Testimonials
-  const testimonials = [
-    { name: "Maria Torres", company: "Torres Bakery", role: "Owner", text: "KC Printing delivered a stunning business card design in less than 24 hours. The colors were perfect and the file was print-ready. Highly recommend.", rating: 5, approved: true, featured: true },
-    { name: "James Whitfield", company: "Whitfield Law Group", role: "Managing Partner", text: "We needed new business cards and postcards for our rebrand. The team nailed it on the first concept. Professional, fast, and priced fairly.", rating: 5, approved: true, featured: true },
-    { name: "Alicia Nguyen", company: "Bloom Wellness Spa", role: "Director", text: "Our retractable banner and matching business cards look incredible at trade shows. Clients always ask where we got them designed.", rating: 5, approved: true, featured: true },
-    { name: "Derek Okafor", company: "Okafor Construction", role: "CEO", text: "Fast turnaround on a 4x8 vinyl banner. The designer followed our brand colors exactly and the file was perfect for our printer.", rating: 5, approved: true, featured: false },
-    { name: "Carlos Reyes", company: "Reyes Landscaping", role: "Owner", text: "Ordered postcard designs for our EDDM campaign. The design was clear, the CTA was strong, and the print files worked perfectly.", rating: 5, approved: true, featured: false },
-  ];
-
-  for (let i = 0; i < testimonials.length; i++) {
-    const t = testimonials[i];
-    await db.testimonial.upsert({
-      where: { id: `seed-testimonial-${i + 1}` },
-      update: {},
-      create: { id: `seed-testimonial-${i + 1}`, ...t },
-    });
-  }
+  // Portfolio items and testimonials are intentionally not seeded with example data. Both are
+  // managed live via /admin/portfolio and /admin/testimonials — real client work and real customer
+  // quotes should be entered there as they're collected, not backfilled with placeholder content
+  // that could be mistaken for genuine reviews or completed projects.
 
   // Page SEO
   const pages = [
-    { path: "/", title: "KC Printing - Premium Print and Design Services Online | Kansas City", description: "Custom business cards, postcards, and banners. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide." },
+    { path: "/", title: "KC Printing - Business Cards, Postcards & Banners | Kansas City", description: "Custom business cards, postcards, and banners. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide." },
     { path: "/services", title: "Design Services - Business Cards, Postcards, Banners | KC Printing", description: "Browse all KC Printing services: business cards, postcards, and banners (roll-up stands and vinyl)." },
-    { path: "/services/business-cards", title: "Custom Business Card Design | KC Printing", description: "Professional business card design starting at $39. Standard, square, slim, circle, and leaf shapes. 300-350 DPI print-ready files. Free revisions included." },
+    { path: "/services/business-cards", title: "Custom Business Card Design | KC Printing", description: "Professional business card design starting at $39. Standard, square, slim, circle, and leaf shapes. 300-350 DPI print-ready files. Revisions included." },
     { path: "/services/postcards", title: "Postcard Design for Marketing and EDDM | KC Printing", description: "Custom postcard design starting at $49. Multiple sizes, front and back, EDDM-ready. Fast turnaround for Kansas City and nationwide marketing campaigns." },
     { path: "/services/banners", title: "Banner Design - Roll-Up Stands and Vinyl Banners | KC Printing", description: "Banner design starting at $79. Roll-up retractable stands and large format vinyl banners. Print-ready with proper bleed, safe zones, and grommet specs." },
     { path: "/pricing", title: "Transparent Pricing for All Design Services | KC Printing", description: "Clear, upfront pricing for business cards, postcards, and banners. No hidden fees. Multiple packages to fit any budget." },

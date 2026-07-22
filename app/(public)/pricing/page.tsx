@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatDollars } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -18,7 +16,7 @@ const ALL_SERVICES = [
     href: "/services/business-cards",
     packages: [
       { name: "Silver", price: 39, features: ["1-2 images", "Up to 4 revisions", "PDF and JPG"] },
-      { name: "Gold", price: 49, features: ["3-4 images", "Up to 6 revisions", "PDF, JPG, PNG"] },
+      { name: "Gold", price: 49, popular: true, features: ["3-4 images", "Up to 6 revisions", "PDF, JPG, PNG"] },
       { name: "Platinum", price: 69, features: ["5+ images", "Up to 8 revisions", "Full bundle"] },
     ],
   },
@@ -27,7 +25,7 @@ const ALL_SERVICES = [
     href: "/services/postcards",
     packages: [
       { name: "Silver", price: 49, features: ["1-2 images", "Up to 4 revisions", "Front only"] },
-      { name: "Gold", price: 69, features: ["3-4 images", "Up to 6 revisions", "Front and back"] },
+      { name: "Gold", price: 69, popular: true, features: ["3-4 images", "Up to 6 revisions", "Front and back"] },
       { name: "Platinum", price: 89, features: ["5+ images", "Up to 8 revisions", "EDDM-ready"] },
     ],
   },
@@ -36,7 +34,7 @@ const ALL_SERVICES = [
     href: "/services/banners",
     packages: [
       { name: "Silver", price: 79, features: ["1-2 images", "Up to 4 revisions", "PDF with bleed"] },
-      { name: "Gold", price: 139, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
+      { name: "Gold", price: 139, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
       { name: "Platinum", price: 199, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
     ],
   },
@@ -44,59 +42,66 @@ const ALL_SERVICES = [
 
 export default function PricingPage() {
   return (
-    <div className="section-pad container-tight">
-      <div className="text-center mb-12">
-        <Badge className="mb-4 bg-kc-teal/10 text-kc-teal border-kc-teal/20">Pricing</Badge>
-        <h1 className="text-4xl sm:text-5xl font-black text-kc-dark mb-4">Clear, Simple Pricing</h1>
-        <p className="text-kc-muted text-lg max-w-2xl mx-auto">
-          No hidden fees. No contracts. Pay for what you need. Every package includes revisions and print-ready file delivery.
-        </p>
+    <div>
+      <div className="section-pad-tight bg-kc-bg">
+        <div className="container-tight max-w-2xl">
+          <h1 className="mb-3 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Clear, simple pricing</h1>
+          <p className="text-lg text-kc-muted">
+            No hidden fees, no contracts. Every package includes revisions and print-ready file delivery.
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-12">
-        {ALL_SERVICES.map((service) => (
-          <div key={service.name}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-kc-dark">{service.name}</h2>
-              <Link href={service.href} className="text-sm text-kc-teal hover:underline flex items-center gap-1">
-                Learn more <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {service.packages.map((pkg) => (
-                <Card key={pkg.name} className="border-kc-border hover:border-kc-teal/30 transition-colors">
-                  <CardContent className="p-5">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-kc-muted mb-1">{pkg.name}</div>
-                    <div className="text-3xl font-black text-kc-dark mb-3">{formatDollars(pkg.price)}</div>
+      <div className="container-tight px-4 py-12 sm:px-6 lg:px-8">
+        <div className="space-y-14">
+          {ALL_SERVICES.map((service) => (
+            <div key={service.name}>
+              <div className="mb-5 flex items-center justify-between border-b border-kc-border pb-3">
+                <h2 className="text-xl font-bold text-kc-dark">{service.name}</h2>
+                <Link href={service.href} className="flex items-center gap-1 text-sm font-medium text-kc-teal hover:underline">
+                  View details <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                {service.packages.map((pkg) => (
+                  <div
+                    key={pkg.name}
+                    className={`rounded-md border p-5 ${pkg.popular ? "border-kc-teal bg-kc-violet-tint" : "border-kc-border bg-white"}`}
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-kc-muted">{pkg.name}</span>
+                      {pkg.popular && <span className="text-[10px] font-bold uppercase tracking-wide text-kc-teal">Most popular</span>}
+                    </div>
+                    <div className="mb-3 text-3xl font-black text-kc-dark">{formatDollars(pkg.price)}</div>
                     <ul className="space-y-1.5">
                       {pkg.features.map((f) => (
                         <li key={f} className="flex items-center gap-2 text-xs text-kc-muted">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-kc-teal shrink-0" />
+                          <Check className="h-3.5 w-3.5 shrink-0 text-kc-teal" />
                           {f}
                         </li>
                       ))}
                     </ul>
-                    <Button asChild size="sm" className="w-full mt-4 bg-kc-teal hover:bg-kc-teal/90 text-white">
-                      <Link href={`${service.href}/order?package=${pkg.name.toLowerCase()}`}>Select</Link>
+                    <Button
+                      asChild
+                      size="sm"
+                      className={`mt-4 w-full rounded-md ${pkg.popular ? "bg-kc-teal text-white hover:bg-kc-teal/90" : "bg-kc-dark text-white hover:bg-kc-dark/90"}`}
+                    >
+                      <Link href={`${service.href}/order?package=${pkg.name.toLowerCase()}`}>Select {pkg.name}</Link>
                     </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
 
-      <div className="relative mt-16 overflow-hidden rounded-3xl bg-gradient-violet-card p-8 text-center text-white sm:p-12">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/[0.04] blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-16 left-16 h-48 w-48 rounded-full bg-orange-500/[0.10] blur-2xl" />
-        <div className="relative z-10">
-          <h2 className="mb-3 text-2xl font-black sm:text-3xl">Have a Custom Project?</h2>
-          <p className="mx-auto mb-6 max-w-xl text-white/80">
-            Not sure which package fits? Contact us for a free quote. We handle custom projects at fair prices with no surprises.
-          </p>
-          <Button asChild className="rounded-xl bg-kc-coral hover:bg-kc-coral/90 text-white shadow-orange-glow">
-            <Link href="/contact">Get a Free Quote</Link>
+        <div className="mt-16 flex flex-col items-start justify-between gap-6 rounded-md border border-kc-border bg-kc-orange-tint p-8 sm:flex-row sm:items-center">
+          <div>
+            <h2 className="mb-1.5 text-xl font-bold text-kc-dark">Have a custom project?</h2>
+            <p className="text-sm text-kc-muted">Not sure which package fits? Contact us for a free quote.</p>
+          </div>
+          <Button asChild className="shrink-0 rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
+            <Link href="/contact">Request a Quote</Link>
           </Button>
         </div>
       </div>

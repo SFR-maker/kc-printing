@@ -4,12 +4,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Phone, Mail, MessageSquare, CheckCircle2 } from "lucide-react";
+import { Phone, Mail, MessageSquare, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const schema = z.object({
@@ -32,6 +31,7 @@ const SERVICES = [
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -39,16 +39,18 @@ export default function ContactPage() {
 
   const onSubmit = async (data: FormValues) => {
     setLoading(true);
+    setSubmitError(false);
     try {
-      await fetch("/api/contact", {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      if (!res.ok) throw new Error("Request failed");
       setSent(true);
     } catch {
-      // fail silently on network error, still show success
-      setSent(true);
+      // Keep the entered data in place so the user doesn't have to retype it.
+      setSubmitError(true);
     } finally {
       setLoading(false);
     }
@@ -56,13 +58,9 @@ export default function ContactPage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden bg-kc-bg section-pad">
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
-          <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-violet-500/[0.07] blur-3xl" />
-        </div>
-        <div className="container-tight relative z-10 max-w-2xl">
-          <Badge className="mb-4 border-kc-teal/20 bg-kc-teal/8 text-kc-teal">Contact Us</Badge>
-          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Let&apos;s Talk About Your Project</h1>
+      <section className="section-pad-tight bg-kc-bg">
+        <div className="container-tight max-w-2xl">
+          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Let&apos;s talk about your project</h1>
           <p className="text-lg leading-relaxed text-kc-muted">
             Call, text, or fill out the form below. We respond to all inquiries within a few hours during business days.
           </p>
@@ -115,7 +113,13 @@ export default function ContactPage() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 bg-white border border-kc-border rounded-xl p-6 sm:p-8">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 rounded-md border border-kc-border bg-white p-6 sm:p-8">
+                {submitError && (
+                  <div className="flex items-start gap-2.5 rounded-md border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>Something went wrong sending your message. Please try again, or reach us directly at (816) 521-0462.</span>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="name">Name</Label>

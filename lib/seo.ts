@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { db } from "@/lib/prisma";
 
 const DEFAULTS = {
-  title: "KC Printing - Professional Print and Design Services in Kansas City",
-  description: "Kansas City's premier print and design studio. Business cards, postcards, logo design, banners, websites and more. Fast turnaround, quality results.",
+  title: "KC Printing - Business Cards, Postcards & Banners | Kansas City",
+  description: "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Serving Kansas City and nationwide online.",
   ogImage: "/og-default.png",
 };
 

@@ -149,17 +149,35 @@
   html {
     @apply font-sans;
   }
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-kc-teal focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @layer utilities {
   .section-pad {
     @apply px-4 py-16 sm:px-6 lg:px-8 lg:py-24;
   }
+  .section-pad-tight {
+    @apply px-4 py-10 sm:px-6 lg:px-8 lg:py-14;
+  }
   .container-tight {
     @apply mx-auto max-w-7xl;
   }
+  .container-copy {
+    @apply mx-auto max-w-[62ch];
+  }
 
-  /* Brand gradient — violet to orange */
+  /* Brand gradient — used sparingly, as a signature moment rather than a default background */
   .text-gradient-brand {
     background: linear-gradient(135deg, #7C3AED 0%, #C026D3 50%, #F97316 100%);
     -webkit-background-clip: text;
@@ -182,7 +200,6 @@
     background: linear-gradient(135deg, #F97316 0%, #FBBF24 100%);
   }
 
-  /* Glows for CTAs */
   .shadow-orange-glow {
     box-shadow: 0 4px 28px -4px rgba(249, 115, 22, 0.40);
   }
@@ -190,8 +207,52 @@
     box-shadow: 0 4px 28px -4px rgba(124, 58, 237, 0.35);
   }
 
-  /* Card hover glow */
   .hover-card-lift {
     @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-8px_rgba(124,58,237,0.15)] hover:border-kc-teal/25;
+  }
+
+  /* Print-inspired details — used sparingly as small, tasteful accents, not decoration everywhere */
+
+  /* Crop-mark corner accent: two short perpendicular lines, like a trim mark on a press sheet */
+  .crop-mark {
+    position: relative;
+  }
+  .crop-mark::before,
+  .crop-mark::after {
+    content: "";
+    position: absolute;
+    background: currentColor;
+    opacity: 0.35;
+  }
+  .crop-mark::before {
+    top: -10px;
+    left: 0;
+    width: 1px;
+    height: 8px;
+  }
+  .crop-mark::after {
+    top: 0;
+    left: -10px;
+    width: 8px;
+    height: 1px;
+  }
+
+  /* Very light paper grain — SVG turbulence, no image request, cheap to render */
+  .paper-grain {
+    position: relative;
+  }
+  .paper-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* Ink swatch dot, for finish/paper/color legends */
+  .ink-swatch {
+    @apply inline-block h-3 w-3 shrink-0 rounded-full border border-black/10;
   }
 }

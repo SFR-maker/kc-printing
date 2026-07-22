@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { getIconComponent } from "./icon-library";
+import type { ImageElement } from "./schema";
 
 function iconToSvgDataUri(name: string, color: string, sizePx: number): string | null {
   const Icon = getIconComponent(name);
@@ -38,4 +39,17 @@ export function iconToPngDataUri(name: string, color: string, sizePx = 512): Pro
     img.onerror = reject;
     img.src = svgUri;
   });
+}
+
+/**
+ * Re-rasterizes a placed icon element at a new color, keeping its on-canvas position and size (in
+ * inches) unchanged — only the underlying PNG and its natural pixel dimensions are replaced.
+ * Returns null if the element wasn't inserted from the icon library (no iconName) or the icon
+ * lookup fails, so callers can no-op rather than crash.
+ */
+export async function recolorIconElement(el: ImageElement, color: string): Promise<Partial<ImageElement> | null> {
+  if (!el.iconName) return null;
+  const result = await iconToPngDataUri(el.iconName, color, 512);
+  if (!result) return null;
+  return { src: result.dataUri, naturalWidthPx: result.width, naturalHeightPx: result.height, iconColor: color };
 }

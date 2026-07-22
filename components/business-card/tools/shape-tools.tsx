@@ -17,9 +17,13 @@ export function ShapeTools({ onInserted }: { onInserted?: () => void }) {
   async function insertIcon(name: string) {
     setInsertingIcon(name);
     try {
-      const result = await iconToPngDataUri(name, "#0A6E63", 512);
+      const color = "#0A6E63";
+      const result = await iconToPngDataUri(name, color, 512);
       if (!result) return;
-      const el = createImageElement({ src: result.dataUri, naturalWidthPx: result.width, naturalHeightPx: result.height, width: 0.7, height: 0.7 }, elements);
+      const el = createImageElement(
+        { src: result.dataUri, naturalWidthPx: result.width, naturalHeightPx: result.height, width: 0.7, height: 0.7, iconName: name, iconColor: color },
+        elements
+      );
       addElement(activeSide, el);
       onInserted?.();
     } finally {

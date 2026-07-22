@@ -53,6 +53,10 @@ export const ImageElementSchema = BaseElementSchema.extend({
   borderWidthPx: z.number().min(0).default(0),
   borderColor: z.string().default("#000000"),
   cornerRadiusIn: z.number().min(0).default(0),
+  // Present only when this image was inserted from the icon library — lets the editor re-rasterize
+  // the icon at a new color in place instead of the color being permanently baked into the PNG.
+  iconName: z.string().optional(),
+  iconColor: z.string().optional(),
 });
 
 export const ShapeKindSchema = z.enum(["rect", "ellipse", "line", "divider"]);

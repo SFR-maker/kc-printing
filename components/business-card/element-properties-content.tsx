@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, Trash2, Copy, Lock, Unlock, BringToFront, SendToBack, ChevronUp, ChevronDown } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { EDITOR_FONTS } from "@/lib/business-card/fonts";
+import { recolorIconElement } from "@/lib/business-card/icon-to-image";
 import type { CardElement, TextElement, ShapeElement, ImageElement, QrElement } from "@/lib/business-card/schema";
 
 /** Full precise-control panel for the selected element — X/Y/size/rotation, per-type styling, and
@@ -141,8 +143,33 @@ function ShapeProps({ el, patch }: { el: ShapeElement; patch: (p: Partial<ShapeE
 }
 
 function ImageProps({ el, patch }: { el: ImageElement; patch: (p: Partial<ImageElement>) => void }) {
+  // Guards against native color-input drag firing onChange faster than the async re-rasterize
+  // resolves — without it, an earlier drag frame could resolve after a later one and revert the
+  // icon to a color the user already moved past.
+  const latestRequest = useRef<string | null>(null);
+
+  async function handleIconColorChange(color: string) {
+    latestRequest.current = color;
+    try {
+      const result = await recolorIconElement(el, color);
+      if (result && latestRequest.current === color) patch(result);
+    } catch (err) {
+      console.error("Failed to recolor icon", err);
+    }
+  }
+
   return (
     <div className="space-y-3 border-t border-kc-border pt-3">
+      {el.iconName && (
+        <Field label="Icon color">
+          <Input
+            type="color"
+            value={el.iconColor ?? "#0A6E63"}
+            onChange={(e) => handleIconColorChange(e.target.value)}
+            className="h-9 p-1"
+          />
+        </Field>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <Field label="Border width"><Input type="number" min={0} value={el.borderWidthPx} onChange={(e) => patch({ borderWidthPx: Number(e.target.value) })} /></Field>
         <Field label="Border color"><Input type="color" value={el.borderColor} onChange={(e) => patch({ borderColor: e.target.value })} className="h-9 p-1" /></Field>

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Bold, Italic, Copy, Trash2, MoreHorizontal, Lock, Unlock } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { EDITOR_FONTS } from "@/lib/business-card/fonts";
-import type { CardElement, TextElement } from "@/lib/business-card/schema";
+import { recolorIconElement } from "@/lib/business-card/icon-to-image";
+import type { CardElement, TextElement, ImageElement } from "@/lib/business-card/schema";
 
 interface ElementQuickToolbarProps {
   onOpenDetails: () => void;
@@ -47,6 +48,8 @@ export function ElementQuickToolbar({ onOpenDetails, variant = "desktop" }: Elem
     >
       {single?.type === "text" ? (
         <TextQuickControls el={single} patch={patch} compact={isMobile} />
+      ) : single?.type === "image" && single.iconName ? (
+        <IconQuickControls el={single} patch={patch} />
       ) : (
         <span className="shrink-0 text-xs font-medium text-kc-muted">
           {selected.length > 1 ? `${selected.length} selected` : titleFor(single!.type)}
@@ -87,6 +90,37 @@ function TextQuickControls({ el, patch, compact }: { el: TextElement; patch: (p:
         <Italic className="h-4 w-4" />
       </ToggleBtn>
       <input type="color" value={el.color} onChange={(e) => patch({ color: e.target.value })} className="h-9 w-9 shrink-0 cursor-pointer rounded-md border border-kc-border p-1" title="Text color" />
+    </div>
+  );
+}
+
+function IconQuickControls({ el, patch }: { el: ImageElement; patch: (p: Partial<ImageElement>) => void }) {
+  // Native color inputs fire onChange repeatedly while dragging, and each change kicks off an
+  // async re-rasterize of variable duration — without this guard, an earlier drag frame could
+  // resolve after a later one and visually revert the icon to a color the user already moved past.
+  const latestRequest = useRef<string | null>(null);
+
+  async function handleColorChange(color: string) {
+    latestRequest.current = color;
+    try {
+      const result = await recolorIconElement(el, color);
+      if (result && latestRequest.current === color) patch(result);
+    } catch (err) {
+      console.error("Failed to recolor icon", err);
+    }
+  }
+
+  return (
+    <div className="flex shrink-0 items-center gap-1.5">
+      <span className="text-xs font-medium text-kc-muted">Icon</span>
+      <input
+        type="color"
+        value={el.iconColor ?? "#0A6E63"}
+        onChange={(e) => handleColorChange(e.target.value)}
+        className="h-9 w-9 cursor-pointer rounded-md border border-kc-border p-1"
+        title="Icon color"
+        aria-label="Icon color"
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, Grid3x3, Eye, EyeOff, Save, Download, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -31,6 +32,14 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-kc-border bg-white px-4 py-2.5">
       <div className="flex items-center gap-1">
+        <Link
+          href="/"
+          title="Back to KC Printing"
+          className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-kc-teal text-xs font-black text-white"
+        >
+          KC
+        </Link>
+        <div className="mx-1 h-5 w-px bg-kc-border" />
         <IconButton label="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo}>
           <Undo2 className="h-4 w-4" />
         </IconButton>

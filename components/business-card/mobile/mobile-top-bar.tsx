@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Undo2, Redo2, Save, Download, ArrowRight, MoreVertical, Eye, EyeOff, Grid3x3, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import Link from "next/link";
+import { Undo2, Redo2, Save, Download, ArrowRight, MoreVertical, Eye, EyeOff, Grid3x3, ZoomIn, ZoomOut, Maximize2, Home } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 
 interface MobileTopBarProps {
@@ -29,7 +30,7 @@ export function MobileTopBar({ onSave, saving, onExport, exporting, onContinue }
 
   return (
     <div className="relative border-b border-kc-border bg-white">
-      <div className="flex items-center justify-between gap-1 px-2 py-2">
+      <div className="flex items-center justify-between gap-1 px-2 py-1.5">
         <div className="flex items-center gap-1">
           <button aria-label="Undo" onClick={undo} disabled={!canUndo} className="flex h-9 w-9 items-center justify-center rounded-md disabled:opacity-30">
             <Undo2 className="h-4 w-4" />
@@ -79,6 +80,10 @@ export function MobileTopBar({ onSave, saving, onExport, exporting, onContinue }
           </div>
           <MenuRow label={showGuides ? "Hide Guides" : "Show Guides"} icon={showGuides ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />} onClick={toggleGuides} />
           <MenuRow label={showGrid ? "Hide Grid" : "Show Grid"} icon={<Grid3x3 className="h-4 w-4" />} onClick={toggleGrid} />
+          <div className="my-1.5 h-px bg-kc-border" />
+          <Link href="/" className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-kc-dark hover:bg-kc-bg">
+            <Home className="h-4 w-4" /> Back to KC Printing
+          </Link>
         </div>
       )}
     </div>

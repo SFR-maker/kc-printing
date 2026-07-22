@@ -35,6 +35,10 @@ export default function ContactPage() {
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
+    // The service Select isn't a native input react-hook-form can auto-register, so without an
+    // explicit default it starts as `undefined` — which fails Zod's string type check with a raw
+    // "expected string, received undefined" message instead of the friendly one on .min(1, ...).
+    defaultValues: { service: "" },
   });
 
   const onSubmit = async (data: FormValues) => {

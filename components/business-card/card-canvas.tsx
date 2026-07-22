@@ -71,8 +71,13 @@ export function CardCanvas() {
     if (!parent) return;
 
     const fit = () => {
-      const availW = parent.clientWidth - 32;
-      const availH = parent.clientHeight - 32;
+      // Read the parent's actual padding rather than assuming a fixed value, since it differs
+      // between mobile and desktop (and clientWidth/clientHeight already include padding).
+      const style = window.getComputedStyle(parent);
+      const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const availW = parent.clientWidth - paddingX;
+      const availH = parent.clientHeight - paddingY;
       if (availW <= 0 || availH <= 0) return;
       const fitZoom = Math.min(availW / widthPx, availH / heightPx, 1);
       setZoom(Math.max(0.25, fitZoom));

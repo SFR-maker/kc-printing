@@ -5,6 +5,11 @@ import { BLEED_PX_HEIGHT, BLEED_PX_WIDTH, BLEED_HEIGHT_IN, BLEED_WIDTH_IN, DPI }
 import { EDITOR_FONTS } from "./fonts";
 import type { CardSide } from "./schema";
 
+// libvips' internal operation cache has been observed to serve stale/blank output for later calls
+// in a long run of sequential sharp() renders within one process (e.g. bulk template thumbnail
+// generation) — disabling it trades a little throughput for correctness across large batches.
+sharp.cache(false);
+
 // svg-to-pdfkit and pdfkit have no first-party ESM types; both are widely used, stable CJS packages.
 // Next.js/Turbopack's CJS interop can wrap the module in a `{ default }` shape depending on the
 // bundling target (API route vs. plain Node/vitest), so resolve either form defensively.

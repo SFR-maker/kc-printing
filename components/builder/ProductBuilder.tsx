@@ -1,29 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, Sparkles, Upload, ArrowRight, ArrowLeft } from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles, Upload, ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
 import type { ServiceDef } from "@/lib/service-data";
 
+// Baked in at build time, same pattern as components/layout/Header.tsx — lets us know whether a
+// signed-in check is even possible without calling Clerk hooks outside a ClerkProvider.
+const CLERK_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 const schema = z.object({
   selectedOption: z.record(z.string(), z.string()).optional(),
   selectedPackage: z.string().min(1, "Please select a package"),
-  selectedAddOns: z.array(z.string()).default([]),
+  selectedAddOns: z.array(z.string()),
   notes: z.string().optional(),
   businessName: z.string().min(1, "Business name is required"),
   contactInfo: z.string().optional(),
   brandColors: z.string().optional(),
-  quantity: z.number().int().min(1).default(1),
+  quantity: z.number().int().min(1, "Quantity must be at least 1"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -36,23 +42,60 @@ interface ProductBuilderProps {
 
 const STEPS = ["Package", "Options", "Details", "Review"];
 
+// Which fields must be valid before advancing past each step — the wizard used to let you skip
+// straight to Review with nothing filled in, since "Next" never checked anything.
+const STEP_FIELDS: (keyof FormValues)[][] = [
+  ["selectedPackage"],
+  ["quantity"],
+  ["businessName"],
+  [],
+];
+
+function draftKey(serviceSlug: string): string {
+  return `kc-order-draft-${serviceSlug}`;
+}
+
 export function ProductBuilder({ service, defaultPackage, cardDesignId }: ProductBuilderProps) {
   const [step, setStep] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
 
   const form = useForm<FormValues>({
-    defaultValues: {
-      selectedPackage: defaultPackage ?? "",
-      selectedAddOns: [],
-      quantity: 1,
-    },
+    resolver: zodResolver(schema),
+    defaultValues: (() => {
+      if (typeof window !== "undefined") {
+        const saved = window.sessionStorage.getItem(draftKey(service.slug));
+        if (saved) {
+          try {
+            return { selectedAddOns: [], quantity: 1, ...JSON.parse(saved) };
+          } catch {
+            // fall through to plain defaults below
+          }
+        }
+      }
+      return {
+        selectedPackage: defaultPackage ?? "",
+        selectedAddOns: [],
+        quantity: 1,
+      };
+    })(),
   });
 
-  const { watch, setValue, register, handleSubmit, formState: { errors } } = form;
+  const { watch, setValue, register, handleSubmit, trigger, formState: { errors } } = form;
   const values = watch();
+
+  // Save the in-progress order to sessionStorage so a sign-in redirect (or an accidental reload)
+  // doesn't throw away everything the customer just filled in.
+  useEffect(() => {
+    const sub = form.watch((v) => {
+      window.sessionStorage.setItem(draftKey(service.slug), JSON.stringify(v));
+    });
+    return () => sub.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [service.slug]);
 
   const selectedPkg = service.packages.find((p) => p.name === values.selectedPackage);
   const selectedAddOnPrices = (values.selectedAddOns ?? []).map((name) => {
@@ -99,25 +142,58 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
   const onSubmit = async (data: any) => {
     const typed = data as FormValues;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ service: service.slug, cardDesignId, ...typed }),
       });
-      const result = await res.json() as { orderId?: string; error?: string };
-      if (result.orderId) {
-        const checkoutRes = await fetch("/api/stripe/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId: result.orderId }),
-        });
-        const checkout = await checkoutRes.json() as { url?: string };
-        if (checkout.url) window.location.href = checkout.url;
+
+      if (res.status === 401) {
+        setSubmitError(
+          "You'll need to sign in to complete your order — your details are saved, so nothing will be lost. Sign in and come back to this page to finish checking out."
+        );
+        return;
       }
+
+      const result = await res.json() as { orderId?: string; error?: string };
+
+      if (!res.ok || !result.orderId) {
+        setSubmitError(result.error ?? "Something went wrong creating your order. Please try again, or contact us at (816) 521-0462.");
+        return;
+      }
+
+      const checkoutRes = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: result.orderId }),
+      });
+
+      if (!checkoutRes.ok) {
+        setSubmitError("Your order was saved, but we couldn't start checkout. Please contact us at (816) 521-0462 to complete payment.");
+        return;
+      }
+
+      const checkout = await checkoutRes.json() as { url?: string };
+      if (!checkout.url) {
+        setSubmitError("Your order was saved, but we couldn't start checkout. Please contact us at (816) 521-0462 to complete payment.");
+        return;
+      }
+
+      window.sessionStorage.removeItem(draftKey(service.slug));
+      window.location.href = checkout.url;
     } catch {
+      setSubmitError("Something went wrong. Please check your connection and try again, or contact us at (816) 521-0462.");
+    } finally {
       setSubmitting(false);
     }
+  };
+
+  const goNext = async () => {
+    const fields = STEP_FIELDS[step];
+    const valid = fields.length === 0 || (await trigger(fields));
+    if (valid) setStep((s) => s + 1);
   };
 
   return (
@@ -146,8 +222,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               >
                 {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </button>
-              <span className={cn("text-sm hidden sm:block", i === step ? "font-semibold text-kc-dark" : "text-kc-muted")}>{s}</span>
-              {i < STEPS.length - 1 && <div className="h-px w-6 bg-kc-border" />}
+              <span className={cn("text-sm", i === step ? "font-semibold text-kc-dark" : "hidden text-kc-muted sm:block")}>{s}</span>
+              {i < STEPS.length - 1 && <div className="hidden h-px w-6 bg-kc-border sm:block" />}
             </div>
           ))}
         </div>
@@ -232,16 +308,40 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select Options</h2>
             {service.specs
-              .filter((s) => ["SIZE", "PAPER", "ORIENTATION"].some((t) => s.label.toUpperCase().includes(t)))
+              .filter((s) => ["SIZE", "ORIENTATION"].some((t) => s.label.toUpperCase().includes(t)))
               .map((spec) => (
                 <div key={spec.label} className="space-y-2">
                   <Label>{spec.label}</Label>
                   <p className="text-sm text-kc-muted">{spec.value}</p>
                 </div>
               ))}
+            {service.specs
+              .filter((s) => ["PAPER", "MATERIAL"].some((t) => s.label.toUpperCase().includes(t)))
+              .map((spec) => {
+                const choices = spec.value.split(",").map((v) => v.trim()).filter(Boolean);
+                return (
+                  <div key={spec.label} className="space-y-2">
+                    <Label>{spec.label}</Label>
+                    <Select
+                      value={values.selectedOption?.[spec.label] ?? ""}
+                      onValueChange={(v) => v && setValue("selectedOption", { ...values.selectedOption, [spec.label]: v })}
+                    >
+                      <SelectTrigger className="max-w-sm">
+                        <SelectValue placeholder={`Choose a ${spec.label.toLowerCase()}`} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {choices.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                );
+              })}
             <div className="space-y-2">
               <Label htmlFor="quantity">Quantity / Scope</Label>
-              <Input id="quantity" type="number" min="1" {...register("quantity")} className="max-w-xs" />
+              <Input id="quantity" type="number" min="1" {...register("quantity", { valueAsNumber: true })} className="max-w-xs" />
+              {errors.quantity && <p className="text-xs text-red-500">{errors.quantity.message}</p>}
             </div>
           </div>
         )}
@@ -323,10 +423,40 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                     <span className="font-medium text-kc-dark">{(values.selectedAddOns ?? []).join(", ")}</span>
                   </div>
                 )}
+                {Object.entries(values.selectedOption ?? {}).map(([label, val]) => (
+                  <div key={label} className="flex justify-between text-sm">
+                    <span className="text-kc-muted">{label}</span>
+                    <span className="font-medium text-kc-dark">{val}</span>
+                  </div>
+                ))}
+                {values.quantity > 1 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-kc-muted">Quantity</span>
+                    <span className="font-medium text-kc-dark">{values.quantity}</span>
+                  </div>
+                )}
                 {values.businessName && (
                   <div className="flex justify-between text-sm">
                     <span className="text-kc-muted">Business Name</span>
                     <span className="font-medium text-kc-dark">{values.businessName}</span>
+                  </div>
+                )}
+                {values.contactInfo && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-kc-muted">Contact Info</span>
+                    <span className="font-medium text-kc-dark">{values.contactInfo}</span>
+                  </div>
+                )}
+                {values.brandColors && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-kc-muted">Brand Colors</span>
+                    <span className="font-medium text-kc-dark">{values.brandColors}</span>
+                  </div>
+                )}
+                {values.notes && (
+                  <div className="text-sm">
+                    <span className="text-kc-muted">Notes</span>
+                    <p className="mt-1 font-medium text-kc-dark">{values.notes}</p>
                   </div>
                 )}
                 <div className="border-t border-kc-border pt-3 flex justify-between font-bold">
@@ -335,6 +465,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                 </div>
               </CardContent>
             </Card>
+
+            {submitError && (
+              <div className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{submitError}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -360,10 +497,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           {step < STEPS.length - 1 ? (
             <Button
               type="button"
-              onClick={() => setStep((s) => s + 1)}
+              onClick={goNext}
               className="bg-kc-teal hover:bg-kc-teal/90 text-white"
             >
               Next <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : submitError?.startsWith("You'll need to sign in") ? (
+            <Button asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
+              <a href={`/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}>
+                Sign In to Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </a>
             </Button>
           ) : (
             <Button

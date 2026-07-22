@@ -147,7 +147,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   }
 
   return (
-    <div className="flex h-[calc(100dvh-4rem)] flex-col">
+    <div className="flex h-dvh flex-col">
       {resumeAvailable && (
         <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs sm:text-sm text-amber-800">
           <span>You have an unsaved draft from a previous session.</span>
@@ -177,7 +177,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       <div className="flex flex-1 overflow-hidden">
         {!isMobile && <LeftToolPanel />}
         <div
-          className="flex flex-1 items-center justify-center overflow-auto bg-kc-bg p-4 sm:p-8"
+          className="flex flex-1 items-center justify-center overflow-auto bg-kc-bg p-2 sm:p-8"
           onClick={(e) => {
             if (e.target === e.currentTarget) clearSelection();
           }}

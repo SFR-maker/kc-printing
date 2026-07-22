@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   // directory at runtime. Bundling it through Turbopack/webpack breaks that relative path
   // resolution (ENOENT on Helvetica.afm), so it must run as a plain, unbundled Node require.
   serverExternalPackages: ["pdfkit", "svg-to-pdfkit"],
+  // lib/business-card/export.ts reads these TTF files at runtime via a computed fs.readFileSync
+  // path (for pdfkit.registerFont), which Next's automatic file-tracing can't see since it only
+  // follows static require/import calls — without this they'd be missing from the deployed
+  // serverless function bundle even though everything works locally.
+  outputFileTracingIncludes: {
+    "/api/card-designs/export": ["./lib/business-card/fonts-ttf/*.ttf"],
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "utfs.io" },

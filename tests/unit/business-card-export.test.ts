@@ -33,4 +33,19 @@ describe("exportCardPdf", () => {
     // A two-page PDF must declare Count 2 in its page tree.
     expect(result.buffer.toString("latin1")).toMatch(/\/Count\s+2/);
   }, 15000);
+
+  it("embeds the real curated font in exported text, not a Helvetica fallback", async () => {
+    const front = emptyCardSide();
+    front.elements.push({
+      id: "t1", type: "text", x: 0.3, y: 0.3, width: 3, height: 0.5, rotation: 0, zIndex: 0, opacity: 1,
+      locked: false, visible: true, text: "Hello", fontFamily: "Playfair Display", fontSizePt: 24, fontWeight: "700",
+      italic: false, underline: false, textTransform: "none", align: "left", lineHeight: 1.2, letterSpacing: 0,
+      color: "#111111", backgroundColor: null,
+    } as never);
+    const back = emptyCardSide();
+    const result = await exportCardPdf(front, back);
+    const text = result.buffer.toString("latin1");
+    expect(text).toMatch(/BaseFont\s*\/[A-Z]{6}\+PlayfairDisplay/);
+    expect(text).not.toMatch(/BaseFont\s*\/Helvetica\b/);
+  }, 15000);
 });

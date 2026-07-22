@@ -85,6 +85,31 @@ export function createImageElement(overrides: Partial<ImageElement> & Pick<Image
   };
 }
 
+/** Full-bleed background image (pattern or uploaded photo) — locked and sent behind everything else,
+ * since the schema's background field only supports solid/gradient. Reuses the existing image
+ * pipeline instead of adding an "image" background type, so export/upload/validation all just work. */
+export function createBackgroundImageElement(overrides: Partial<ImageElement> & Pick<ImageElement, "src" | "naturalWidthPx" | "naturalHeightPx">, existing: CardElement[] = []): ImageElement {
+  const backmost = existing.length === 0 ? 0 : Math.min(...existing.map((e) => e.zIndex));
+  return {
+    id: newId("bg-image"),
+    type: "image",
+    x: 0,
+    y: 0,
+    width: 3.75,
+    height: 2.25,
+    rotation: 0,
+    zIndex: backmost - 1,
+    opacity: 1,
+    locked: true,
+    visible: true,
+    crop: null,
+    borderWidthPx: 0,
+    borderColor: "#000000",
+    cornerRadiusIn: 0,
+    ...overrides,
+  };
+}
+
 export function createQrElement(overrides: Partial<QrElement> = {}, existing: CardElement[] = []): QrElement {
   return {
     id: newId("qr"),

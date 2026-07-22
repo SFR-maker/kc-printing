@@ -49,6 +49,42 @@ export function CardCanvas() {
     else nodeRefs.current.delete(id);
   }, []);
 
+  // Canvas text renders with whatever font is available at draw time — if a custom @font-face
+  // hasn't finished downloading yet, Konva silently falls back and never redraws once it lands.
+  // Force a redraw whenever the browser's font set finishes loading (both the initial batch and
+  // any fonts that load later, e.g. the first time a newly picked font is actually used).
+  useEffect(() => {
+    const redraw = () => stageRef.current?.getLayers().forEach((l) => l.batchDraw());
+    document.fonts.ready.then(redraw).catch(() => {});
+    document.fonts.addEventListener("loadingdone", redraw);
+    return () => document.fonts.removeEventListener("loadingdone", redraw);
+  }, []);
+
+  const setZoom = useCardEditorStore((s) => s.setZoom);
+
+  // Auto-fit the card to whatever space is actually available (critical on mobile, where a fixed
+  // 100% zoom is wider than the whole screen) and re-fit on resize/orientation change. This means a
+  // manual zoom can get reset by a resize (e.g. rotating a phone) — an acceptable tradeoff since
+  // re-fitting is usually exactly what you want right after an orientation change anyway.
+  useEffect(() => {
+    const parent = containerRef.current?.parentElement;
+    if (!parent) return;
+
+    const fit = () => {
+      const availW = parent.clientWidth - 32;
+      const availH = parent.clientHeight - 32;
+      if (availW <= 0 || availH <= 0) return;
+      const fitZoom = Math.min(availW / widthPx, availH / heightPx, 1);
+      setZoom(Math.max(0.25, fitZoom));
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(parent);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widthPx, heightPx]);
+
   useEffect(() => {
     const transformer = transformerRef.current;
     if (!transformer) return;
@@ -207,6 +243,11 @@ export function CardCanvas() {
             ref={transformerRef}
             rotateEnabled
             keepRatio={false}
+            anchorSize={16}
+            anchorCornerRadius={8}
+            anchorStrokeWidth={2}
+            rotateAnchorOffset={28}
+            borderStrokeWidth={2}
             boundBoxFunc={(oldBox, newBox) => (newBox.width < 10 || newBox.height < 10 ? oldBox : newBox)}
           />
         </Layer>

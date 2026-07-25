@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Star, Phone, Mail, FileCheck, Users2, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -20,6 +21,8 @@ const SERVICES = [
   {
     name: "Business Cards",
     href: "/services/business-cards",
+    orderHref: "/services/business-cards/order",
+    image: "/images/homepage/business-cards.jpg",
     price: "from $39",
     sizes: "Standard, square, slim, circle, or leaf shapes",
     bestFor: "Networking, trade shows, front-desk stacks",
@@ -28,6 +31,8 @@ const SERVICES = [
   {
     name: "Postcards",
     href: "/services/postcards",
+    orderHref: "/services/postcards/order",
+    image: "/images/homepage/postcards.jpg",
     price: "from $49",
     sizes: "3×5 up to 6×11, EDDM-ready",
     bestFor: "Mailers, promotions, seasonal campaigns",
@@ -36,6 +41,8 @@ const SERVICES = [
   {
     name: "Banners",
     href: "/services/banners",
+    orderHref: "/services/banners/order",
+    image: "/images/homepage/banners.jpg",
     price: "from $79",
     sizes: "Roll-up stands or vinyl, 24″ up to 10 ft",
     bestFor: "Storefronts, trade shows, events",
@@ -110,11 +117,24 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             {SERVICES.map((service) => (
-              <Link key={service.href} href={service.href} className="group block overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
-                <div className={`h-1.5 w-full ${service.accent}`} />
+              <div key={service.href} className="group overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
+                <Link href={service.href} className="block">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-kc-bg">
+                    <Image
+                      src={service.image}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 33vw, 100vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                    />
+                  </div>
+                  <div className={`h-1.5 w-full ${service.accent}`} />
+                </Link>
                 <div className="p-6">
                   <div className="mb-3 flex items-baseline justify-between gap-2">
-                    <h3 className="text-lg font-bold text-kc-dark">{service.name}</h3>
+                    <Link href={service.href}>
+                      <h3 className="text-lg font-bold text-kc-dark hover:text-kc-teal">{service.name}</h3>
+                    </Link>
                     <span className="shrink-0 text-sm font-semibold text-kc-teal">{service.price}</span>
                   </div>
                   <dl className="space-y-1.5 text-sm text-kc-muted">
@@ -127,11 +147,18 @@ export default async function HomePage() {
                       <dd>{service.bestFor}</dd>
                     </div>
                   </dl>
-                  <div className="mt-5 flex items-center gap-1 text-sm font-semibold text-kc-teal">
-                    View {service.name} <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  <div className="mt-5 flex items-center gap-3">
+                    <Button asChild size="sm" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
+                      <Link href={service.orderHref}>
+                        Order Now <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                      </Link>
+                    </Button>
+                    <Link href={service.href} className="text-sm font-semibold text-kc-teal hover:underline">
+                      View details
+                    </Link>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>

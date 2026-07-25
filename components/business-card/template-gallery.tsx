@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CATEGORIES } from "@/lib/business-card/templates/categories";
 import { STYLE_TAGS } from "@/lib/business-card/templates/categories";
+import { PRODUCT_ROUTE_SEGMENT, type DesignProduct } from "@/lib/business-card/print-spec";
+import { CreateWithAiDialog } from "@/components/business-card/create-with-ai-dialog";
 
 interface TemplateSummary {
   id: string;
@@ -21,34 +23,44 @@ interface TemplateSummary {
   thumbnailBack: string | null;
 }
 
-const RECENT_KEY = "kc-card-recent-templates";
+function recentKeyFor(product: DesignProduct): string {
+  return `kc-recent-templates-${product}`;
+}
 
-function getRecent(): string[] {
+function getRecent(product: DesignProduct): string[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+    return JSON.parse(window.localStorage.getItem(recentKeyFor(product)) ?? "[]");
   } catch {
     return [];
   }
 }
 
-export function TemplateGallery() {
+const THUMB_ASPECT: Record<DesignProduct, string> = {
+  "business-card": "aspect-[7/4.2]",
+  postcard: "aspect-[3/2]",
+  banner: "aspect-[4/3]",
+};
+
+export function TemplateGallery({ product = "business-card" }: { product?: DesignProduct }) {
   const [templates, setTemplates] = useState<TemplateSummary[] | null>(null);
   const [error, setError] = useState(false);
   const [industry, setIndustry] = useState("all");
   const [style, setStyle] = useState("all");
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
+  const routeSegment = PRODUCT_ROUTE_SEGMENT[product];
+  const thumbAspect = THUMB_ASPECT[product];
 
   useEffect(() => {
     // localStorage isn't available during SSR, so this can only be read post-mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setRecent(getRecent());
-  }, []);
+    setRecent(getRecent(product));
+  }, [product]);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/card-templates")
+    fetch(`/api/card-templates?product=${product}`)
       .then((res) => {
         if (!res.ok) throw new Error("failed");
         return res.json();
@@ -62,7 +74,7 @@ export function TemplateGallery() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [product]);
 
   const filtered = useMemo(() => {
     if (!templates) return [];
@@ -83,12 +95,12 @@ export function TemplateGallery() {
     return (
       <div className="rounded-xl border border-dashed border-red-200 bg-red-50 py-16 text-center text-sm text-red-700">
         Couldn&apos;t load templates right now. <button onClick={() => window.location.reload()} className="font-semibold underline">Try again</button>, or{" "}
-        <Link href="/services/business-cards/design/new" className="font-semibold underline">start from a blank card</Link>.
+        <Link href={`/services/${routeSegment}/design/new`} className="font-semibold underline">start from a blank design</Link>.
       </div>
     );
   }
 
-  if (!templates) return <GallerySkeleton />;
+  if (!templates) return <GallerySkeleton aspect={thumbAspect} />;
 
   return (
     <div className="space-y-8">
@@ -107,17 +119,20 @@ export function TemplateGallery() {
         </select>
       </div>
 
-      <Link
-        href="/services/business-cards/design/new"
-        className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-kc-teal/40 bg-kc-teal/5 px-6 py-5 text-sm font-semibold text-kc-teal transition-colors hover:bg-kc-teal/10"
-      >
-        <Sparkles className="h-4 w-4" /> Start From a Blank Card
-      </Link>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Link
+          href={`/services/${routeSegment}/design/new`}
+          className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-kc-teal/40 bg-kc-teal/5 px-6 py-5 text-sm font-semibold text-kc-teal transition-colors hover:bg-kc-teal/10"
+        >
+          <Sparkles className="h-4 w-4" /> Start From a Blank Design
+        </Link>
+        <CreateWithAiDialog product={product} />
+      </div>
 
       {recentTemplates.length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-semibold text-kc-dark">Recently Used</h2>
-          <TemplateGrid templates={recentTemplates} />
+          <TemplateGrid templates={recentTemplates} product={product} routeSegment={routeSegment} thumbAspect={thumbAspect} />
         </section>
       )}
 
@@ -130,27 +145,27 @@ export function TemplateGallery() {
             No templates match your filters. Try a different search or category.
           </div>
         ) : (
-          <TemplateGrid templates={filtered} />
+          <TemplateGrid templates={filtered} product={product} routeSegment={routeSegment} thumbAspect={thumbAspect} />
         )}
       </section>
     </div>
   );
 }
 
-function TemplateGrid({ templates }: { templates: TemplateSummary[] }) {
+function TemplateGrid({ templates, product, routeSegment, thumbAspect }: { templates: TemplateSummary[]; product: DesignProduct; routeSegment: string; thumbAspect: string }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {templates.map((t) => (
         <Link
           key={t.slug}
-          href={`/services/business-cards/design/t-${t.slug}`}
+          href={`/services/${routeSegment}/design/t-${t.slug}`}
           onClick={() => {
-            const current = getRecent().filter((s) => s !== t.slug);
-            window.localStorage.setItem(RECENT_KEY, JSON.stringify([t.slug, ...current].slice(0, 8)));
+            const current = getRecent(product).filter((s) => s !== t.slug);
+            window.localStorage.setItem(recentKeyFor(product), JSON.stringify([t.slug, ...current].slice(0, 8)));
           }}
           className="group overflow-hidden rounded-xl border border-kc-border bg-white transition-shadow hover:shadow-lg"
         >
-          <div className="aspect-[7/4.2] bg-kc-bg">
+          <div className={`${thumbAspect} bg-kc-bg`}>
             {t.thumbnailFront ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={t.thumbnailFront} alt={t.title} className="h-full w-full object-cover" loading="lazy" />
@@ -175,11 +190,11 @@ function TemplateGrid({ templates }: { templates: TemplateSummary[] }) {
   );
 }
 
-function GallerySkeleton() {
+function GallerySkeleton({ aspect }: { aspect: string }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
       {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="aspect-[7/4.2] animate-pulse rounded-xl bg-kc-bg" />
+        <div key={i} className={`${aspect} animate-pulse rounded-xl bg-kc-bg`} />
       ))}
     </div>
   );

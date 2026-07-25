@@ -161,3 +161,29 @@ export function blankCardDesign(title = "Untitled Design"): CardDesign {
     back: emptyCardSide(),
   };
 }
+
+/** Same as emptyCardSide() but at an arbitrary physical size — used for postcards/banners, which
+ * (unlike the single fixed business-card size) come in several sizes the customer picks from. */
+export function emptySideAtSize(size: { trimWidthIn: number; trimHeightIn: number; bleedIn: number; safeZoneInsetIn: number }): CardSide {
+  return CardSideSchema.parse({
+    physicalWidthIn: size.trimWidthIn + size.bleedIn * 2,
+    physicalHeightIn: size.trimHeightIn + size.bleedIn * 2,
+    bleedIn: size.bleedIn,
+    safeZoneInsetIn: size.safeZoneInsetIn,
+    background: { type: "solid", color: "#FFFFFF", gradient: null },
+    elements: [],
+  });
+}
+
+export function blankDesignAtSize(
+  size: { trimWidthIn: number; trimHeightIn: number; bleedIn: number; safeZoneInsetIn: number },
+  title = "Untitled Design"
+): CardDesign {
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    title,
+    templateId: null,
+    front: emptySideAtSize(size),
+    back: emptySideAtSize(size),
+  };
+}

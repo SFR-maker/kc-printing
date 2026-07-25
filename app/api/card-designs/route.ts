@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { CardSideSchema } from "@/lib/business-card/schema";
+import { safeClerkUserId } from "@/lib/safe-auth";
 
 const createSchema = z.object({
   title: z.string().min(1).max(120).default("Untitled Design"),
   templateId: z.string().nullable().optional(),
+  product: z.enum(["BUSINESS_CARD", "POSTCARD", "BANNER"]).default("BUSINESS_CARD"),
   front: CardSideSchema,
   back: CardSideSchema,
   anonymousToken: z.string().optional(),
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid design", details: parsed.error.flatten() }, { status: 400 });
 
-  const { userId: clerkId } = await auth();
+  const clerkId = await safeClerkUserId();
   let userId: string | null = null;
   if (clerkId) {
     const user = await db.user.findUnique({ where: { clerkId } });
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
     data: {
       userId,
       templateId: parsed.data.templateId ?? null,
+      product: parsed.data.product,
       title: parsed.data.title,
       front: parsed.data.front,
       back: parsed.data.back,
@@ -39,7 +41,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
-  const { userId: clerkId } = await auth();
+  const clerkId = await safeClerkUserId();
   if (!clerkId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const user = await db.user.findUnique({ where: { clerkId } });

@@ -34,6 +34,15 @@ describe("exportCardPdf", () => {
     expect(result.buffer.toString("latin1")).toMatch(/\/Count\s+2/);
   }, 15000);
 
+  it("sizes the PDF from the design's own physical dimensions, not a fixed business-card size", async () => {
+    // 6x4in postcard trim + 0.125in bleed = 6.25 x 4.25in physical.
+    const front = { ...emptyCardSide(), physicalWidthIn: 6.25, physicalHeightIn: 4.25 };
+    const back = { ...emptyCardSide(), physicalWidthIn: 6.25, physicalHeightIn: 4.25 };
+    const result = await exportCardPdf(front, back);
+    expect(result.widthPt).toBeCloseTo(6.25 * 72, 5);
+    expect(result.heightPt).toBeCloseTo(4.25 * 72, 5);
+  }, 15000);
+
   it("embeds the real curated font in exported text, not a Helvetica fallback", async () => {
     const front = emptyCardSide();
     front.elements.push({

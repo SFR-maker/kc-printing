@@ -61,3 +61,58 @@ export async function generateWithOpenRouter(opts: GenerateOptions): Promise<Gen
 
   return { text, model: data.model ?? model, tokensUsed, costUsd };
 }
+
+export interface GenerateImageOptions {
+  prompt: string;
+  model?: string;
+}
+
+export interface GenerateImageResult {
+  /** data: URL (e.g. "data:image/png;base64,...") */
+  dataUrl: string;
+  model: string;
+}
+
+const NANO_BANANA_MODEL = "google/gemini-3.1-flash-image";
+
+/**
+ * Generates an image via OpenRouter's Gemini image models ("nano banana"). Unlike
+ * generateWithOpenRouter, this has no dev/test fallback — callers that need graceful
+ * degradation (e.g. a customer-facing feature) should catch and handle failures themselves,
+ * since a placeholder image isn't a meaningful fallback the way placeholder text is.
+ */
+export async function generateImageWithOpenRouter(opts: GenerateImageOptions): Promise<GenerateImageResult> {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is not set");
+
+  const model = opts.model ?? NANO_BANANA_MODEL;
+  const res = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+      "X-Title": "KC Printing",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: opts.prompt }],
+      modalities: ["image", "text"],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`OpenRouter image error: ${err}`);
+  }
+
+  const data = await res.json() as {
+    model: string;
+    choices: { message: { images?: { image_url: { url: string } }[] } }[];
+  };
+
+  const dataUrl = data.choices[0]?.message?.images?.[0]?.image_url?.url;
+  if (!dataUrl) throw new Error("OpenRouter returned no image");
+
+  return { dataUrl, model: data.model ?? model };
+}

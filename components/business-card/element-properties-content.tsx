@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { EDITOR_FONTS } from "@/lib/business-card/fonts";
 import { recolorIconElement } from "@/lib/business-card/icon-to-image";
+import { AlignTools } from "./align-tools";
 import type { CardElement, TextElement, ShapeElement, ImageElement, QrElement } from "@/lib/business-card/schema";
 
 /** Full precise-control panel for the selected element — X/Y/size/rotation, per-type styling, and
@@ -54,6 +55,10 @@ export function ElementPropertiesContent() {
         <IconBtn label="Forward" onClick={() => reorderSelected("forward")}><ChevronUp className="h-3.5 w-3.5" /></IconBtn>
         <IconBtn label="Backward" onClick={() => reorderSelected("backward")}><ChevronDown className="h-3.5 w-3.5" /></IconBtn>
         <IconBtn label="Send to back" onClick={() => reorderSelected("back")}><SendToBack className="h-3.5 w-3.5" /></IconBtn>
+      </div>
+
+      <div className="border-t border-kc-border pt-3">
+        <AlignTools />
       </div>
 
       {single && (

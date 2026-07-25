@@ -6,15 +6,24 @@ import type Konva from "konva";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import { ElementNode } from "./element-node";
 import { useKeyboardShortcuts } from "./use-keyboard-shortcuts";
+import { computeSnap, computeGridSnap, type Guide } from "@/lib/business-card/snapping";
 import type { TextElement } from "@/lib/business-card/schema";
 
 export const PX_PER_IN = 200;
+const GRID_SIZE_IN = 0.25;
 
 interface MarqueeRect {
   x: number;
   y: number;
   width: number;
   height: number;
+}
+
+interface DragState {
+  /** ids of every element being moved together (the dragged one plus any co-selected siblings) */
+  ids: string[];
+  /** each id's position (inches) at the start of the gesture */
+  origin: Map<string, { x: number; y: number }>;
 }
 
 export function CardCanvas() {
@@ -26,6 +35,7 @@ export function CardCanvas() {
   const showGrid = useCardEditorStore((s) => s.showGrid);
   const setSelected = useCardEditorStore((s) => s.setSelected);
   const updateElement = useCardEditorStore((s) => s.updateElement);
+  const updateElements = useCardEditorStore((s) => s.updateElements);
 
   const side = activeSide === "front" ? design.front : design.back;
   const widthPx = side.physicalWidthIn * PX_PER_IN;
@@ -35,6 +45,8 @@ export function CardCanvas() {
   const transformerRef = useRef<Konva.Transformer>(null);
   const nodeRefs = useRef<Map<string, Konva.Group>>(new Map());
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  const [guides, setGuides] = useState<Guide[]>([]);
 
   const [marquee, setMarquee] = useState<MarqueeRect | null>(null);
   const marqueeStart = useRef<{ x: number; y: number } | null>(null);
@@ -80,7 +92,10 @@ export function CardCanvas() {
       const availH = parent.clientHeight - paddingY;
       if (availW <= 0 || availH <= 0) return;
       const fitZoom = Math.min(availW / widthPx, availH / heightPx, 1);
-      setZoom(Math.max(0.25, fitZoom));
+      // Floor is intentionally low, not the ~25% that's plenty for a business card — a 33x81in
+      // roll-up banner can genuinely need single-digit zoom to fit on screen at all, and flooring
+      // it higher just makes most of the design scroll out of view instead of shrinking to fit.
+      setZoom(Math.max(0.03, fitZoom));
     };
 
     fit();
@@ -113,6 +128,79 @@ export function CardCanvas() {
     },
     [setSelected]
   );
+
+  // Dragging one element moves every co-selected sibling by the same delta, and snaps against the
+  // canvas (edges/center) and other elements (edges/centers), or the grid when it's toggled on.
+  // All of this happens by moving Konva nodes directly rather than through React state, so it stays
+  // smooth at 60fps and doesn't fight Konva's own native drag handling of the grabbed node — the
+  // store is only touched once, on drag end, which is also the single point that becomes undoable.
+  const handleElementDragStart = useCallback(
+    (id: string) => {
+      const current = useCardEditorStore.getState().selectedIds;
+      const ids = current.includes(id) ? current : [id];
+      if (!current.includes(id)) setSelected([id]);
+      const origin = new Map<string, { x: number; y: number }>();
+      for (const elId of ids) {
+        const el = side.elements.find((e) => e.id === elId);
+        if (el) origin.set(elId, { x: el.x, y: el.y });
+      }
+      dragStateRef.current = { ids, origin };
+    },
+    [side.elements, setSelected]
+  );
+
+  const handleElementDragMove = useCallback(
+    (id: string, xPx: number, yPx: number) => {
+      const drag = dragStateRef.current;
+      const primaryOrigin = drag?.origin.get(id);
+      const primaryEl = side.elements.find((e) => e.id === id);
+      if (!drag || !primaryOrigin || !primaryEl) return;
+
+      let dx = xPx / PX_PER_IN - primaryOrigin.x;
+      let dy = yPx / PX_PER_IN - primaryOrigin.y;
+
+      const movingBox = { x: primaryOrigin.x + dx, y: primaryOrigin.y + dy, width: primaryEl.width, height: primaryEl.height };
+
+      if (showGrid) {
+        const gridSnap = computeGridSnap(movingBox, GRID_SIZE_IN);
+        dx += gridSnap.dx;
+        dy += gridSnap.dy;
+        setGuides([]);
+      } else {
+        const otherBoxes = side.elements
+          .filter((e) => !drag.ids.includes(e.id) && e.visible)
+          .map((e) => ({ x: e.x, y: e.y, width: e.width, height: e.height }));
+        const snap = computeSnap(movingBox, side.physicalWidthIn, side.physicalHeightIn, otherBoxes);
+        dx += snap.dx;
+        dy += snap.dy;
+        setGuides(snap.guides);
+      }
+
+      for (const elId of drag.ids) {
+        const o = drag.origin.get(elId);
+        const node = nodeRefs.current.get(elId);
+        if (o && node) node.position({ x: (o.x + dx) * PX_PER_IN, y: (o.y + dy) * PX_PER_IN });
+      }
+      transformerRef.current?.forceUpdate();
+      stageRef.current?.batchDraw();
+    },
+    [side.elements, side.physicalWidthIn, side.physicalHeightIn, showGrid]
+  );
+
+  const handleElementDragEnd = useCallback(() => {
+    const drag = dragStateRef.current;
+    if (!drag) return;
+    const patches = drag.ids
+      .map((elId) => {
+        const node = nodeRefs.current.get(elId);
+        if (!node) return null;
+        return { id: elId, patch: { x: node.x() / PX_PER_IN, y: node.y() / PX_PER_IN } };
+      })
+      .filter((p): p is { id: string; patch: { x: number; y: number } } => p !== null);
+    updateElements(activeSide, patches);
+    dragStateRef.current = null;
+    setGuides([]);
+  }, [activeSide, updateElements]);
 
   const handleStageMouseDown = useCallback(
     (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -239,6 +327,9 @@ export function CardCanvas() {
                   isSelected={selectedIds.includes(el.id)}
                   onSelect={handleSelect}
                   onChange={(id, patch) => updateElement(activeSide, id, patch)}
+                  onDragStart={handleElementDragStart}
+                  onDragMove={handleElementDragMove}
+                  onDragEnd={handleElementDragEnd}
                   onDblClickText={startEditText}
                   registerRef={registerRef}
                 />
@@ -267,6 +358,18 @@ export function CardCanvas() {
         {marquee && (
           <Layer listening={false}>
             <Rect x={marquee.x} y={marquee.y} width={marquee.width} height={marquee.height} fill="#0A6E6320" stroke="#0A6E63" strokeWidth={1} />
+          </Layer>
+        )}
+
+        {guides.length > 0 && (
+          <Layer listening={false}>
+            {guides.map((g, i) =>
+              g.orientation === "v" ? (
+                <Line key={i} points={[g.pos * PX_PER_IN, 0, g.pos * PX_PER_IN, heightPx]} stroke="#EC4899" strokeWidth={1} dash={[4, 4]} />
+              ) : (
+                <Line key={i} points={[0, g.pos * PX_PER_IN, widthPx, g.pos * PX_PER_IN]} stroke="#EC4899" strokeWidth={1} dash={[4, 4]} />
+              )
+            )}
           </Layer>
         )}
       </Stage>

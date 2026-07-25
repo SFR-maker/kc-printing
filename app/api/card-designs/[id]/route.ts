@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { CardSideSchema } from "@/lib/business-card/schema";
+import { safeClerkUserId } from "@/lib/safe-auth";
 
 const updateSchema = z.object({
   title: z.string().min(1).max(120).optional(),
@@ -13,7 +13,7 @@ const updateSchema = z.object({
 });
 
 async function getOwnedDesign(id: string) {
-  const { userId: clerkId } = await auth();
+  const clerkId = await safeClerkUserId();
   if (!clerkId) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }), design: null };
 
   const user = await db.user.findUnique({ where: { clerkId } });

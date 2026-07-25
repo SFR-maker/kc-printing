@@ -22,6 +22,70 @@ export const MIN_PRINT_DPI = 150;
 export const RECOMMENDED_DPI = 300;
 export const MIN_FONT_SIZE_PT = 6;
 
+export type DesignProduct = "business-card" | "postcard" | "banner";
+
+export interface SizePreset {
+  key: string;
+  label: string;
+  trimWidthIn: number;
+  trimHeightIn: number;
+  bleedIn: number;
+  safeZoneInsetIn: number;
+}
+
+export const BUSINESS_CARD_SIZES: SizePreset[] = [
+  { key: "standard", label: "Standard (3.5 x 2 in)", trimWidthIn: 3.5, trimHeightIn: 2, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+];
+
+// Real sizes from lib/service-data.ts's Postcards spec ("Popular Sizes").
+export const POSTCARD_SIZES: SizePreset[] = [
+  { key: "3x5", label: "3 x 5 in", trimWidthIn: 5, trimHeightIn: 3, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+  { key: "4x6", label: "4 x 6 in", trimWidthIn: 6, trimHeightIn: 4, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+  { key: "5x7", label: "5 x 7 in", trimWidthIn: 7, trimHeightIn: 5, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+  { key: "5.5x8.5", label: "5.5 x 8.5 in", trimWidthIn: 8.5, trimHeightIn: 5.5, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+  { key: "6x9", label: "6 x 9 in", trimWidthIn: 9, trimHeightIn: 6, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+  { key: "6x11", label: "6 x 11 in", trimWidthIn: 11, trimHeightIn: 6, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+];
+
+// Real sizes from lib/service-data.ts's Banners spec ("Roll-Up Sizes" / "Vinyl Sizes"). Roll-up
+// stands print at a much lower viewing-distance DPI than small format, but the editor still works
+// in inches, so only the safe zone differs (roll-ups need a bigger inset for the stand's clamp bar).
+export const BANNER_SIZES: SizePreset[] = [
+  { key: "rollup-24x81", label: "Roll-Up Stand 24 x 81 in", trimWidthIn: 24, trimHeightIn: 81, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "rollup-33x81", label: "Roll-Up Stand 33 x 81 in", trimWidthIn: 33, trimHeightIn: 81, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "rollup-36x81", label: "Roll-Up Stand 36 x 81 in", trimWidthIn: 36, trimHeightIn: 81, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "tabletop-24x63", label: "Table-Top Stand 24 x 63 in", trimWidthIn: 24, trimHeightIn: 63, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "vinyl-2x4", label: "Vinyl Banner 2 x 4 ft", trimWidthIn: 48, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x6", label: "Vinyl Banner 3 x 6 ft", trimWidthIn: 72, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x8", label: "Vinyl Banner 4 x 8 ft", trimWidthIn: 96, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x10", label: "Vinyl Banner 4 x 10 ft", trimWidthIn: 120, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+];
+
+export function sizePresetsFor(product: DesignProduct): SizePreset[] {
+  if (product === "postcard") return POSTCARD_SIZES;
+  if (product === "banner") return BANNER_SIZES;
+  return BUSINESS_CARD_SIZES;
+}
+
+export function defaultSizeFor(product: DesignProduct): SizePreset {
+  return sizePresetsFor(product)[0];
+}
+
+/** Plural URL segment used under /services/{segment}/... */
+export const PRODUCT_ROUTE_SEGMENT: Record<DesignProduct, string> = {
+  "business-card": "business-cards",
+  postcard: "postcards",
+  banner: "banners",
+};
+
+/** Matches the Prisma DesignProduct enum values (kept as plain strings here so this file has no
+ * dependency on the generated Prisma client). */
+export const PRODUCT_DB_VALUE: Record<DesignProduct, "BUSINESS_CARD" | "POSTCARD" | "BANNER"> = {
+  "business-card": "BUSINESS_CARD",
+  postcard: "POSTCARD",
+  banner: "BANNER",
+};
+
 export function inchesToPx(inches: number, dpi: number = DPI): number {
   return inches * dpi;
 }

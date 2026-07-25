@@ -2,8 +2,11 @@ import { create } from "zustand";
 import type { CardDesign, CardElement, CardSide } from "./schema";
 import { blankCardDesign } from "./schema";
 import { recolorSide } from "./recolor";
+import type { DesignProduct } from "./print-spec";
 
 export type SideKey = "front" | "back";
+export type AlignMode = "left" | "centerH" | "right" | "top" | "centerV" | "bottom";
+export type DistributeAxis = "horizontal" | "vertical";
 
 interface HistoryEntry {
   front: CardSide;
@@ -24,12 +27,16 @@ interface EditorState {
   showGrid: boolean;
   dirty: boolean;
   designId: string | null;
+  /** Which product this editing session is for — set once when the editor mounts and read by
+   * anything that needs to call a product-scoped API (the template switcher, mainly), so it
+   * doesn't have to be threaded as a prop through every intermediate panel/sheet component. */
+  product: DesignProduct;
   /** The 3-color palette the current template was authored with, if any — tracked separately from
    * the design content so color-variant swatches know which exact hex values to remap from, and is
    * updated to the new palette after each swap so repeated variant clicks keep working correctly. */
   activePalette: string[] | null;
 
-  loadDesign: (design: CardDesign, designId?: string | null, palette?: string[] | null) => void;
+  loadDesign: (design: CardDesign, designId?: string | null, palette?: string[] | null, product?: DesignProduct) => void;
   applyColorVariant: (newPalette: string[]) => void;
   setActiveSide: (side: SideKey) => void;
   setSelected: (ids: string[]) => void;
@@ -39,6 +46,8 @@ interface EditorState {
   addElement: (side: SideKey, element: CardElement, select?: boolean) => void;
   updateElement: (side: SideKey, id: string, patch: Partial<CardElement>) => void;
   updateElements: (side: SideKey, patches: { id: string; patch: Partial<CardElement> }[]) => void;
+  alignSelected: (mode: AlignMode) => void;
+  distributeSelected: (axis: DistributeAxis) => void;
   removeSelected: () => void;
   duplicateSelected: () => void;
   copySelected: () => void;
@@ -79,10 +88,11 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   showGrid: false,
   dirty: false,
   designId: null,
+  product: "business-card",
   activePalette: null,
 
-  loadDesign: (design, designId = null, palette = null) =>
-    set({ design, designId, activePalette: palette, past: [], future: [], selectedIds: [], dirty: false, activeSide: "front" }),
+  loadDesign: (design, designId = null, palette = null, product = "business-card") =>
+    set({ design, designId, product, activePalette: palette, past: [], future: [], selectedIds: [], dirty: false, activeSide: "front" }),
 
   applyColorVariant: (newPalette) => {
     const s = get();
@@ -122,17 +132,107 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
 
   updateElement: (side, id, patch) => {
     const s = get();
+    const history = snapshot(s.design);
     const currentSide = sideOf(s.design, side);
     const nextElements = currentSide.elements.map((el) => (el.id === id ? ({ ...el, ...patch } as CardElement) : el));
-    set({ design: { ...s.design, [side]: { ...currentSide, elements: nextElements } }, dirty: true });
+    set({
+      design: { ...s.design, [side]: { ...currentSide, elements: nextElements } },
+      past: [...s.past, history].slice(-MAX_HISTORY),
+      future: [],
+      dirty: true,
+    });
   },
 
   updateElements: (side, patches) => {
     const s = get();
+    if (patches.length === 0) return;
+    const history = snapshot(s.design);
     const currentSide = sideOf(s.design, side);
     const byId = new Map(patches.map((p) => [p.id, p.patch]));
     const nextElements = currentSide.elements.map((el) => (byId.has(el.id) ? ({ ...el, ...byId.get(el.id) } as CardElement) : el));
-    set({ design: { ...s.design, [side]: { ...currentSide, elements: nextElements } }, dirty: true });
+    set({
+      design: { ...s.design, [side]: { ...currentSide, elements: nextElements } },
+      past: [...s.past, history].slice(-MAX_HISTORY),
+      future: [],
+      dirty: true,
+    });
+  },
+
+  alignSelected: (mode) => {
+    const s = get();
+    if (s.selectedIds.length === 0) return;
+    const currentSide = sideOf(s.design, s.activeSide);
+    const selected = currentSide.elements.filter((el) => s.selectedIds.includes(el.id) && !el.locked);
+    if (selected.length === 0) return;
+
+    // One element: align to the card. Two or more: align to the selection's own bounding box —
+    // the standard behavior in design tools, since "align to card" would just stack everything
+    // in one spot.
+    const bounds =
+      selected.length === 1
+        ? { left: 0, top: 0, right: currentSide.physicalWidthIn, bottom: currentSide.physicalHeightIn }
+        : selected.reduce(
+            (acc, el) => ({
+              left: Math.min(acc.left, el.x),
+              top: Math.min(acc.top, el.y),
+              right: Math.max(acc.right, el.x + el.width),
+              bottom: Math.max(acc.bottom, el.y + el.height),
+            }),
+            { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }
+          );
+
+    const patches = selected.map((el) => {
+      let x = el.x;
+      let y = el.y;
+      switch (mode) {
+        case "left": x = bounds.left; break;
+        case "centerH": x = bounds.left + (bounds.right - bounds.left - el.width) / 2; break;
+        case "right": x = bounds.right - el.width; break;
+        case "top": y = bounds.top; break;
+        case "centerV": y = bounds.top + (bounds.bottom - bounds.top - el.height) / 2; break;
+        case "bottom": y = bounds.bottom - el.height; break;
+      }
+      return { id: el.id, patch: { x, y } };
+    });
+
+    get().updateElements(s.activeSide, patches);
+  },
+
+  distributeSelected: (axis) => {
+    const s = get();
+    const currentSide = sideOf(s.design, s.activeSide);
+    const selected = currentSide.elements.filter((el) => s.selectedIds.includes(el.id) && !el.locked);
+    if (selected.length < 3) return;
+
+    if (axis === "horizontal") {
+      const sorted = [...selected].sort((a, b) => a.x - b.x);
+      const first = sorted[0];
+      const last = sorted[sorted.length - 1];
+      const totalSpan = last.x + last.width - first.x;
+      const totalWidth = sorted.reduce((sum, el) => sum + el.width, 0);
+      const gap = (totalSpan - totalWidth) / (sorted.length - 1);
+      let cursor = first.x;
+      const patches = sorted.map((el) => {
+        const patch = { id: el.id, patch: { x: cursor } };
+        cursor += el.width + gap;
+        return patch;
+      });
+      get().updateElements(s.activeSide, patches);
+    } else {
+      const sorted = [...selected].sort((a, b) => a.y - b.y);
+      const first = sorted[0];
+      const last = sorted[sorted.length - 1];
+      const totalSpan = last.y + last.height - first.y;
+      const totalHeight = sorted.reduce((sum, el) => sum + el.height, 0);
+      const gap = (totalSpan - totalHeight) / (sorted.length - 1);
+      let cursor = first.y;
+      const patches = sorted.map((el) => {
+        const patch = { id: el.id, patch: { y: cursor } };
+        cursor += el.height + gap;
+        return patch;
+      });
+      get().updateElements(s.activeSide, patches);
+    }
   },
 
   removeSelected: () => {
@@ -264,7 +364,10 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   canUndo: () => get().past.length > 0,
   canRedo: () => get().future.length > 0,
 
-  setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.25, zoom)) }),
+  // Floor matches card-canvas.tsx's auto-fit floor (not a higher "always readable" value) — a
+  // 33x81in roll-up banner genuinely needs single-digit zoom to fit on screen, and this is the
+  // one place that clamp is actually enforced (auto-fit calls this same action).
+  setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.03, zoom)) }),
   toggleGuides: () => set((s) => ({ showGuides: !s.showGuides })),
   toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
 

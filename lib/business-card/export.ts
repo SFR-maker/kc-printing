@@ -1,7 +1,8 @@
 import sharp from "sharp";
 import path from "path";
-import { renderSideToSvg, resolveSideImages } from "./render-svg";
-import { BLEED_PX_HEIGHT, BLEED_PX_WIDTH, BLEED_HEIGHT_IN, BLEED_WIDTH_IN, DPI } from "./print-spec";
+import { renderSideToSvg } from "./render-svg";
+import { resolveSideImages } from "./resolve-images-server";
+import { DPI } from "./print-spec";
 import { EDITOR_FONTS } from "./fonts";
 import type { CardSide } from "./schema";
 
@@ -21,8 +22,6 @@ const svgToPdfModule = require("svg-to-pdfkit");
 const SVGtoPDF = (svgToPdfModule.default ?? svgToPdfModule) as (doc: unknown, svg: string, x: number, y: number, opts?: Record<string, unknown>) => void;
 
 const POINTS_PER_INCH = 72;
-const PAGE_WIDTH_PT = BLEED_WIDTH_IN * POINTS_PER_INCH;
-const PAGE_HEIGHT_PT = BLEED_HEIGHT_IN * POINTS_PER_INCH;
 
 /**
  * Registers every curated editor font with the pdfkit document under its exact family name, so
@@ -47,13 +46,18 @@ export interface RasterExportResult {
   dpi: number;
 }
 
-/** Rasterizes a card side to a 300 DPI PNG matching the full-bleed pixel dimensions from the print spec. */
+/** Rasterizes a card side to a 300 DPI PNG matching the side's own full-bleed physical dimensions. */
 export async function exportSidePng(side: CardSide): Promise<RasterExportResult> {
   const resolved = await resolveSideImages(side);
   const svg = renderSideToSvg(resolved, DPI);
   const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
   const meta = await sharp(buffer).metadata();
-  return { buffer, widthPx: meta.width ?? BLEED_PX_WIDTH, heightPx: meta.height ?? BLEED_PX_HEIGHT, dpi: DPI };
+  return {
+    buffer,
+    widthPx: meta.width ?? Math.round(side.physicalWidthIn * DPI),
+    heightPx: meta.height ?? Math.round(side.physicalHeightIn * DPI),
+    dpi: DPI,
+  };
 }
 
 export interface PdfExportResult {
@@ -63,13 +67,20 @@ export interface PdfExportResult {
   pageCount: number;
 }
 
-/** Produces a two-page (front, back) print-ready PDF at the exact bleed trim size with vector text/shapes/QR. */
+/** Produces a two-page (front, back) print-ready PDF at each side's own full-bleed physical size,
+ * in points, with vector text/shapes/QR. Front and back are sized independently in case a design
+ * ever has mismatched side dimensions, though in practice both sides of one design always match. */
 export async function exportCardPdf(front: CardSide, back: CardSide): Promise<PdfExportResult> {
   const [resolvedFront, resolvedBack] = await Promise.all([resolveSideImages(front), resolveSideImages(back)]);
   const frontSvg = renderSideToSvg(resolvedFront);
   const backSvg = renderSideToSvg(resolvedBack);
 
-  const doc = new PDFDocument({ size: [PAGE_WIDTH_PT, PAGE_HEIGHT_PT], margin: 0, autoFirstPage: false });
+  const frontWidthPt = front.physicalWidthIn * POINTS_PER_INCH;
+  const frontHeightPt = front.physicalHeightIn * POINTS_PER_INCH;
+  const backWidthPt = back.physicalWidthIn * POINTS_PER_INCH;
+  const backHeightPt = back.physicalHeightIn * POINTS_PER_INCH;
+
+  const doc = new PDFDocument({ size: [frontWidthPt, frontHeightPt], margin: 0, autoFirstPage: false });
   registerEditorFonts(doc);
   const chunks: Buffer[] = [];
   doc.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -79,22 +90,26 @@ export async function exportCardPdf(front: CardSide, back: CardSide): Promise<Pd
     doc.on("error", reject);
   });
 
-  doc.addPage({ size: [PAGE_WIDTH_PT, PAGE_HEIGHT_PT], margin: 0 });
-  SVGtoPDF(doc, frontSvg, 0, 0, { width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT, assumePt: true });
+  doc.addPage({ size: [frontWidthPt, frontHeightPt], margin: 0 });
+  SVGtoPDF(doc, frontSvg, 0, 0, { width: frontWidthPt, height: frontHeightPt, assumePt: true });
 
-  doc.addPage({ size: [PAGE_WIDTH_PT, PAGE_HEIGHT_PT], margin: 0 });
-  SVGtoPDF(doc, backSvg, 0, 0, { width: PAGE_WIDTH_PT, height: PAGE_HEIGHT_PT, assumePt: true });
+  doc.addPage({ size: [backWidthPt, backHeightPt], margin: 0 });
+  SVGtoPDF(doc, backSvg, 0, 0, { width: backWidthPt, height: backHeightPt, assumePt: true });
 
   doc.end();
   const buffer = await donePromise;
 
-  return { buffer, widthPt: PAGE_WIDTH_PT, heightPt: PAGE_HEIGHT_PT, pageCount: 2 };
+  return { buffer, widthPt: frontWidthPt, heightPt: frontHeightPt, pageCount: 2 };
 }
 
 /** Generates a small preview thumbnail (JPEG) used for template/design gallery cards. */
-export async function exportSideThumbnail(side: CardSide, maxWidthPx = 480): Promise<Buffer> {
+export async function exportSideThumbnail(side: CardSide, maxWidthPx = 480, maxHeightPx = maxWidthPx): Promise<Buffer> {
   const resolved = await resolveSideImages(side);
-  const thumbDpi = Math.max(72, maxWidthPx / side.physicalWidthIn);
+  // Bounded by both dimensions, not just width — a business card fits maxWidthPx comfortably at a
+  // sensible height, but an 81in-tall roll-up banner at the same "just cap width" logic would come
+  // out several thousand pixels tall (physically huge regardless of DPI). No DPI floor here since
+  // this is a display thumbnail, not a print asset — sharpness only needs to hold up at gallery size.
+  const thumbDpi = Math.min(maxWidthPx / side.physicalWidthIn, maxHeightPx / side.physicalHeightIn);
   const svg = renderSideToSvg(resolved, thumbDpi);
   return sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer();
 }

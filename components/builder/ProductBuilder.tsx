@@ -203,7 +203,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         {cardDesignId && (
           <div className="mb-4 flex items-center justify-between rounded-lg border border-kc-teal/30 bg-kc-teal/5 px-4 py-2.5 text-sm">
             <span className="text-kc-dark">Using your custom design from the Design Studio.</span>
-            <a href={`/services/business-cards/design/${cardDesignId}`} className="font-semibold text-kc-teal hover:underline">
+            <a href={`/services/${service.slug}/design/${cardDesignId}`} className="font-semibold text-kc-teal hover:underline">
               Edit design
             </a>
           </div>

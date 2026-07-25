@@ -17,7 +17,7 @@ test.describe("Business card design studio", () => {
     await page.waitForTimeout(300);
     const after = await page.locator("a[href^='/services/business-cards/design/t-']").count();
     expect(after).toBeLessThan(before);
-    expect(after).toBe(5);
+    expect(after).toBe(7);
   });
 
   test("25 - opening a template loads the canvas editor", async ({ page }) => {

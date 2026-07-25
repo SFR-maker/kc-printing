@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Bold, Italic, Copy, Trash2, MoreHorizontal, Lock, Unlock } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Bold, Italic, Copy, Trash2, MoreHorizontal, Lock, Unlock, AlignStartVertical } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { EDITOR_FONTS } from "@/lib/business-card/fonts";
 import { recolorIconElement } from "@/lib/business-card/icon-to-image";
+import { AlignTools } from "./align-tools";
 import type { CardElement, TextElement, ImageElement } from "@/lib/business-card/schema";
 
 interface ElementQuickToolbarProps {
@@ -57,6 +58,7 @@ export function ElementQuickToolbar({ onOpenDetails, variant = "desktop" }: Elem
       )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
+        <AlignPopoverButton />
         <IconBtn label="Duplicate" onClick={duplicateSelected}><Copy className="h-4 w-4" /></IconBtn>
         <IconBtn label={single?.locked ? "Unlock" : "Lock"} onClick={toggleLockSelected}>
           {single?.locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
@@ -64,6 +66,33 @@ export function ElementQuickToolbar({ onOpenDetails, variant = "desktop" }: Elem
         {isMobile && <IconBtn label="More options" onClick={onOpenDetails}><MoreHorizontal className="h-4 w-4" /></IconBtn>}
         <IconBtn label="Delete" onClick={removeSelected}><Trash2 className="h-4 w-4 text-red-500" /></IconBtn>
       </div>
+    </div>
+  );
+}
+
+function AlignPopoverButton() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <IconBtn label="Align" onClick={() => setOpen((v) => !v)}>
+        <AlignStartVertical className="h-4 w-4" />
+      </IconBtn>
+      {open && (
+        <div className="absolute right-0 top-11 z-40 w-56 rounded-xl border border-kc-border bg-white p-3 shadow-xl">
+          <AlignTools compact />
+        </div>
+      )}
     </div>
   );
 }

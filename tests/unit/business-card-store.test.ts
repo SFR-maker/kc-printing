@@ -104,4 +104,94 @@ describe("card editor store", () => {
     for (let i = 0; i < 80; i++) addElement("front", makeText(`t${i}`), false);
     expect(useCardEditorStore.getState().past.length).toBeLessThanOrEqual(60);
   });
+
+  it("undoes a move/property change made via updateElement", () => {
+    const { addElement, updateElement, undo } = useCardEditorStore.getState();
+    addElement("front", makeText("t1"), false);
+    updateElement("front", "t1", { x: 2 } as never);
+    expect(useCardEditorStore.getState().design.front.elements[0].x).toBe(2);
+    undo();
+    expect(useCardEditorStore.getState().design.front.elements[0].x).toBe(0.3);
+  });
+
+  it("undoes a batched updateElements change as a single step", () => {
+    const { addElement, updateElements, undo } = useCardEditorStore.getState();
+    addElement("front", makeText("t1"), false);
+    addElement("front", makeText("t2"), false);
+    updateElements("front", [{ id: "t1", patch: { x: 1 } }, { id: "t2", patch: { x: 1.5 } }]);
+    undo();
+    const elements = useCardEditorStore.getState().design.front.elements;
+    expect(elements.find((e) => e.id === "t1")!.x).toBe(0.3);
+    expect(elements.find((e) => e.id === "t2")!.x).toBe(0.3);
+  });
+
+  describe("alignSelected", () => {
+    it("aligns a single element to the card edges/center", () => {
+      const { addElement, setSelected, alignSelected } = useCardEditorStore.getState();
+      addElement("front", { ...makeText("t1"), x: 0.5, y: 0.5, width: 1, height: 0.3 }, false);
+      setSelected(["t1"]);
+
+      alignSelected("left");
+      expect(useCardEditorStore.getState().design.front.elements[0].x).toBe(0);
+
+      alignSelected("centerH");
+      const side = useCardEditorStore.getState().design.front;
+      expect(useCardEditorStore.getState().design.front.elements[0].x).toBeCloseTo((side.physicalWidthIn - 1) / 2, 5);
+
+      alignSelected("top");
+      expect(useCardEditorStore.getState().design.front.elements[0].y).toBe(0);
+    });
+
+    it("aligns multiple elements to their combined selection bounding box", () => {
+      const { addElement, setSelected, alignSelected } = useCardEditorStore.getState();
+      addElement("front", { ...makeText("t1"), x: 0.2, y: 0.2, width: 0.5, height: 0.2 }, false);
+      addElement("front", { ...makeText("t2"), x: 1.5, y: 1.0, width: 0.5, height: 0.2 }, false);
+      setSelected(["t1", "t2"]);
+
+      alignSelected("left");
+      const elements = useCardEditorStore.getState().design.front.elements;
+      expect(elements.find((e) => e.id === "t1")!.x).toBe(0.2);
+      expect(elements.find((e) => e.id === "t2")!.x).toBe(0.2);
+    });
+
+    it("does not move locked elements", () => {
+      const { addElement, setSelected, alignSelected } = useCardEditorStore.getState();
+      addElement("front", { ...makeText("t1"), x: 0.5, locked: true }, false);
+      setSelected(["t1"]);
+      alignSelected("left");
+      expect(useCardEditorStore.getState().design.front.elements[0].x).toBe(0.5);
+    });
+  });
+
+  describe("distributeSelected", () => {
+    it("evenly spaces 3+ elements horizontally, keeping the outer two fixed", () => {
+      const { addElement, setSelected, distributeSelected } = useCardEditorStore.getState();
+      addElement("front", { ...makeText("t1"), x: 0, width: 0.2 }, false);
+      addElement("front", { ...makeText("t2"), x: 0.5, width: 0.2 }, false);
+      addElement("front", { ...makeText("t3"), x: 2, width: 0.2 }, false);
+      setSelected(["t1", "t2", "t3"]);
+
+      distributeSelected("horizontal");
+      const elements = useCardEditorStore.getState().design.front.elements;
+      const t1 = elements.find((e) => e.id === "t1")!;
+      const t2 = elements.find((e) => e.id === "t2")!;
+      const t3 = elements.find((e) => e.id === "t3")!;
+      expect(t1.x).toBe(0);
+      expect(t3.x).toBe(2);
+      // gap between t1-t2 should equal gap between t2-t3
+      const gap1 = t2.x - (t1.x + t1.width);
+      const gap2 = t3.x - (t2.x + t2.width);
+      expect(gap1).toBeCloseTo(gap2, 5);
+    });
+
+    it("does nothing with fewer than 3 elements selected", () => {
+      const { addElement, setSelected, distributeSelected } = useCardEditorStore.getState();
+      addElement("front", { ...makeText("t1"), x: 0 }, false);
+      addElement("front", { ...makeText("t2"), x: 1 }, false);
+      setSelected(["t1", "t2"]);
+      distributeSelected("horizontal");
+      const elements = useCardEditorStore.getState().design.front.elements;
+      expect(elements.find((e) => e.id === "t2")!.x).toBe(1);
+    });
+  });
 });

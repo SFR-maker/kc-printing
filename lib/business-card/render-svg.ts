@@ -118,22 +118,3 @@ function renderQr(el: QrElement): string {
 function esc(value: string): string {
   return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" }[c] as string));
 }
-
-/** Fetches remote image URLs and inlines them as base64 data URIs so server-side rasterizers (sharp/pdfkit) don't need network access. */
-export async function resolveSideImages(side: CardSide): Promise<CardSide> {
-  const elements = await Promise.all(
-    side.elements.map(async (el): Promise<CardElement> => {
-      if (el.type !== "image" || el.src.startsWith("data:")) return el;
-      try {
-        const res = await fetch(el.src);
-        if (!res.ok) return el;
-        const buf = Buffer.from(await res.arrayBuffer());
-        const contentType = res.headers.get("content-type") ?? "image/png";
-        return { ...el, src: `data:${contentType};base64,${buf.toString("base64")}` };
-      } catch {
-        return el;
-      }
-    })
-  );
-  return { ...side, elements };
-}

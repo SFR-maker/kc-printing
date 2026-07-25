@@ -7,6 +7,7 @@ import { AlertTriangle } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import type { CardDesign } from "@/lib/business-card/schema";
 import { validateDesign } from "@/lib/business-card/validate";
+import { PRODUCT_ROUTE_SEGMENT, PRODUCT_DB_VALUE, type DesignProduct } from "@/lib/business-card/print-spec";
 import { getAnonymousToken, saveDesignLocally, loadDesignLocally } from "@/lib/business-card/local-autosave";
 import { useIsMobile } from "./use-media-query";
 import { CardCanvas } from "./card-canvas";
@@ -27,10 +28,12 @@ interface CardEditorProps {
   designId: string | null;
   isSignedIn: boolean;
   templatePalette?: string[] | null;
+  product?: DesignProduct;
 }
 
-export function CardEditor({ initialDesign, designId: initialDesignId, isSignedIn, templatePalette = null }: CardEditorProps) {
+export function CardEditor({ initialDesign, designId: initialDesignId, isSignedIn, templatePalette = null, product = "business-card" }: CardEditorProps) {
   const router = useRouter();
+  const routeSegment = PRODUCT_ROUTE_SEGMENT[product];
   const isMobile = useIsMobile();
   const loadDesign = useCardEditorStore((s) => s.loadDesign);
   const design = useCardEditorStore((s) => s.design);
@@ -49,7 +52,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    loadDesign(initialDesign, initialDesignId, templatePalette);
+    loadDesign(initialDesign, initialDesignId, templatePalette, product);
     if (!initialDesignId) {
       // localStorage isn't available during SSR, so this can only be read post-mount.
       const local = loadDesignLocally(LOCAL_KEY);
@@ -65,7 +68,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
     autosaveTimer.current = setTimeout(async () => {
       saveDesignLocally(LOCAL_KEY, design);
       if (isSignedIn) {
-        await persist(design, designId, () => {}, router, false);
+        await persist(design, designId, product, () => {}, false);
       }
       markSaved();
     }, AUTOSAVE_DEBOUNCE_MS);
@@ -90,13 +93,13 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
     setSaving(true);
     saveDesignLocally(LOCAL_KEY, design);
     if (isSignedIn) {
-      await persist(design, designId, (newId) => {
-        if (!designId && newId) router.replace(`/services/business-cards/design/${newId}`);
-      }, router, true);
+      await persist(design, designId, product, (newId) => {
+        if (!designId && newId) router.replace(`/services/${routeSegment}/design/${newId}`);
+      }, true);
     }
     markSaved();
     setSaving(false);
-  }, [design, designId, isSignedIn, router, markSaved]);
+  }, [design, designId, isSignedIn, router, markSaved, product, routeSegment]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -140,7 +143,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
           setConfirming(true);
           await handleSave();
           const params = new URLSearchParams({ designId: designId ?? "", package: "gold" });
-          router.push(`/services/business-cards/order?${params.toString()}`);
+          router.push(`/services/${routeSegment}/order?${params.toString()}`);
         }}
       />
     );
@@ -196,8 +199,8 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
 async function persist(
   design: CardDesign,
   designId: string | null,
+  product: DesignProduct,
   onNewId: (id: string) => void,
-  _router: ReturnType<typeof useRouter>,
   throwOnError: boolean
 ) {
   try {
@@ -212,7 +215,14 @@ async function persist(
       const res = await fetch("/api/card-designs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: design.title, templateId: design.templateId, front: design.front, back: design.back, anonymousToken }),
+        body: JSON.stringify({
+          title: design.title,
+          templateId: design.templateId,
+          product: PRODUCT_DB_VALUE[product],
+          front: design.front,
+          back: design.back,
+          anonymousToken,
+        }),
       });
       if (res.ok) {
         const data = await res.json();

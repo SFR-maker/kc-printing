@@ -19,10 +19,11 @@ export function TemplateSwitcher({ onSelected }: { onSelected?: () => void }) {
   const [confirmSlug, setConfirmSlug] = useState<string | null>(null);
   const resetToTemplate = useCardEditorStore((s) => s.resetToTemplate);
   const dirty = useCardEditorStore((s) => s.dirty);
+  const product = useCardEditorStore((s) => s.product);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/card-templates")
+    fetch(`/api/card-templates?product=${product}`)
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((data) => {
         if (!cancelled) setTemplates(data.templates ?? []);
@@ -33,7 +34,7 @@ export function TemplateSwitcher({ onSelected }: { onSelected?: () => void }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [product]);
 
   async function apply(slug: string) {
     const res = await fetch(`/api/card-templates/${slug}`);

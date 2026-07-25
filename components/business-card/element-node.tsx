@@ -13,17 +13,16 @@ interface ElementNodeProps {
   isSelected: boolean;
   onSelect: (id: string, additive: boolean) => void;
   onChange: (id: string, patch: Partial<CardElement>) => void;
+  onDragStart: (id: string) => void;
+  onDragMove: (id: string, xPx: number, yPx: number) => void;
+  onDragEnd: (id: string, xPx: number, yPx: number) => void;
   onDblClickText: (id: string) => void;
   registerRef: (id: string, node: Konva.Group | null) => void;
 }
 
-export function ElementNode({ el, pxPerIn, isSelected, onSelect, onChange, onDblClickText, registerRef }: ElementNodeProps) {
+export function ElementNode({ el, pxPerIn, isSelected, onSelect, onChange, onDragStart, onDragMove, onDragEnd, onDblClickText, registerRef }: ElementNodeProps) {
   const widthPx = el.width * pxPerIn;
   const heightPx = el.height * pxPerIn;
-
-  const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    onChange(el.id, { x: e.target.x() / pxPerIn, y: e.target.y() / pxPerIn });
-  };
 
   const handleTransformEnd = (e: Konva.KonvaEventObject<Event>) => {
     const node = e.target as Konva.Group;
@@ -52,7 +51,9 @@ export function ElementNode({ el, pxPerIn, isSelected, onSelect, onChange, onDbl
       listening={el.visible}
       onClick={(e) => onSelect(el.id, e.evt.shiftKey)}
       onTap={() => onSelect(el.id, false)}
-      onDragEnd={handleDragEnd}
+      onDragStart={() => onDragStart(el.id)}
+      onDragMove={(e) => onDragMove(el.id, e.target.x(), e.target.y())}
+      onDragEnd={(e) => onDragEnd(el.id, e.target.x(), e.target.y())}
       onTransformEnd={handleTransformEnd}
       onDblClick={() => el.type === "text" && onDblClickText(el.id)}
     >

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeClerkUserId } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/prisma";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export default async function AccountDashboard() {
-  const { userId } = await auth();
+  const userId = await safeClerkUserId();
   if (!userId) redirect("/sign-in");
 
   const user = await db.user.findUnique({ where: { clerkId: userId } });

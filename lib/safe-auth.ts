@@ -16,3 +16,13 @@ export async function safeClerkUserId(): Promise<string | null> {
     return null;
   }
 }
+
+/** Same as safeClerkUserId, but for call sites (e.g. admin role checks) that also need sessionClaims. */
+export async function safeClerkAuth(): Promise<{ userId: string | null; sessionClaims: unknown }> {
+  try {
+    const { userId, sessionClaims } = await auth();
+    return { userId: userId ?? null, sessionClaims };
+  } catch {
+    return { userId: null, sessionClaims: null };
+  }
+}

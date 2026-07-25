@@ -15,21 +15,38 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
+import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
+import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import type { ServiceDef } from "@/lib/service-data";
 
 // Baked in at build time, same pattern as components/layout/Header.tsx — lets us know whether a
 // signed-in check is even possible without calling Clerk hooks outside a ClerkProvider.
 const CLERK_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
+const bcSpecSchema = z.object({
+  sizeId: z.number(),
+  paperId: z.number(),
+  colorId: z.number(),
+  quantity: z.number(),
+  rush: z.boolean(),
+  roundCorners: z.boolean(),
+  manualProof: z.boolean(),
+});
+
+const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 100, rush: false, roundCorners: false, manualProof: false };
+
 const schema = z.object({
   selectedOption: z.record(z.string(), z.string()).optional(),
-  selectedPackage: z.string().min(1, "Please select a package"),
+  // Required for postcards/banners (checked in goNext, since it's optional here so business cards
+  // — where "design it yourself" is a valid, free choice — aren't forced to pick a package).
+  selectedPackage: z.string().optional(),
   selectedAddOns: z.array(z.string()),
   notes: z.string().optional(),
   businessName: z.string().min(1, "Business name is required"),
   contactInfo: z.string().optional(),
   brandColors: z.string().optional(),
   quantity: z.number().int().min(1, "Quantity must be at least 1"),
+  bcSpec: bcSpecSchema.optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -40,22 +57,24 @@ interface ProductBuilderProps {
   cardDesignId?: string;
 }
 
-const STEPS = ["Package", "Options", "Details", "Review"];
-
-// Which fields must be valid before advancing past each step — the wizard used to let you skip
-// straight to Review with nothing filled in, since "Next" never checked anything.
-const STEP_FIELDS: (keyof FormValues)[][] = [
-  ["selectedPackage"],
-  ["quantity"],
-  ["businessName"],
-  [],
-];
-
 function draftKey(serviceSlug: string): string {
   return `kc-order-draft-${serviceSlug}`;
 }
 
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 export function ProductBuilder({ service, defaultPackage, cardDesignId }: ProductBuilderProps) {
+  const isBusinessCards = service.slug === "business-cards";
+  const STEPS = isBusinessCards ? ["Print Specs", "Design Service", "Details", "Review"] : ["Package", "Options", "Details", "Review"];
+  // Which fields must be valid before advancing past each step — business cards validate the print
+  // spec combo imperatively in goNext instead (its "always has a value" defaults make zod's presence
+  // check meaningless), and don't use the generic quantity field at all.
+  const STEP_FIELDS: (keyof FormValues)[][] = isBusinessCards
+    ? [[], [], ["businessName"], []]
+    : [["selectedPackage"], ["quantity"], ["businessName"], []];
+
   const [step, setStep] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
@@ -70,7 +89,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
-            return { selectedAddOns: [], quantity: 1, ...JSON.parse(saved) };
+            return { selectedAddOns: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, ...JSON.parse(saved) };
           } catch {
             // fall through to plain defaults below
           }
@@ -80,6 +99,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         selectedPackage: defaultPackage ?? "",
         selectedAddOns: [],
         quantity: 1,
+        bcSpec: DEFAULT_BC_SPEC,
       };
     })(),
   });
@@ -103,13 +123,22 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
     return ao?.price ?? 0;
   });
 
-  const price = selectedPkg
-    ? calculatePrice({
-        packagePrice: selectedPkg.price,
-        addOnPrices: selectedAddOnPrices,
-        quantity: values.quantity,
-      })
-    : null;
+  const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec) : null;
+
+  const price = isBusinessCards
+    ? (bcPrice?.valid
+        ? (() => {
+            const total = round2(bcPrice.total + (selectedPkg?.price ?? 0) + selectedAddOnPrices.reduce((s, p) => s + p, 0));
+            return { subtotal: total, discount: 0, total };
+          })()
+        : null)
+    : selectedPkg
+      ? calculatePrice({
+          packagePrice: selectedPkg.price,
+          addOnPrices: selectedAddOnPrices,
+          quantity: values.quantity,
+        })
+      : null;
 
   const generateAI = async () => {
     setAiLoading(true);
@@ -191,6 +220,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
   };
 
   const goNext = async () => {
+    if (isBusinessCards && step === 0 && !bcPrice?.valid) return;
+    if (!isBusinessCards && step === 0 && !values.selectedPackage) {
+      form.setError("selectedPackage", { message: "Please select a package" });
+      return;
+    }
     const fields = STEP_FIELDS[step];
     const valid = fields.length === 0 || (await trigger(fields));
     if (valid) setStep((s) => s + 1);
@@ -230,8 +264,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Step 0: Package */}
-        {step === 0 && (
+        {/* Step 0: Package (or, for business cards, real print specs priced off gotprint.com) */}
+        {step === 0 && isBusinessCards && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
+            <p className="text-sm text-kc-muted">Real print pricing — size, paper, sides, and quantity all affect your price.</p>
+            <BusinessCardPrintSpec spec={values.bcSpec ?? DEFAULT_BC_SPEC} onChange={(next) => setValue("bcSpec", next)} />
+          </div>
+        )}
+        {step === 0 && !isBusinessCards && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-kc-dark">Select a Package</h2>
             <div className={`grid grid-cols-1 gap-4 ${service.packages.length <= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"}`}>
@@ -303,8 +344,91 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           </div>
         )}
 
-        {/* Step 1: Options */}
-        {step === 1 && (
+        {/* Step 1: Options (or, for business cards, the optional design service upsell) */}
+        {step === 1 && isBusinessCards && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-kc-dark">Design Service</h2>
+            <p className="text-sm text-kc-muted">Have your own artwork? Skip this — you can upload your file after checkout. Want us to design it for you? Pick a package below.</p>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <button
+                type="button"
+                onClick={() => setValue("selectedPackage", "")}
+                className={cn(
+                  "relative rounded-xl border-2 p-5 text-left transition-all",
+                  !values.selectedPackage ? "border-kc-teal bg-kc-teal/5 shadow-md" : "border-kc-border bg-white hover:border-kc-teal/40"
+                )}
+              >
+                <div className="text-xs font-semibold uppercase tracking-wider text-kc-muted mb-1">Self-Serve</div>
+                <div className="text-3xl font-black text-kc-dark mb-3">Free</div>
+                <p className="text-xs text-kc-muted">Upload your own print-ready file, or use our free design studio.</p>
+              </button>
+              {service.packages.map((pkg) => (
+                <button
+                  key={pkg.name}
+                  type="button"
+                  onClick={() => setValue("selectedPackage", pkg.name)}
+                  className={cn(
+                    "relative rounded-xl border-2 p-5 text-left transition-all",
+                    values.selectedPackage === pkg.name
+                      ? "border-kc-teal bg-kc-teal/5 shadow-md"
+                      : "border-kc-border bg-white hover:border-kc-teal/40"
+                  )}
+                >
+                  {pkg.popular && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-kc-teal text-white border-0 text-xs">
+                      Most Popular
+                    </Badge>
+                  )}
+                  <div className="text-xs font-semibold uppercase tracking-wider text-kc-muted mb-1">{pkg.name}</div>
+                  <div className="text-3xl font-black text-kc-dark mb-3">{formatDollars(pkg.price)}</div>
+                  <ul className="space-y-1.5">
+                    {pkg.features.slice(0, 4).map((f) => (
+                      <li key={f} className="flex items-center gap-2 text-xs text-kc-muted">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-kc-teal shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+              ))}
+            </div>
+
+            {service.addOns.length > 0 && (
+              <div className="mt-6">
+                <h3 className="font-semibold text-kc-dark mb-3">Add-Ons (optional)</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {service.addOns.map((ao) => {
+                    const isSelected = (values.selectedAddOns ?? []).includes(ao.name);
+                    return (
+                      <button
+                        key={ao.name}
+                        type="button"
+                        onClick={() => {
+                          const current = values.selectedAddOns ?? [];
+                          setValue(
+                            "selectedAddOns",
+                            isSelected ? current.filter((n) => n !== ao.name) : [...current, ao.name]
+                          );
+                        }}
+                        className={cn(
+                          "rounded-lg border-2 p-3 text-left transition-all",
+                          isSelected ? "border-kc-coral bg-kc-coral/5" : "border-kc-border bg-white hover:border-kc-coral/40"
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-kc-dark">{ao.name}</span>
+                          <Badge className="bg-kc-yellow/30 text-kc-dark border-0 text-xs">+{formatDollars(ao.price)}</Badge>
+                        </div>
+                        <p className="text-xs text-kc-muted mt-0.5">{ao.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {step === 1 && !isBusinessCards && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select Options</h2>
             {service.specs
@@ -411,10 +535,40 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                   <span className="text-kc-muted">Service</span>
                   <span className="font-medium text-kc-dark">{service.name}</span>
                 </div>
+                {isBusinessCards && values.bcSpec && bcPrice?.valid && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-kc-muted">Size</span>
+                      <span className="font-medium text-kc-dark">{BC_SIZES.find((s) => s.id === values.bcSpec!.sizeId)?.label}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-kc-muted">Paper</span>
+                      <span className="font-medium text-kc-dark">{BC_PAPERS.find((p) => p.id === values.bcSpec!.paperId)?.label}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-kc-muted">Sides</span>
+                      <span className="font-medium text-kc-dark">{BC_COLORS.find((c) => c.id === values.bcSpec!.colorId)?.label}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-kc-muted">Quantity</span>
+                      <span className="font-medium text-kc-dark">{values.bcSpec.quantity.toLocaleString("en-US")} cards</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-kc-muted">Printing</span>
+                      <span className="font-medium text-kc-dark">{formatDollars(bcPrice.total)}</span>
+                    </div>
+                  </>
+                )}
                 {values.selectedPackage && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-kc-muted">Package</span>
+                    <span className="text-kc-muted">{isBusinessCards ? "Design Service" : "Package"}</span>
                     <span className="font-medium text-kc-dark">{values.selectedPackage} - {formatDollars(selectedPkg?.price ?? 0)}</span>
+                  </div>
+                )}
+                {isBusinessCards && !values.selectedPackage && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-kc-muted">Design Service</span>
+                    <span className="font-medium text-kc-dark">Self-serve (free)</span>
                   </div>
                 )}
                 {(values.selectedAddOns ?? []).length > 0 && (

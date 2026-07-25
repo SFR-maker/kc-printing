@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeClerkUserId } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/prisma";
@@ -15,7 +15,7 @@ const STATUS_PROGRESS: Record<string, number> = {
 };
 
 export default async function ProjectsPage() {
-  const { userId } = await auth();
+  const userId = await safeClerkUserId();
   if (!userId) redirect("/sign-in");
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) redirect("/sign-in");

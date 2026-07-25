@@ -1,9 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeClerkUserId } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import { UserProfile } from "@clerk/nextjs";
 
 export default async function SettingsPage() {
-  const { userId } = await auth();
+  const userId = await safeClerkUserId();
   if (!userId) redirect("/sign-in");
 
   return (

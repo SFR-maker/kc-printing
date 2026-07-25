@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeClerkAuth } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
@@ -28,9 +28,9 @@ const NAV = [
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { userId, sessionClaims } = await auth();
+  const { userId, sessionClaims } = await safeClerkAuth();
   if (!userId) redirect("/sign-in");
-  const role = (sessionClaims?.metadata as { role?: string } | undefined)?.role;
+  const role = (sessionClaims as { metadata?: { role?: string } } | null)?.metadata?.role;
   if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
     const user = await db.user.findUnique({ where: { clerkId: userId } });
     if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) redirect("/account");

@@ -1,9 +1,9 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { safeClerkUserId } from "@/lib/safe-auth";
 
 export async function requireAdmin() {
-  const { userId } = await auth();
+  const userId = await safeClerkUserId();
   if (!userId) {
     return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }), user: null };
   }
@@ -17,7 +17,7 @@ export async function requireAdmin() {
 }
 
 export async function requireAuth() {
-  const { userId } = await auth();
+  const userId = await safeClerkUserId();
   if (!userId) {
     return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }), user: null };
   }

@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeClerkUserId } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
@@ -14,7 +14,7 @@ const NAV = [
 ];
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = await auth();
+  const userId = await safeClerkUserId();
   if (!userId) redirect("/sign-in");
 
   return (

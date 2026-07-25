@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { safeClerkUserId } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +6,7 @@ import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function FilesPage() {
-  const { userId } = await auth();
+  const userId = await safeClerkUserId();
   if (!userId) redirect("/sign-in");
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) redirect("/sign-in");

@@ -409,6 +409,12 @@ model CardDesign {
   thumbnailFront String?
   thumbnailBack  String?
   anonymousToken String?
+  // Structured contact/brand inputs captured at AI-generation time (businessName, phone, email,
+  // website, linkedin, address, colorPaletteId) — kept separate from front/back since those bake
+  // the values into unlabeled layout text elements that can't be reliably read back out. Lets the
+  // order flow prefill its Details step instead of asking the customer to retype everything. Null
+  // for designs built manually in the canvas editor (never had structured inputs to begin with).
+  meta           Json?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 

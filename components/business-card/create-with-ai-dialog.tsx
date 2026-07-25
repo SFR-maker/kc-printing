@@ -190,11 +190,27 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
             <div className="space-y-1.5">
               <Label className="text-xs uppercase tracking-wide text-kc-muted">Contact Info</Label>
               <div className="grid grid-cols-2 gap-3">
-                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone *" />
-                <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" />
-                <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="Website" />
-                <Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} placeholder="LinkedIn (optional)" />
-                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Address" className="col-span-2" />
+                <div className="space-y-1">
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    placeholder="(816) 555-0100" className={!form.phone.trim() ? "border-kc-orange/40" : ""} />
+                  <span className="pl-0.5 text-[11px] text-kc-muted">Phone *</span>
+                </div>
+                <div className="space-y-1">
+                  <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@business.com" />
+                  <span className="pl-0.5 text-[11px] text-kc-muted">Email</span>
+                </div>
+                <div className="space-y-1">
+                  <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="yourbusiness.com" />
+                  <span className="pl-0.5 text-[11px] text-kc-muted">Website</span>
+                </div>
+                <div className="space-y-1">
+                  <Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} placeholder="linkedin.com/in/you" />
+                  <span className="pl-0.5 text-[11px] text-kc-muted">LinkedIn (optional)</span>
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, Kansas City, MO" />
+                  <span className="pl-0.5 text-[11px] text-kc-muted">Address (optional)</span>
+                </div>
               </div>
             </div>
 
@@ -223,24 +239,34 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className={status !== "preview" && status !== "limit" ? "flex-col items-stretch sm:flex-col sm:items-end" : undefined}>
           {status === "preview" ? (
-            <>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setOpen(false)} className="border-kc-border">Close</Button>
               <Button onClick={openEditor} className="bg-kc-orange text-white hover:bg-kc-orange/90">Open in Editor</Button>
-            </>
+            </div>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setOpen(false)} className="border-kc-border">Cancel</Button>
-              {status !== "limit" && (
-                <Button onClick={handleSubmit} disabled={!canSubmit || status === "loading"} className="bg-kc-orange text-white hover:bg-kc-orange/90">
-                  {status === "loading" ? (
-                    <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Generating…</span>
-                  ) : (
-                    "Generate My Design"
-                  )}
-                </Button>
+              {status !== "limit" && !canSubmit && status !== "loading" && (
+                <p className="text-right text-xs text-kc-muted">
+                  {[!form.businessName.trim() && "business name", !form.description.trim() && "description", !form.phone.trim() && "phone"]
+                    .filter(Boolean)
+                    .join(", ")} required to generate
+                </p>
               )}
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button variant="outline" onClick={() => setOpen(false)} className="border-kc-border">Cancel</Button>
+                {status !== "limit" && (
+                  <Button onClick={handleSubmit} disabled={!canSubmit || status === "loading"}
+                    className="bg-kc-orange text-white hover:bg-kc-orange/90 disabled:bg-kc-orange/30 disabled:text-white disabled:opacity-100">
+                    {status === "loading" ? (
+                      <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Generating…</span>
+                    ) : (
+                      <span className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> Generate My Design</span>
+                    )}
+                  </Button>
+                )}
+              </div>
             </>
           )}
         </DialogFooter>

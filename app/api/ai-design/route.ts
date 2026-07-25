@@ -123,6 +123,14 @@ export async function POST(req: Request) {
       front,
       back,
       anonymousToken: identity.userId ? null : identity.anonymousToken,
+      meta: {
+        businessName: data.businessName,
+        phone: data.phone,
+        email: data.email,
+        website: data.website,
+        linkedin: data.linkedin,
+        colorPaletteId: data.colorPaletteId,
+      },
     },
   });
 

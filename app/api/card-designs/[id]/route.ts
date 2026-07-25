@@ -27,10 +27,27 @@ async function getOwnedDesign(id: string) {
   return { error: null, design };
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+// GET is also reachable pre-sign-in (the order flow's Details step prefills from a design the
+// customer just built, and submitting an order — not viewing a design — is the point where we
+// actually require auth). Mirrors resolveIdentity() in app/api/ai-design/route.ts: fall back to
+// matching the design's anonymousToken when there's no signed-in owner.
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { error, design } = await getOwnedDesign(id);
-  if (error) return error;
+  const clerkId = await safeClerkUserId();
+
+  if (clerkId) {
+    const { error, design } = await getOwnedDesign(id);
+    if (error) return error;
+    return NextResponse.json({ design });
+  }
+
+  const anonymousToken = new URL(req.url).searchParams.get("anonymousToken");
+  if (!anonymousToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const design = await db.cardDesign.findUnique({ where: { id } });
+  if (!design || design.anonymousToken !== anonymousToken) {
+    return NextResponse.json({ error: "Design not found" }, { status: 404 });
+  }
   return NextResponse.json({ design });
 }
 

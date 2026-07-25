@@ -11,6 +11,7 @@
   --color-kc-teal:        #7C3AED;   /* PRIMARY: deep violet — creative, premium */
   --color-kc-teal-light:  #A78BFA;   /* violet-400 — hover / lighter accents */
   --color-kc-coral:       #F97316;   /* CTA: vibrant orange — warm, energetic */
+  --color-kc-orange:      #F97316;   /* alias of kc-coral — used by AI-generation UI accents */
   --color-kc-yellow:      #FBBF24;   /* amber — stars, badges, highlights */
   --color-kc-sage:        #10B981;   /* emerald — success, live indicators */
   --color-kc-dark:        #0C0A09;   /* near-black — TEXT only (not backgrounds) */

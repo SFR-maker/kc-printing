@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, CheckCircle2, Sparkles, Upload, ArrowRight, ArrowLeft } from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles, Upload, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,8 @@ import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
+import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
+import { getAnonymousToken } from "@/lib/business-card/local-autosave";
 import type { ServiceDef } from "@/lib/service-data";
 
 // Baked in at build time, same pattern as components/layout/Header.tsx — lets us know whether a
@@ -43,8 +45,12 @@ const schema = z.object({
   selectedAddOns: z.array(z.string()),
   notes: z.string().optional(),
   businessName: z.string().min(1, "Business name is required"),
-  contactInfo: z.string().optional(),
-  brandColors: z.string().optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
+  website: z.string().optional(),
+  linkedin: z.string().optional(),
+  colorPaletteId: z.string().optional(),
+  brandColorsNotes: z.string().optional(),
   quantity: z.number().int().min(1, "Quantity must be at least 1"),
   bcSpec: bcSpecSchema.optional(),
 });
@@ -80,6 +86,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
   const [aiResult, setAiResult] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [designMetaLoaded, setDesignMetaLoaded] = useState(false);
+  const [detailsExpanded, setDetailsExpanded] = useState(!cardDesignId);
   const router = useRouter();
 
   const form = useForm<FormValues>({
@@ -89,7 +97,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
-            return { selectedAddOns: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, ...JSON.parse(saved) };
+            return { selectedAddOns: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, ...JSON.parse(saved) };
           } catch {
             // fall through to plain defaults below
           }
@@ -100,6 +108,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         selectedAddOns: [],
         quantity: 1,
         bcSpec: DEFAULT_BC_SPEC,
+        colorPaletteId: AI_PALETTE_AUTO_ID,
       };
     })(),
   });
@@ -116,6 +125,30 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
     return () => sub.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [service.slug]);
+
+  // If this order started from a design built with "Create with AI", that flow already collected
+  // business name/contact/colors — pull them in here instead of making the customer retype
+  // everything on the Details step.
+  useEffect(() => {
+    if (!cardDesignId) return;
+    const token = getAnonymousToken();
+    fetch(`/api/card-designs/${cardDesignId}?anonymousToken=${encodeURIComponent(token)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { design?: { meta?: Record<string, string> | null } } | null) => {
+        const meta = data?.design?.meta;
+        if (!meta) return;
+        if (meta.businessName && !form.getValues("businessName")) setValue("businessName", meta.businessName);
+        if (meta.phone) setValue("phone", meta.phone);
+        if (meta.email) setValue("email", meta.email);
+        if (meta.website) setValue("website", meta.website);
+        if (meta.linkedin) setValue("linkedin", meta.linkedin);
+        if (meta.colorPaletteId) setValue("colorPaletteId", meta.colorPaletteId);
+        setDesignMetaLoaded(true);
+        setDetailsExpanded(false);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cardDesignId]);
 
   const selectedPkg = service.packages.find((p) => p.name === values.selectedPackage);
   const selectedAddOnPrices = (values.selectedAddOns ?? []).map((name) => {
@@ -140,6 +173,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         })
       : null;
 
+  const selectedPaletteLabel = values.colorPaletteId && values.colorPaletteId !== AI_PALETTE_AUTO_ID
+    ? AI_PALETTES.find((p) => p.id === values.colorPaletteId)?.label
+    : undefined;
+
   const generateAI = async () => {
     setAiLoading(true);
     try {
@@ -153,13 +190,17 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           payload: {
             businessName: values.businessName,
             service: service.name,
-            brandColors: values.brandColors,
+            brandColors: selectedPaletteLabel ?? values.brandColorsNotes,
             notes: values.notes,
           },
         }),
       });
+      if (res.status === 401) {
+        setAiResult("Sign in to use the AI copy generator — your other details on this page are saved.");
+        return;
+      }
       const data = await res.json() as { text?: string; error?: string };
-      setAiResult(data.text ?? "");
+      setAiResult(data.text || "AI is temporarily unavailable. Please describe your requirements in the notes field.");
     } catch {
       setAiResult("AI is temporarily unavailable. Please describe your requirements in the notes field.");
     } finally {
@@ -479,14 +520,78 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               <Input id="businessName" placeholder="Your business name" {...register("businessName")} />
               {errors.businessName && <p className="text-xs text-red-500">{errors.businessName.message}</p>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="contactInfo">Contact Info for Design (optional)</Label>
-              <Input id="contactInfo" placeholder="Phone, email, website to include in design" {...register("contactInfo")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="brandColors">Brand Colors (optional)</Label>
-              <Input id="brandColors" placeholder="e.g., Navy blue #173B64, Gold #FFDE70" {...register("brandColors")} />
-            </div>
+
+            {designMetaLoaded && !detailsExpanded ? (
+              <div className="flex items-start justify-between gap-3 rounded-xl border border-kc-teal/30 bg-kc-teal/5 p-4">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-kc-teal" />
+                  <div className="text-sm">
+                    <p className="font-medium text-kc-dark">Using contact info &amp; colors from your design</p>
+                    <p className="mt-0.5 text-xs text-kc-muted">
+                      {[values.phone, values.email, values.website].filter(Boolean).join(" · ") || "No contact info was set."}
+                      {selectedPaletteLabel ? ` · ${selectedPaletteLabel} palette` : ""}
+                    </p>
+                  </div>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => setDetailsExpanded(true)} className="border-kc-border shrink-0">
+                  Edit
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Contact Info for Design (optional)</Label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Input placeholder="Phone" {...register("phone")} />
+                    <Input placeholder="Email" {...register("email")} />
+                    <Input placeholder="Website" {...register("website")} />
+                    <Input placeholder="LinkedIn (optional)" {...register("linkedin")} />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Brand Colors (optional)</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setValue("colorPaletteId", AI_PALETTE_AUTO_ID)}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-medium transition-colors",
+                        (values.colorPaletteId ?? AI_PALETTE_AUTO_ID) === AI_PALETTE_AUTO_ID
+                          ? "border-kc-teal bg-kc-teal/10 text-kc-teal"
+                          : "border-kc-border text-kc-muted hover:border-kc-teal/40"
+                      )}
+                    >
+                      <Sparkles className="h-3 w-3" /> Surprise Me
+                    </button>
+                    {AI_PALETTES.map((p) => {
+                      const active = values.colorPaletteId === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          title={p.label}
+                          onClick={() => setValue("colorPaletteId", p.id)}
+                          className={cn(
+                            "flex items-center gap-1.5 rounded-full border-2 px-2.5 py-1.5 text-xs font-medium transition-colors",
+                            active ? "border-kc-dark bg-kc-bg" : "border-kc-border hover:border-kc-dark/40"
+                          )}
+                        >
+                          <span className="flex -space-x-1">
+                            {p.colors.map((c, i) => (
+                              <span key={i} className="h-3.5 w-3.5 rounded-full border border-white" style={{ backgroundColor: c }} />
+                            ))}
+                          </span>
+                          {active && <Check className="h-3 w-3" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <Input placeholder="Or describe custom colors, e.g. Navy blue #173B64, Gold #FFDE70" {...register("brandColorsNotes")} className="mt-1" />
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="notes">Project Notes</Label>
               <Textarea
@@ -497,23 +602,36 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               />
             </div>
 
-            <div className="border border-kc-border rounded-xl p-4 bg-kc-bg">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-kc-teal" />
-                  <span className="font-semibold text-kc-dark text-sm">AI Copy Generator</span>
+            <div className="rounded-xl border-2 border-kc-teal/20 bg-gradient-to-br from-kc-teal/5 to-kc-orange/5 p-5">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-kc-teal/15">
+                    <Sparkles className="h-4.5 w-4.5 text-kc-teal" />
+                  </div>
+                  <div>
+                    <span className="block font-semibold text-kc-dark text-sm">AI Copy Generator</span>
+                    <span className="block text-xs text-kc-muted">Get headline &amp; tagline ideas tailored to your business</span>
+                  </div>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={generateAI} disabled={aiLoading || !values.businessName}
-                  className="border-kc-teal text-kc-teal hover:bg-kc-teal/5">
-                  {aiLoading ? "Generating..." : "Generate Ideas"}
+                <Button type="button" onClick={generateAI} disabled={aiLoading || !values.businessName}
+                  className="bg-kc-teal text-white hover:bg-kc-teal/90 disabled:bg-kc-teal/30 disabled:text-white disabled:opacity-100">
+                  {aiLoading ? (
+                    <span className="flex items-center gap-2">Generating…</span>
+                  ) : (
+                    <span className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> Generate Ideas</span>
+                  )}
                 </Button>
               </div>
               {aiResult && (
-                <div className="text-xs text-kc-muted bg-white border border-kc-border rounded-lg p-3 whitespace-pre-wrap">
+                <div className="rounded-lg border border-kc-border bg-white p-4 text-sm text-kc-dark whitespace-pre-wrap shadow-sm">
                   {aiResult}
                 </div>
               )}
-              {!aiResult && <p className="text-xs text-kc-muted">Enter your business name above to generate AI copy suggestions.</p>}
+              {!aiResult && !aiLoading && (
+                <p className="text-xs text-kc-muted">
+                  {values.businessName ? "Click “Generate Ideas” for AI copy suggestions based on your business." : "Enter your business name above to generate AI copy suggestions."}
+                </p>
+              )}
             </div>
 
             <div className="border-2 border-dashed border-kc-border rounded-xl p-6 text-center">
@@ -595,16 +713,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                     <span className="font-medium text-kc-dark">{values.businessName}</span>
                   </div>
                 )}
-                {values.contactInfo && (
+                {[values.phone, values.email, values.website, values.linkedin].some(Boolean) && (
                   <div className="flex justify-between text-sm">
                     <span className="text-kc-muted">Contact Info</span>
-                    <span className="font-medium text-kc-dark">{values.contactInfo}</span>
+                    <span className="font-medium text-kc-dark text-right">
+                      {[values.phone, values.email, values.website, values.linkedin].filter(Boolean).join(" · ")}
+                    </span>
                   </div>
                 )}
-                {values.brandColors && (
+                {(selectedPaletteLabel || values.brandColorsNotes) && (
                   <div className="flex justify-between text-sm">
                     <span className="text-kc-muted">Brand Colors</span>
-                    <span className="font-medium text-kc-dark">{values.brandColors}</span>
+                    <span className="font-medium text-kc-dark text-right">{selectedPaletteLabel ?? values.brandColorsNotes}</span>
                   </div>
                 )}
                 {values.notes && (

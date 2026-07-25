@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAnonymousToken } from "@/lib/business-card/local-autosave";
 import { PRODUCT_ROUTE_SEGMENT, type DesignProduct } from "@/lib/business-card/print-spec";
+import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
+import { renderSideToSvg } from "@/lib/business-card/render-svg";
+import type { CardSide } from "@/lib/business-card/schema";
 
 interface FormState {
   businessName: string;
@@ -19,19 +22,31 @@ interface FormState {
   phone: string;
   email: string;
   website: string;
+  linkedin: string;
   address: string;
+  colorPaletteId: string;
+  includeQrCode: boolean;
   bannerFormat: "rollup" | "vinyl";
 }
 
-const EMPTY_FORM: FormState = { businessName: "", tagline: "", description: "", phone: "", email: "", website: "", address: "", bannerFormat: "vinyl" };
+const EMPTY_FORM: FormState = {
+  businessName: "", tagline: "", description: "", phone: "", email: "", website: "", linkedin: "", address: "",
+  colorPaletteId: AI_PALETTE_AUTO_ID, includeQrCode: false, bannerFormat: "vinyl",
+};
+
+interface PreviewData {
+  designId: string;
+  front: CardSide;
+}
 
 export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [remaining, setRemaining] = useState<number | null>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "error" | "limit">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "preview" | "error" | "limit">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [preview, setPreview] = useState<PreviewData | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -65,11 +80,18 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
         return;
       }
       const data = await res.json();
-      router.push(`/services/${PRODUCT_ROUTE_SEGMENT[product]}/design/${data.designId}`);
+      setRemaining(data.remaining ?? 0);
+      setPreview({ designId: data.designId, front: data.front });
+      setStatus("preview");
     } catch {
       setStatus("error");
       setErrorMessage("Something went wrong generating your design. Please try again.");
     }
+  }
+
+  function openEditor() {
+    if (!preview) return;
+    router.push(`/services/${PRODUCT_ROUTE_SEGMENT[product]}/design/${preview.designId}`);
   }
 
   return (
@@ -80,6 +102,7 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
         if (!next) {
           setStatus("idle");
           setForm(EMPTY_FORM);
+          setPreview(null);
         }
       }}
     >
@@ -91,19 +114,23 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
         <Sparkles className="h-4 w-4" /> Create with AI
       </button>
 
-      <DialogContent className="max-w-lg">
+      <DialogContent className={status === "preview" ? "max-w-xl" : "max-w-lg"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-kc-orange" /> Create with AI</DialogTitle>
-          <DialogDescription>
-            Tell us about your business and we&apos;ll generate a custom design — background art included.
-            {remaining !== null && <span className="mt-1 block font-medium text-kc-dark">{remaining} free AI design{remaining === 1 ? "" : "s"} remaining.</span>}
-          </DialogDescription>
+          {status !== "preview" && (
+            <DialogDescription>
+              Tell us about your business and we&apos;ll generate a custom design — background art included.
+              {remaining !== null && <span className="mt-1 block font-medium text-kc-dark">{remaining} free AI design{remaining === 1 ? "" : "s"} remaining.</span>}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         {status === "limit" ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             You&apos;ve used all your free AI designs. Browse our template gallery to keep designing, or contact us for more.
           </div>
+        ) : status === "preview" && preview ? (
+          <AiPreview front={preview.front} />
         ) : (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -128,30 +155,62 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
               <p className="text-xs text-kc-muted">Used to generate your background art — the more descriptive, the better.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Phone *</Label>
-                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="(816) 555-0142" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Website</Label>
-                <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="example.com" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Email</Label>
-                <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="hello@example.com" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Address</Label>
-                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, Kansas City, MO" />
+            <div className="space-y-1.5">
+              <Label>Color Palette</Label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, colorPaletteId: AI_PALETTE_AUTO_ID })}
+                  className={`flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-medium transition-colors ${form.colorPaletteId === AI_PALETTE_AUTO_ID ? "border-kc-orange bg-kc-orange/10 text-kc-orange" : "border-kc-border text-kc-muted hover:border-kc-orange/40"}`}
+                >
+                  <Sparkles className="h-3 w-3" /> Surprise Me
+                </button>
+                {AI_PALETTES.map((p) => {
+                  const active = form.colorPaletteId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      title={p.label}
+                      onClick={() => setForm({ ...form, colorPaletteId: p.id })}
+                      className={`flex items-center gap-1.5 rounded-full border-2 px-2.5 py-1.5 text-xs font-medium transition-colors ${active ? "border-kc-dark bg-kc-bg" : "border-kc-border hover:border-kc-dark/40"}`}
+                    >
+                      <span className="flex -space-x-1">
+                        {p.colors.map((c, i) => (
+                          <span key={i} className="h-3.5 w-3.5 rounded-full border border-white" style={{ backgroundColor: c }} />
+                        ))}
+                      </span>
+                      {active && <Check className="h-3 w-3" />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs uppercase tracking-wide text-kc-muted">Contact Info</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Phone *" />
+                <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" />
+                <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="Website" />
+                <Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} placeholder="LinkedIn (optional)" />
+                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Address" className="col-span-2" />
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2.5 rounded-lg border border-kc-border p-3 text-sm">
+              <input type="checkbox" checked={form.includeQrCode} onChange={(e) => setForm({ ...form, includeQrCode: e.target.checked })} className="h-4 w-4 shrink-0" />
+              <span>
+                <span className="font-medium text-kc-dark">Include a QR code</span>
+                <span className="block text-xs text-kc-muted">Links to your website (or contact info if no website is given).</span>
+              </span>
+            </label>
 
             {product === "banner" && (
               <div className="space-y-1.5">
                 <Label>Banner Format</Label>
                 <Select value={form.bannerFormat} onValueChange={(v) => v && setForm({ ...form, bannerFormat: v as "rollup" | "vinyl" })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue>{(v: string) => (v === "rollup" ? "Roll-Up Stand (tall, 33x81in)" : "Vinyl Banner (wide, 8ft)")}</SelectValue></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="vinyl">Vinyl Banner (wide, 8ft)</SelectItem>
                     <SelectItem value="rollup">Roll-Up Stand (tall, 33x81in)</SelectItem>
@@ -165,18 +224,37 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} className="border-kc-border">Cancel</Button>
-          {status !== "limit" && (
-            <Button onClick={handleSubmit} disabled={!canSubmit || status === "loading"} className="bg-kc-orange text-white hover:bg-kc-orange/90">
-              {status === "loading" ? (
-                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Generating…</span>
-              ) : (
-                "Generate My Design"
+          {status === "preview" ? (
+            <>
+              <Button variant="outline" onClick={() => setOpen(false)} className="border-kc-border">Close</Button>
+              <Button onClick={openEditor} className="bg-kc-orange text-white hover:bg-kc-orange/90">Open in Editor</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setOpen(false)} className="border-kc-border">Cancel</Button>
+              {status !== "limit" && (
+                <Button onClick={handleSubmit} disabled={!canSubmit || status === "loading"} className="bg-kc-orange text-white hover:bg-kc-orange/90">
+                  {status === "loading" ? (
+                    <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Generating…</span>
+                  ) : (
+                    "Generate My Design"
+                  )}
+                </Button>
               )}
-            </Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function AiPreview({ front }: { front: CardSide }) {
+  const svg = renderSideToSvg(front, 72);
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-kc-muted">Here&apos;s your AI-generated design. Open it in the editor to fine-tune anything before ordering.</p>
+      <div className="overflow-hidden rounded-xl border border-kc-border [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+    </div>
   );
 }

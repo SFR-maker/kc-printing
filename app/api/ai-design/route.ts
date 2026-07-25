@@ -6,7 +6,7 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 import { generateImageWithOpenRouter } from "@/lib/openrouter";
 import { FREE_AI_DESIGN_LIMIT } from "@/lib/business-card/ai-design-limit";
 import { PRODUCT_DB_VALUE, type DesignProduct } from "@/lib/business-card/print-spec";
-import { CATEGORIES } from "@/lib/business-card/templates/categories";
+import { resolveAiPalette } from "@/lib/business-card/templates/ai-palettes";
 import { buildCustomBusinessCard, buildCustomPostcard, buildCustomBanner, type BannerFormat } from "@/lib/business-card/templates/ai-custom";
 
 async function resolveIdentity(anonymousToken: string | undefined): Promise<{ userId: string | null; anonymousToken: string | null } | null> {
@@ -44,7 +44,10 @@ const bodySchema = z.object({
   phone: z.string().min(1).max(40),
   email: z.string().max(120).default(""),
   website: z.string().max(120).default(""),
+  linkedin: z.string().max(160).default(""),
   address: z.string().max(160).default(""),
+  colorPaletteId: z.string().default("auto"),
+  includeQrCode: z.boolean().default(false),
   anonymousToken: z.string().optional(),
 });
 
@@ -92,17 +95,18 @@ export async function POST(req: Request) {
   const resized = await sharp(raw).resize(targetW, targetH, { fit: "cover", kernel: "lanczos3" }).jpeg({ quality: 82 }).toBuffer();
   const imageSrc = `data:image/jpeg;base64,${resized.toString("base64")}`;
 
-  const [p, s, ink] = CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)].palette;
   const info = {
     businessName: data.businessName,
     tagline: data.tagline,
     phone: data.phone,
     email: data.email,
     website: data.website,
+    linkedin: data.linkedin,
     address: data.address,
-    palette: [p, s, ink] as [string, string, string],
+    palette: resolveAiPalette(data.colorPaletteId),
     headingFont: "Poppins",
     bodyFont: "Inter",
+    includeQrCode: data.includeQrCode,
   };
 
   const { front, back } =
@@ -126,5 +130,7 @@ export async function POST(req: Request) {
     data: { userId: identity.userId, anonymousToken: identity.userId ? null : identity.anonymousToken, product: PRODUCT_DB_VALUE[product] },
   });
 
-  return NextResponse.json({ designId: design.id, remaining: Math.max(0, FREE_AI_DESIGN_LIMIT - used - 1) });
+  // front/back are returned (not just the id) so the dialog can render an immediate preview of what
+  // was actually generated before the user commits to opening the full editor.
+  return NextResponse.json({ designId: design.id, remaining: Math.max(0, FREE_AI_DESIGN_LIMIT - used - 1), front, back });
 }

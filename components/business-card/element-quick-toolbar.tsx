@@ -58,11 +58,18 @@ export function ElementQuickToolbar({ onOpenDetails, variant = "desktop" }: Elem
       )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
-        <AlignPopoverButton />
-        <IconBtn label="Duplicate" onClick={duplicateSelected}><Copy className="h-4 w-4" /></IconBtn>
-        <IconBtn label={single?.locked ? "Unlock" : "Lock"} onClick={toggleLockSelected}>
-          {single?.locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-        </IconBtn>
+        {/* Align/Duplicate/Lock are also in the "More" sheet (ElementPropertiesContent) — on mobile
+            the row is too narrow for all of it, and stacking every icon here just pushed Delete and
+            More off the right edge with no scroll hint, so mobile keeps only what doesn't overflow. */}
+        {!isMobile && (
+          <>
+            <AlignPopoverButton />
+            <IconBtn label="Duplicate" onClick={duplicateSelected}><Copy className="h-4 w-4" /></IconBtn>
+            <IconBtn label={single?.locked ? "Unlock" : "Lock"} onClick={toggleLockSelected}>
+              {single?.locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+            </IconBtn>
+          </>
+        )}
         {isMobile && <IconBtn label="More options" onClick={onOpenDetails}><MoreHorizontal className="h-4 w-4" /></IconBtn>}
         <IconBtn label="Delete" onClick={removeSelected}><Trash2 className="h-4 w-4 text-red-500" /></IconBtn>
       </div>
@@ -101,7 +108,7 @@ function TextQuickControls({ el, patch, compact }: { el: TextElement; patch: (p:
   return (
     <div className="flex shrink-0 items-center gap-1.5">
       <Select value={el.fontFamily} onValueChange={(v) => v && patch({ fontFamily: v })}>
-        <SelectTrigger className={compact ? "h-9 w-28 text-xs" : "h-9 w-36 text-xs"}><SelectValue /></SelectTrigger>
+        <SelectTrigger className={compact ? "h-9 w-20 text-xs" : "h-9 w-36 text-xs"}><SelectValue /></SelectTrigger>
         <SelectContent>
           {EDITOR_FONTS.map((f) => <SelectItem key={f.family} value={f.family}>{f.family}</SelectItem>)}
         </SelectContent>
@@ -110,7 +117,7 @@ function TextQuickControls({ el, patch, compact }: { el: TextElement; patch: (p:
         type="number"
         value={el.fontSizePt}
         onChange={(e) => patch({ fontSizePt: Number(e.target.value) })}
-        className="h-9 w-14 text-xs"
+        className={compact ? "h-9 w-12 px-1 text-xs" : "h-9 w-14 text-xs"}
       />
       <ToggleBtn active={["700", "800", "900"].includes(el.fontWeight)} onClick={() => patch({ fontWeight: ["700", "800", "900"].includes(el.fontWeight) ? "400" : "700" })}>
         <Bold className="h-4 w-4" />

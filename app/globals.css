@@ -148,6 +148,9 @@
   }
   html {
     @apply font-sans;
+    /* Header is `sticky top-0 h-16` — without this, anchor links, validation-error focus, and
+       keyboard-triggered scroll-into-view land content partially hidden underneath it. */
+    scroll-padding-top: 4.5rem;
   }
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-kc-teal focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white;

@@ -133,7 +133,7 @@ function ElementContent({ el, widthPx, heightPx, pxPerIn }: { el: CardElement; w
   }
 
   if (el.type === "qr") {
-    return <QrKonvaNodes el={el} />;
+    return <QrKonvaNodes el={el} widthPx={widthPx} heightPx={heightPx} />;
   }
 
   return null;

@@ -1,11 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Default bottom-left position sits directly on top of the business card editor's mobile
-  // bottom toolbar (dev-only overlay, but it was blocking clicks on the first tab in local dev).
-  devIndicators: {
-    position: "top-right",
-  },
+  // The dev-only route indicator badge has no safe corner on narrow viewports — bottom-left sat on
+  // the business card editor's mobile toolbar, top-right sits on the order-flow "Continue" button.
+  // It doesn't appear in production either way, so just hide it rather than chasing a safe spot.
+  devIndicators: false,
   // pdfkit loads its built-in font metrics (AFM files) from disk relative to its own package
   // directory at runtime. Bundling it through Turbopack/webpack breaks that relative path
   // resolution (ENOENT on Helvetica.afm), so it must run as a plain, unbundled Node require.

@@ -387,6 +387,13 @@ model CardTemplate {
   back           Json
   source         CardTemplateSource @default(MANUAL)
   active         Boolean            @default(true)
+  // Curation: the template set is procedurally generated (a small set of layout archetypes
+  // stamped across many industries), so most templates are visual variants of each other.
+  // featured + sortOrder let the gallery surface a hand-picked, quality-ranked subset first
+  // instead of raw createdAt/insertion order (which groups by industry and cycles through
+  // every archetype, strong and weak, in lockstep).
+  featured       Boolean            @default(false)
+  sortOrder      Int                @default(0)
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
@@ -395,6 +402,7 @@ model CardTemplate {
   @@index([active])
   @@index([slug])
   @@index([product])
+  @@index([product, featured, sortOrder])
 }
 
 model CardDesign {

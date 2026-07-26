@@ -45,7 +45,9 @@ export async function GET(req: Request) {
       thumbnailFront: true,
       thumbnailBack: true,
     },
-    orderBy: { createdAt: "asc" },
+    // Curated best-first: hand-picked featured templates (ranked by sortOrder) lead, then
+    // everything else falls back to the original insertion order. See CardTemplate.featured.
+    orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
   });
 
   return NextResponse.json({ templates, count: templates.length });

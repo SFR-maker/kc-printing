@@ -67,9 +67,13 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
     if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
     autosaveTimer.current = setTimeout(async () => {
       saveDesignLocally(LOCAL_KEY, design);
-      if (isSignedIn) {
-        await persist(design, designId, product, () => {}, false);
-      }
+      // persist() already handles anonymous saves via anonymousToken (see app/api/card-designs
+      // POST) — gating this on isSignedIn meant anonymous users' designs never got a real
+      // server-side id, so designId stayed null and the "order this design" handoff silently
+      // broke (empty designId in the URL, no prefill, no "using your design" banner).
+      await persist(design, designId, product, (newId) => {
+        if (!designId && newId) router.replace(`/services/${routeSegment}/design/${newId}`);
+      }, false);
       markSaved();
     }, AUTOSAVE_DEBOUNCE_MS);
     return () => {
@@ -92,14 +96,12 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const handleSave = useCallback(async () => {
     setSaving(true);
     saveDesignLocally(LOCAL_KEY, design);
-    if (isSignedIn) {
-      await persist(design, designId, product, (newId) => {
-        if (!designId && newId) router.replace(`/services/${routeSegment}/design/${newId}`);
-      }, true);
-    }
+    await persist(design, designId, product, (newId) => {
+      if (!designId && newId) router.replace(`/services/${routeSegment}/design/${newId}`);
+    }, true);
     markSaved();
     setSaving(false);
-  }, [design, designId, isSignedIn, router, markSaved, product, routeSegment]);
+  }, [design, designId, router, markSaved, product, routeSegment]);
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -164,7 +166,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       {isMobile ? (
         <MobileTopBar onSave={handleSave} saving={saving} onExport={handleExport} exporting={exporting} onContinue={() => setShowProof(true)} />
       ) : (
-        <TopCommandBar onSave={handleSave} saving={saving} onExport={handleExport} exporting={exporting} onContinue={() => setShowProof(true)} />
+        <TopCommandBar onSave={handleSave} saving={saving} onExport={handleExport} exporting={exporting} onContinue={() => setShowProof(true)} isSignedIn={isSignedIn} />
       )}
 
       {errorCount > 0 && (

@@ -86,8 +86,21 @@ function AlignPopoverButton() {
     function onOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
+    // Escape closes this popover only — stopPropagation before it reaches the global editor
+    // shortcut handler (use-keyboard-shortcuts.ts), which would otherwise treat the same
+    // keypress as "clear the element selection" and dismiss the quick toolbar entirely.
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setOpen(false);
+      }
+    }
     document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
   return (

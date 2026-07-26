@@ -51,7 +51,7 @@ const schema = z.object({
   linkedin: z.string().optional(),
   colorPaletteId: z.string().optional(),
   brandColorsNotes: z.string().optional(),
-  quantity: z.number().int().min(1, "Quantity must be at least 1"),
+  quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
   bcSpec: bcSpecSchema.optional(),
 });
 
@@ -167,9 +167,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         : null)
     : selectedPkg
       ? calculatePrice({
+          // Postcard/banner packages are a flat one-time design fee (see the package feature
+          // lists in lib/service-data.ts — revisions, file formats, delivery time, never a
+          // per-copy cost), not a per-unit print price like business cards' bcSpec. Quantity
+          // here is scope/print-run metadata for the order, not a price multiplier — passing it
+          // through previously made a Gold postcard order at qty 1000 come out to $69,000.
           packagePrice: selectedPkg.price,
           addOnPrices: selectedAddOnPrices,
-          quantity: values.quantity,
         })
       : null;
 
@@ -483,7 +487,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select Options</h2>
             {service.specs
-              .filter((s) => ["SIZE", "ORIENTATION"].some((t) => s.label.toUpperCase().includes(t)))
+              .filter((s) => ["ORIENTATION", "CUSTOM"].some((t) => s.label.toUpperCase().includes(t)))
               .map((spec) => (
                 <div key={spec.label} className="space-y-2">
                   <Label>{spec.label}</Label>
@@ -491,9 +495,14 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                 </div>
               ))}
             {service.specs
-              .filter((s) => ["PAPER", "MATERIAL"].some((t) => s.label.toUpperCase().includes(t)))
+              .filter((s) => {
+                const up = s.label.toUpperCase();
+                if (up.includes("CUSTOM")) return false;
+                return ["PAPER", "MATERIAL", "SIZE", "TYPE"].some((t) => up.includes(t));
+              })
               .map((spec) => {
                 const choices = spec.value.split(",").map((v) => v.trim()).filter(Boolean);
+                const article = /^[aeiou]/i.test(spec.label) ? "an" : "a";
                 return (
                   <div key={spec.label} className="space-y-2">
                     <Label>{spec.label}</Label>
@@ -502,7 +511,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                       onValueChange={(v) => v && setValue("selectedOption", { ...values.selectedOption, [spec.label]: v })}
                     >
                       <SelectTrigger className="max-w-sm">
-                        <SelectValue placeholder={`Choose a ${spec.label.toLowerCase()}`} />
+                        <SelectValue placeholder={`Choose ${article} ${spec.label.toLowerCase().replace(/s$/, "")}`} />
                       </SelectTrigger>
                       <SelectContent>
                         {choices.map((c) => (

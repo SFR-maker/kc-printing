@@ -12,9 +12,10 @@ interface TopCommandBarProps {
   onExport: () => void;
   exporting: boolean;
   onContinue?: () => void;
+  isSignedIn?: boolean;
 }
 
-export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue }: TopCommandBarProps) {
+export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue, isSignedIn }: TopCommandBarProps) {
   const activeSide = useCardEditorStore((s) => s.activeSide);
   const setActiveSide = useCardEditorStore((s) => s.setActiveSide);
   const undo = useCardEditorStore((s) => s.undo);
@@ -82,7 +83,9 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue 
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-xs text-kc-muted">{saving ? "Saving..." : dirty ? "Unsaved changes" : "Saved"}</span>
+        <span className="text-xs text-kc-muted">
+          {saving ? "Saving..." : dirty ? "Unsaved changes" : isSignedIn === false ? "Saved as guest" : "Saved"}
+        </span>
         <Button variant="outline" size="sm" onClick={onSave} disabled={saving} className="border-kc-border">
           <Save className="mr-1.5 h-3.5 w-3.5" /> Save
         </Button>

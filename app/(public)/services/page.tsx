@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getFeaturedThumbnails, type ProductThumbnail } from "@/lib/product-thumbnails";
 
 export const metadata: Metadata = {
   title: "Design Services - Business Cards, Postcards, Banners, Rigid Signs",
@@ -14,6 +14,7 @@ const SERVICES = [
   {
     slug: "business-cards",
     name: "Business Cards",
+    image: "/images/services/business-cards.jpg",
     price: "from $39",
     description: "Standard, square, slim, circle, or leaf shapes, in 14 to 32pt paper. Files come back print-ready at 300-350 DPI with proper bleed.",
     highlights: ["Standard 2 × 3.5 in, plus specialty shapes", "14pt to 32pt paper weights", "Up to 8 revisions included"],
@@ -22,6 +23,7 @@ const SERVICES = [
   {
     slug: "postcards",
     name: "Postcards",
+    image: "/images/services/postcards.jpg",
     price: "from $49",
     description: "Six popular sizes from 3×5 to 6×11, front-and-back design, and EDDM-ready layouts for mail campaigns.",
     highlights: ["3×5 up to 6×11, EDDM-ready", "Front and back design", "Up to 8 revisions included"],
@@ -30,6 +32,7 @@ const SERVICES = [
   {
     slug: "banners",
     name: "Banners",
+    image: "/images/services/banners.jpg",
     price: "from $79",
     description: "Retractable roll-up stands for trade shows and offices, or large-format vinyl for storefronts and outdoor events.",
     highlights: ["Roll-up stands and vinyl, 24″ to 10 ft", "Bleed, safe zone, and grommet specs included", "Up to 8 revisions included"],
@@ -38,6 +41,7 @@ const SERVICES = [
   {
     slug: "rigid-signs",
     name: "Rigid Signs",
+    image: "/images/services/rigid-signs.jpg",
     price: "from $59",
     description: "Die-cut rigid signage in circle, star, arrow, house, or rounded-square shapes, available in acrylic, aluminum, PVC, foam board, or corrugated plastic.",
     highlights: ["5 shapes, 5 materials", "Print-ready file with die line included", "Up to 8 revisions included"],
@@ -45,16 +49,7 @@ const SERVICES = [
   },
 ];
 
-export const revalidate = 3600;
-
-export default async function ServicesPage() {
-  const thumbnails = await Promise.all(
-    SERVICES.map((s) => getFeaturedThumbnails(s.slug as Parameters<typeof getFeaturedThumbnails>[0], 1))
-  );
-  const thumbnailBySlug: Record<string, ProductThumbnail | undefined> = Object.fromEntries(
-    SERVICES.map((s, i) => [s.slug, thumbnails[i][0]])
-  );
-
+export default function ServicesPage() {
   return (
     <div>
       <div className="section-pad-tight bg-kc-bg">
@@ -68,18 +63,18 @@ export default async function ServicesPage() {
 
       <div className="container-tight px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {SERVICES.map((s) => {
-            const thumb = thumbnailBySlug[s.slug];
-            return (
+          {SERVICES.map((s) => (
             <Link key={s.slug} href={`/services/${s.slug}`} className="group flex flex-col overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
-              {thumb ? (
-                <div className="aspect-[16/10] w-full overflow-hidden bg-kc-bg">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={thumb.url} alt={thumb.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
-                </div>
-              ) : (
-                <div className={`h-1.5 w-full ${s.accent}`} />
-              )}
+              <div className="relative aspect-[16/10] w-full overflow-hidden bg-kc-bg">
+                <Image
+                  src={s.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 25vw, 50vw"
+                  className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              </div>
+              <div className={`h-1.5 w-full ${s.accent}`} />
               <div className="flex flex-1 flex-col p-6">
                 <div className="mb-3 flex items-baseline justify-between gap-2">
                   <h2 className="text-xl font-bold text-kc-dark group-hover:text-kc-teal transition-colors">{s.name}</h2>
@@ -96,8 +91,7 @@ export default async function ServicesPage() {
                 </div>
               </div>
             </Link>
-            );
-          })}
+          ))}
         </div>
 
         <div className="mt-16 flex flex-col items-start justify-between gap-6 rounded-md border border-kc-border bg-kc-violet-tint p-8 sm:flex-row sm:items-center">

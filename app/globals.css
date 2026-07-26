@@ -5,20 +5,21 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* KC Printing — Prestige palette (violet × orange × warm cream) */
+  /* KC Printing — CMYK print palette (blue × magenta × gold), sampled from the FreePrint/PRINT
+     Company reference logos: vivid process-print colors instead of the prior violet/orange scheme */
   --color-kc-bg:          #FAFAF8;   /* warm off-white — like quality paper stock */
   --color-kc-surface:     #FFFFFF;
-  --color-kc-teal:        #7C3AED;   /* PRIMARY: deep violet — creative, premium */
-  --color-kc-teal-light:  #A78BFA;   /* violet-400 — hover / lighter accents */
-  --color-kc-coral:       #F97316;   /* CTA: vibrant orange — warm, energetic */
-  --color-kc-orange:      #F97316;   /* alias of kc-coral — used by AI-generation UI accents */
-  --color-kc-yellow:      #FBBF24;   /* amber — stars, badges, highlights */
-  --color-kc-sage:        #10B981;   /* emerald — success, live indicators */
+  --color-kc-teal:        #0099D8;   /* PRIMARY: cyan-blue — sampled from logo wing/background */
+  --color-kc-teal-light:  #48B4FC;   /* lighter blue — hover / lighter accents */
+  --color-kc-coral:       #E6007E;   /* CTA: vivid magenta — sampled from logo wordmark accent */
+  --color-kc-orange:      #F2900C;   /* distinct orange — used by AI-generation UI accents */
+  --color-kc-yellow:      #FBC800;   /* gold — sampled from logo wing, stars/badges/highlights */
+  --color-kc-sage:        #10B981;   /* emerald — success, live indicators (kept for semantic clarity) */
   --color-kc-dark:        #0C0A09;   /* near-black — TEXT only (not backgrounds) */
   --color-kc-border:      #E5E5E5;   /* neutral zinc border */
   --color-kc-muted:       #737373;   /* muted gray text */
-  --color-kc-violet-tint: #F5F3FF;   /* very light violet — alt section bg */
-  --color-kc-orange-tint: #FFF7ED;   /* very light orange — warm section bg */
+  --color-kc-violet-tint: #EFF6FF;   /* very light blue — alt section bg */
+  --color-kc-orange-tint: #FDF2F8;   /* very light pink — warm section bg */
 
   /* shadcn semantic tokens */
   --color-background:          var(--background);
@@ -76,12 +77,12 @@
   --popover:               oklch(1 0 0);
   --popover-foreground:    oklch(0.10 0.008 60);
 
-  /* primary = violet #7C3AED */
-  --primary:               oklch(0.47 0.27 293);
+  /* primary = cyan-blue #0099D8 */
+  --primary:               oklch(0.60 0.14 232);
   --primary-foreground:    oklch(1 0 0);
 
-  /* secondary = orange #F97316 */
-  --secondary:             oklch(0.72 0.18 50);
+  /* secondary = magenta #E6007E */
+  --secondary:             oklch(0.52 0.24 355);
   --secondary-foreground:  oklch(1 0 0);
 
   --muted:                 oklch(0.96 0.004 80);
@@ -91,24 +92,24 @@
   --destructive:           oklch(0.577 0.245 27.325);
   --border:                oklch(0.91 0.002 60);
   --input:                 oklch(0.94 0.002 60);
-  --ring:                  oklch(0.47 0.27 293);
+  --ring:                  oklch(0.60 0.14 232);
 
-  --chart-1: oklch(0.47 0.27 293);
-  --chart-2: oklch(0.72 0.18 50);
-  --chart-3: oklch(0.80 0.15 85);
+  --chart-1: oklch(0.60 0.14 232);
+  --chart-2: oklch(0.52 0.24 355);
+  --chart-3: oklch(0.83 0.15 90);
   --chart-4: oklch(0.60 0.15 160);
-  --chart-5: oklch(0.55 0.20 293);
+  --chart-5: oklch(0.65 0.18 55);
 
   --radius: 0.625rem;
 
   --sidebar:                    oklch(0.10 0.008 60);
   --sidebar-foreground:         oklch(0.98 0.002 60);
-  --sidebar-primary:            oklch(0.47 0.27 293);
+  --sidebar-primary:            oklch(0.60 0.14 232);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent:             oklch(0.18 0.01 60);
   --sidebar-accent-foreground:  oklch(0.98 0.002 60);
   --sidebar-border:             oklch(0.22 0.008 60);
-  --sidebar-ring:               oklch(0.47 0.27 293);
+  --sidebar-ring:               oklch(0.60 0.14 232);
 }
 
 .dark {
@@ -118,9 +119,9 @@
   --card-foreground:       oklch(0.98 0.002 60);
   --popover:               oklch(0.15 0.01 60);
   --popover-foreground:    oklch(0.98 0.002 60);
-  --primary:               oklch(0.65 0.22 293);
+  --primary:               oklch(0.68 0.14 232);
   --primary-foreground:    oklch(0.10 0.008 60);
-  --secondary:             oklch(0.72 0.18 50);
+  --secondary:             oklch(0.60 0.22 355);
   --secondary-foreground:  oklch(0.10 0.008 60);
   --muted:                 oklch(0.22 0.008 60);
   --muted-foreground:      oklch(0.62 0.006 60);
@@ -129,15 +130,15 @@
   --destructive:           oklch(0.704 0.191 22.216);
   --border:                oklch(1 0 0 / 10%);
   --input:                 oklch(1 0 0 / 15%);
-  --ring:                  oklch(0.65 0.22 293);
+  --ring:                  oklch(0.68 0.14 232);
   --sidebar:               oklch(0.10 0.008 60);
   --sidebar-foreground:    oklch(0.98 0.002 60);
-  --sidebar-primary:       oklch(0.65 0.22 293);
+  --sidebar-primary:       oklch(0.68 0.14 232);
   --sidebar-primary-foreground: oklch(0.10 0.008 60);
   --sidebar-accent:        oklch(0.18 0.008 60);
   --sidebar-accent-foreground: oklch(0.98 0.002 60);
   --sidebar-border:        oklch(1 0 0 / 10%);
-  --sidebar-ring:          oklch(0.65 0.22 293);
+  --sidebar-ring:          oklch(0.68 0.14 232);
 }
 
 @layer base {
@@ -183,36 +184,36 @@
 
   /* Brand gradient — used sparingly, as a signature moment rather than a default background */
   .text-gradient-brand {
-    background: linear-gradient(135deg, #7C3AED 0%, #C026D3 50%, #F97316 100%);
+    background: linear-gradient(135deg, #0099D8 0%, #E6007E 50%, #FBC800 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .text-gradient-violet {
-    background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%);
+    background: linear-gradient(135deg, #0099D8 0%, #0077AD 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .bg-gradient-brand {
-    background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 40%, #4F46E5 100%);
+    background: linear-gradient(135deg, #0077AD 0%, #0099D8 40%, #48B4FC 100%);
   }
   .bg-gradient-violet-card {
-    background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 50%, #4338CA 100%);
+    background: linear-gradient(135deg, #0077AD 0%, #0099D8 50%, #005580 100%);
   }
   .gradient-coral {
-    background: linear-gradient(135deg, #F97316 0%, #FBBF24 100%);
+    background: linear-gradient(135deg, #E6007E 0%, #FBC800 100%);
   }
 
   .shadow-orange-glow {
-    box-shadow: 0 4px 28px -4px rgba(249, 115, 22, 0.40);
+    box-shadow: 0 4px 28px -4px rgba(242, 144, 12, 0.40);
   }
   .shadow-violet-glow {
-    box-shadow: 0 4px 28px -4px rgba(124, 58, 237, 0.35);
+    box-shadow: 0 4px 28px -4px rgba(0, 153, 216, 0.35);
   }
 
   .hover-card-lift {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-8px_rgba(124,58,237,0.15)] hover:border-kc-teal/25;
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_32px_-8px_rgba(0,153,216,0.15)] hover:border-kc-teal/25;
   }
 
   /* Print-inspired details — used sparingly as small, tasteful accents, not decoration everywhere */

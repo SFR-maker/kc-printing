@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/auth/requireAdmin";
+import { safeClerkUserId } from "@/lib/safe-auth";
 import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
 
@@ -31,11 +32,18 @@ const schema = z.object({
   quantity: z.number().int().min(1).default(1),
   cardDesignId: z.string().optional(),
   bcSpec: bcSpecSchema.optional(),
+  // Only required for guests (see the userId check below) — a signed-in user's account email is
+  // used instead, but the field is accepted either way so the client doesn't need to know the
+  // customer's auth state before submitting.
+  guestEmail: z.string().email().optional(),
 });
 
 export async function POST(req: Request) {
-  const { error, user } = await requireAuth();
-  if (error) return error;
+  // Guest checkout: purchasing doesn't require an account, only AI features do. Resolve the
+  // signed-in user if there is one, but don't hard-block anonymous requests the way requireAuth()
+  // does — a guest just needs a valid email so there's somewhere to send confirmation and files.
+  const clerkId = await safeClerkUserId();
+  const user = clerkId ? await db.user.findUnique({ where: { clerkId } }) : null;
 
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
@@ -43,7 +51,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, ...config } = parsed.data;
+  if (!user && !parsed.data.guestEmail) {
+    return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
+  }
+
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, ...config } = parsed.data;
 
   const product = await db.product.findUnique({ where: { slug: service }, include: { packages: true, addOns: true } });
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -74,7 +86,8 @@ export async function POST(req: Request) {
 
   const order = await db.order.create({
     data: {
-      userId: user!.id,
+      userId: user?.id ?? null,
+      guestEmail: user ? null : guestEmail,
       status: "DRAFT",
       total,
       items: {

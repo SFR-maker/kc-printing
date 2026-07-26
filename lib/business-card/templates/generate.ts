@@ -19,7 +19,7 @@ export function generateAllTemplates(): CardTemplate[] {
         schemaVersion: 1,
         id: slug,
         slug,
-        title: `${cat.label} — ${titleCase(archetype.name)}`,
+        title: `${cat.label}: ${titleCase(archetype.name)}`,
         description: `A ${archetype.style} ${archetype.name.replace(/-/g, " ")} business card layout for ${cat.label.toLowerCase()} businesses.`,
         industry: cat.key,
         style: archetype.style,

@@ -94,7 +94,7 @@ export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSp
             </SelectContent>
           </Select>
           {!comboOk && (
-            <p className="text-xs text-amber-600">This paper doesn&apos;t support that side option — pick a different paper or sides.</p>
+            <p className="text-xs text-amber-600">This paper doesn&apos;t support that side option. Pick a different paper or sides.</p>
           )}
         </div>
 

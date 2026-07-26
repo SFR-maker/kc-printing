@@ -20,7 +20,7 @@ export function generateRigidSignTemplates(): CardTemplate[] {
           schemaVersion: 1,
           id: slug,
           slug,
-          title: `${cat.label} — ${titleCase(shapeName)} ${titleCase(archetype.name)}`,
+          title: `${cat.label}: ${titleCase(shapeName)} ${titleCase(archetype.name)}`,
           description: `A ${archetype.style} ${shapeName.replace(/-/g, " ")}-shaped rigid sign layout for ${cat.label.toLowerCase()} businesses.`,
           industry: cat.key,
           style: archetype.style,

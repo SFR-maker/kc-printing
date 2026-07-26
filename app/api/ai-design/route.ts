@@ -9,30 +9,26 @@ import { PRODUCT_DB_VALUE, type DesignProduct } from "@/lib/business-card/print-
 import { resolveAiPalette } from "@/lib/business-card/templates/ai-palettes";
 import { buildCustomBusinessCard, buildCustomPostcard, buildCustomBanner, type BannerFormat } from "@/lib/business-card/templates/ai-custom";
 
-async function resolveIdentity(anonymousToken: string | undefined): Promise<{ userId: string | null; anonymousToken: string | null } | null> {
+// AI generation requires a signed-in account (purchasing does not — see app/api/orders) so usage
+// is tied to a real identity rather than a browser-local anonymousToken that resets the moment
+// someone clears storage or switches devices.
+async function resolveIdentity(): Promise<{ userId: string } | null> {
   const clerkId = await safeClerkUserId();
-  if (clerkId) {
-    const user = await db.user.findUnique({ where: { clerkId } });
-    if (user) return { userId: user.id, anonymousToken: null };
-  }
-  if (anonymousToken) return { userId: null, anonymousToken };
-  return null;
+  if (!clerkId) return null;
+  const user = await db.user.findUnique({ where: { clerkId } });
+  return user ? { userId: user.id } : null;
 }
 
-async function usageFor(identity: { userId: string | null; anonymousToken: string | null }): Promise<number> {
-  return db.aiDesignGeneration.count({
-    where: identity.userId ? { userId: identity.userId } : { anonymousToken: identity.anonymousToken },
-  });
+async function usageFor(identity: { userId: string }): Promise<number> {
+  return db.aiDesignGeneration.count({ where: { userId: identity.userId } });
 }
 
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const anonymousToken = url.searchParams.get("anonymousToken") ?? undefined;
-  const identity = await resolveIdentity(anonymousToken);
-  if (!identity) return NextResponse.json({ used: 0, limit: FREE_AI_DESIGN_LIMIT, remaining: FREE_AI_DESIGN_LIMIT });
+export async function GET() {
+  const identity = await resolveIdentity();
+  if (!identity) return NextResponse.json({ requiresSignIn: true, used: 0, limit: FREE_AI_DESIGN_LIMIT, remaining: 0 });
 
   const used = await usageFor(identity);
-  return NextResponse.json({ used, limit: FREE_AI_DESIGN_LIMIT, remaining: Math.max(0, FREE_AI_DESIGN_LIMIT - used) });
+  return NextResponse.json({ requiresSignIn: false, used, limit: FREE_AI_DESIGN_LIMIT, remaining: Math.max(0, FREE_AI_DESIGN_LIMIT - used) });
 }
 
 const bodySchema = z.object({
@@ -48,7 +44,6 @@ const bodySchema = z.object({
   address: z.string().max(160).default(""),
   colorPaletteId: z.string().default("auto"),
   includeQrCode: z.boolean().default(false),
-  anonymousToken: z.string().optional(),
 });
 
 const NON_BANNER_TARGET: Record<"business-card" | "postcard", { w: number; h: number }> = {
@@ -67,8 +62,8 @@ export async function POST(req: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request", details: parsed.error.flatten() }, { status: 400 });
   const data = parsed.data;
 
-  const identity = await resolveIdentity(data.anonymousToken);
-  if (!identity) return NextResponse.json({ error: "Missing identity" }, { status: 400 });
+  const identity = await resolveIdentity();
+  if (!identity) return NextResponse.json({ error: "Sign in to use AI design generation" }, { status: 401 });
 
   const used = await usageFor(identity);
   if (used >= FREE_AI_DESIGN_LIMIT) {
@@ -122,7 +117,6 @@ export async function POST(req: Request) {
       title: data.businessName,
       front,
       back,
-      anonymousToken: identity.userId ? null : identity.anonymousToken,
       meta: {
         businessName: data.businessName,
         phone: data.phone,
@@ -135,7 +129,7 @@ export async function POST(req: Request) {
   });
 
   await db.aiDesignGeneration.create({
-    data: { userId: identity.userId, anonymousToken: identity.userId ? null : identity.anonymousToken, product: PRODUCT_DB_VALUE[product] },
+    data: { userId: identity.userId, product: PRODUCT_DB_VALUE[product] },
   });
 
   // front/back are returned (not just the id) so the dialog can render an immediate preview of what

@@ -237,7 +237,7 @@ export const iconRow: Archetype = (ctx) => {
   const front = solidSide("#FFFFFF", [
     text({ x: 0.3, y: 0.32, width: 3.15, height: 0.3, text: ctx.name, fontFamily: ctx.headingFont, fontSizePt: 15, fontWeight: "700", color: ink }),
     shape({ x: 0.3, y: 0.68, width: 0.9, height: 0.03, shape: "divider", fill: p }),
-    text({ x: 0.3, y: 0.8, width: 3.15, height: 0.2, text: `${ctx.title} — ${ctx.company}`, fontFamily: ctx.bodyFont, fontSizePt: 8, color: "#555555" }),
+    text({ x: 0.3, y: 0.8, width: 3.15, height: 0.2, text: `${ctx.title}, ${ctx.company}`, fontFamily: ctx.bodyFont, fontSizePt: 8, color: "#555555" }),
     text({ x: 0.3, y: 1.45, width: 1.05, height: 0.18, text: ctx.phone, fontFamily: ctx.bodyFont, fontSizePt: 6.5, color: ink, align: "left" }),
     text({ x: 1.35, y: 1.45, width: 1.05, height: 0.18, text: ctx.email, fontFamily: ctx.bodyFont, fontSizePt: 6.5, color: ink, align: "left" }),
     text({ x: 2.4, y: 1.45, width: 1.05, height: 0.18, text: ctx.website, fontFamily: ctx.bodyFont, fontSizePt: 6.5, color: ink, align: "left" }),

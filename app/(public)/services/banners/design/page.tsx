@@ -13,7 +13,7 @@ export default function BannerDesignPage() {
         <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-kc-teal">Design Studio</div>
         <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Design Your Banner</h1>
         <p className="mx-auto max-w-xl text-lg text-kc-muted">
-          Pick a template or start from scratch. Edit every detail, add your logo, and download a print-ready file — no design experience required.
+          Pick a template or start from scratch. Edit every detail, add your logo, and download a print-ready file. No design experience required.
         </p>
       </div>
       <TemplateGallery product="banner" />

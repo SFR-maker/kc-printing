@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getAnonymousToken } from "@/lib/business-card/local-autosave";
 import { PRODUCT_ROUTE_SEGMENT, type DesignProduct } from "@/lib/business-card/print-spec";
 import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
 import { renderSideToSvg } from "@/lib/business-card/render-svg";
@@ -44,16 +43,21 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [remaining, setRemaining] = useState<number | null>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "preview" | "error" | "limit">("idle");
+  const [status, setStatus] = useState<"idle" | "signin" | "loading" | "preview" | "error" | "limit">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [preview, setPreview] = useState<PreviewData | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    const token = getAnonymousToken();
-    fetch(`/api/ai-design?anonymousToken=${encodeURIComponent(token)}`)
+    fetch("/api/ai-design")
       .then((res) => res.json())
-      .then((data) => setRemaining(data.remaining ?? 0))
+      .then((data) => {
+        if (data.requiresSignIn) {
+          setStatus("signin");
+          return;
+        }
+        setRemaining(data.remaining ?? 0);
+      })
       .catch(() => setRemaining(null));
   }, [open]);
 
@@ -67,8 +71,12 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
       const res = await fetch("/api/ai-design", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product, anonymousToken: getAnonymousToken(), ...form }),
+        body: JSON.stringify({ product, ...form }),
       });
+      if (res.status === 401) {
+        setStatus("signin");
+        return;
+      }
       if (res.status === 429) {
         setStatus("limit");
         setRemaining(0);
@@ -117,15 +125,26 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
       <DialogContent className={status === "preview" ? "max-w-xl" : "max-w-lg"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-kc-orange" /> Create with AI</DialogTitle>
-          {status !== "preview" && (
+          {status !== "preview" && status !== "signin" && (
             <DialogDescription>
-              Tell us about your business and we&apos;ll generate a custom design — background art included.
+              Tell us about your business and we&apos;ll generate a custom design, background art included.
               {remaining !== null && <span className="mt-1 block font-medium text-kc-dark">{remaining} free AI design{remaining === 1 ? "" : "s"} remaining.</span>}
             </DialogDescription>
           )}
         </DialogHeader>
 
-        {status === "limit" ? (
+        {status === "signin" ? (
+          <div className="space-y-3">
+            <p className="text-sm text-kc-muted">
+              AI design generation is a free account perk. Sign in (or create a free account) to get 3 AI-generated designs, no strings attached. You can still browse templates and order without an account.
+            </p>
+            <Button asChild className="w-full bg-kc-orange text-white hover:bg-kc-orange/90">
+              <a href={`/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}>
+                Sign In to Use AI
+              </a>
+            </Button>
+          </div>
+        ) : status === "limit" ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             You&apos;ve used all your free AI designs. Browse our template gallery to keep designing, or contact us for more.
           </div>
@@ -149,10 +168,10 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
               <Textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Boutique real estate agency in Kansas City specializing in family homes — warm, trustworthy, upscale feel"
+                placeholder="Boutique real estate agency in Kansas City specializing in family homes: warm, trustworthy, upscale feel"
                 rows={2}
               />
-              <p className="text-xs text-kc-muted">Used to generate your background art — the more descriptive, the better.</p>
+              <p className="text-xs text-kc-muted">Used to generate your background art. The more descriptive, the better.</p>
             </div>
 
             <div className="space-y-1.5">

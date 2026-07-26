@@ -43,7 +43,7 @@ export default async function AdminOrdersPage({ searchParams }: { searchParams: 
               {orders.map((order) => (
                 <tr key={order.id} className="hover:bg-kc-bg transition-colors">
                   <td className="px-4 py-3 font-mono text-xs text-kc-teal">#{order.id.slice(-8)}</td>
-                  <td className="px-4 py-3 text-kc-dark">{order.user?.name ?? order.user?.email ?? "Unknown"}</td>
+                  <td className="px-4 py-3 text-kc-dark">{order.user?.name ?? order.user?.email ?? order.guestEmail ?? "Unknown"}</td>
                   <td className="px-4 py-3 text-kc-muted">{order.items[0]?.product?.name ?? "-"}</td>
                   <td className="px-4 py-3 text-kc-muted">{order.items[0]?.packageTierId ? "Package" : "-"}</td>
                   <td className="px-4 py-3 font-medium text-kc-dark">{formatDollars(order.total)}</td>

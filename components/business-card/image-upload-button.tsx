@@ -77,7 +77,7 @@ export function ImageUploadButton({ onInserted }: { onInserted?: () => void }) {
     addElement(activeSide, el);
     const dpi = imageEffectiveDpi(uploaded.width, el.width);
     if (dpi < MIN_PRINT_DPI) {
-      setWarning(`This image is about ${Math.round(dpi)} DPI at its inserted size — it may look blurry when printed. Use a larger image or shrink it on the card.`);
+      setWarning(`This image is about ${Math.round(dpi)} DPI at its inserted size. It may look blurry when printed. Use a larger image or shrink it on the card.`);
     }
     onInserted?.();
   }
@@ -88,7 +88,7 @@ export function ImageUploadButton({ onInserted }: { onInserted?: () => void }) {
     addElement(activeSide, el, false);
     const dpi = imageEffectiveDpi(uploaded.width, el.width);
     if (dpi < MIN_PRINT_DPI) {
-      setWarning(`This image is about ${Math.round(dpi)} DPI at full-card size — it may look blurry when printed.`);
+      setWarning(`This image is about ${Math.round(dpi)} DPI at full-card size. It may look blurry when printed.`);
     }
     onInserted?.();
   }

@@ -75,7 +75,7 @@ export default async function AdminDashboard() {
                         #{order.id.slice(-8)}
                       </Link>
                     </td>
-                    <td className="py-2.5 text-kc-dark">{order.user?.name ?? order.user?.email ?? "Unknown"}</td>
+                    <td className="py-2.5 text-kc-dark">{order.user?.name ?? order.user?.email ?? order.guestEmail ?? "Unknown"}</td>
                     <td className="py-2.5 text-kc-muted">{order.items[0]?.product?.name ?? "-"}</td>
                     <td className="py-2.5 font-medium text-kc-dark">{formatDollars(order.total)}</td>
                     <td className="py-2.5">

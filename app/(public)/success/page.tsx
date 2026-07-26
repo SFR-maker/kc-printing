@@ -59,7 +59,7 @@ export default async function SuccessPage({
         <XCircle className="h-16 w-16 text-kc-muted mx-auto mb-6" />
         <h1 className="text-3xl font-black text-kc-dark mb-3">Payment Not Completed</h1>
         <p className="text-kc-muted text-lg mb-8 leading-relaxed">
-          We couldn&apos;t confirm payment for this order. If you were charged, contact us and we&apos;ll sort it out right away — otherwise, you can return and try again.
+          We couldn&apos;t confirm payment for this order. If you were charged, contact us and we&apos;ll sort it out right away. Otherwise, you can return and try again.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-3">
           <Button asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">

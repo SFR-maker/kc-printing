@@ -168,7 +168,11 @@ model AddOn {
 
 model Order {
   id                   String      @id @default(cuid())
-  userId               String
+  // Null for guest checkout orders — guests aren't required to sign in to purchase, only to use
+  // AI features. guestEmail is required whenever userId is null (enforced in app/api/orders) so
+  // there's always somewhere to send the confirmation and print files.
+  userId               String?
+  guestEmail           String?
   status               OrderStatus @default(DRAFT)
   total                Float       @default(0)
   stripeSessionId      String?     @unique
@@ -179,7 +183,7 @@ model Order {
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
-  user    User        @relation(fields: [userId], references: [id])
+  user    User?       @relation(fields: [userId], references: [id])
   coupon  Coupon?     @relation(fields: [couponId], references: [id])
   items   OrderItem[]
   project Project?

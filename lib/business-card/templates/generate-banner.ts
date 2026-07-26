@@ -16,7 +16,7 @@ export function generateBannerTemplates(): CardTemplate[] {
         schemaVersion: 1,
         id: slug,
         slug,
-        title: `${cat.label} — ${titleCase(archetype.name)}`,
+        title: `${cat.label}: ${titleCase(archetype.name)}`,
         description: `A ${archetype.style} ${isRollup ? "roll-up stand" : "vinyl"} banner layout for ${cat.label.toLowerCase()} businesses.`,
         industry: cat.key,
         style: archetype.style,

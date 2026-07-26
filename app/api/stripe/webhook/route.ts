@@ -23,9 +23,13 @@ export async function POST(req: Request) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.orderId;
-    const userId = session.metadata?.userId;
+    // Guest orders have no userId in metadata (empty string, see app/api/stripe/checkout) — that's
+    // expected, not a reason to skip marking the order paid. Previously this whole block required
+    // both orderId AND userId, so a guest's payment was taken but the order was never marked PAID,
+    // no confirmation email sent, and no fulfillment record created.
+    const userId = session.metadata?.userId || null;
 
-    if (orderId && userId) {
+    if (orderId) {
       const order = await db.order.update({
         where: { id: orderId },
         data: {
@@ -34,7 +38,10 @@ export async function POST(req: Request) {
         },
       });
 
-      if (order.id) {
+      // Project tracking (the account-dashboard timeline) only applies to signed-in customers who
+      // have somewhere to view it — guest orders still get marked PAID and emailed above/below,
+      // just without a Project row.
+      if (order.id && userId) {
         await db.project.upsert({
           where: { orderId },
           update: {},
@@ -58,14 +65,15 @@ export async function POST(req: Request) {
         where: { id: orderId },
         include: { user: true, items: { include: { product: true, packageTier: true } } },
       });
-      if (fullOrder?.user?.email) {
+      const customerEmail = fullOrder?.user?.email ?? fullOrder?.guestEmail;
+      if (customerEmail) {
         const emailData = {
-          customerName: fullOrder.user.name ?? fullOrder.user.email,
-          customerEmail: fullOrder.user.email,
+          customerName: fullOrder?.user?.name ?? customerEmail,
+          customerEmail,
           orderId,
-          serviceName: fullOrder.items[0]?.product?.name ?? "Design Service",
-          packageName: fullOrder.items[0]?.packageTier?.name ?? "",
-          total: fullOrder.total,
+          serviceName: fullOrder?.items[0]?.product?.name ?? "Design Service",
+          packageName: fullOrder?.items[0]?.packageTier?.name ?? "",
+          total: fullOrder?.total ?? 0,
         };
         await Promise.all([sendOrderConfirmation(emailData), sendAdminNewOrder(emailData)]);
       }

@@ -136,9 +136,9 @@ export const SERVICES: Record<string, ServiceDef> = {
   "rigid-signs": {
     slug: "rigid-signs",
     name: "Rigid Signs",
-    tagline: "Die-cut rigid signage in custom shapes and materials — acrylic, aluminum, PVC, foam board, and corrugated plastic.",
+    tagline: "Die-cut rigid signage in custom shapes and materials: acrylic, aluminum, PVC, foam board, and corrugated plastic.",
     description:
-      "Custom rigid sign designs cut to shape — circle, star, arrow, house, or rounded square — in the material that fits your use case. Files include proper bleed and a clean die line for professional cutting.",
+      "Custom rigid sign designs cut to shape (circle, star, arrow, house, or rounded square) in the material that fits your use case. Files include proper bleed and a clean die line for professional cutting.",
     icon: "🪧",
     specs: [
       { label: "Shapes", value: "Rounded Square, Circle, Star, Arrow, House" },
@@ -161,8 +161,8 @@ export const SERVICES: Record<string, ServiceDef> = {
     ],
     faqs: [
       { q: "Which material should I choose?", a: "Acrylic and aluminum give a premium, long-lasting look for storefronts and offices. PVC and foam board are lightweight and budget-friendly for indoor use or short-term displays. Corrugated plastic is the most weather-resistant, affordable choice for yard and event signs. Tell us your use case and we'll recommend the right material." },
-      { q: "Can I get a shape that's not in the standard list?", a: "Yes — add the Custom Shape add-on and describe (or upload) the outline you need. We'll cut a die line to match." },
-      { q: "How does the die line work?", a: "We design on a standard rectangular canvas sized to comfortably contain your chosen shape, then apply the shape as a precise cut line at export — what you design maps exactly onto the final die-cut sign, with 0.125 in bleed so color runs to the edge with no white gaps." },
+      { q: "Can I get a shape that's not in the standard list?", a: "Yes. Add the Custom Shape add-on and describe (or upload) the outline you need. We'll cut a die line to match." },
+      { q: "How does the die line work?", a: "We design on a standard rectangular canvas sized to comfortably contain your chosen shape, then apply the shape as a precise cut line at export. What you design maps exactly onto the final die-cut sign, with 0.125 in bleed so color runs to the edge with no white gaps." },
       { q: "What file format does the printer need?", a: "We deliver a print-ready PDF with the die line marked, plus a high-res JPG preview. Both include bleed and safe-zone guides." },
       { q: "Can I use my existing brand colors and logo?", a: "Yes. Upload your existing logo and brand guidelines in the order. If you do not have a style guide, fill out the brand questionnaire and our designer will match your colors as closely as possible." },
     ],

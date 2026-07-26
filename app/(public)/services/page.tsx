@@ -38,7 +38,7 @@ const SERVICES = [
     slug: "rigid-signs",
     name: "Rigid Signs",
     price: "from $59",
-    description: "Die-cut rigid signage in circle, star, arrow, house, or rounded-square shapes — acrylic, aluminum, PVC, foam board, or corrugated plastic.",
+    description: "Die-cut rigid signage in circle, star, arrow, house, or rounded-square shapes, available in acrylic, aluminum, PVC, foam board, or corrugated plastic.",
     highlights: ["5 shapes, 5 materials", "Print-ready file with die line included", "Up to 8 revisions included"],
     accent: "bg-kc-sage",
   },
@@ -51,7 +51,7 @@ export default function ServicesPage() {
         <div className="container-tight max-w-2xl">
           <h1 className="mb-3 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">All Services</h1>
           <p className="text-lg text-kc-muted">
-            Four products, each built around a designer who knows the format — not a template engine.
+            Four products, each built around a designer who knows the format, not a template engine.
           </p>
         </div>
       </div>

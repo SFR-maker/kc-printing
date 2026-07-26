@@ -62,10 +62,10 @@ const SERVICES = [
 
 const FAQS = [
   { q: "How does the ordering process work?", a: "Choose your product and package, upload your artwork or notes, and our designers get to work. You'll see your first draft within 1-3 business days. Request revisions and download your print-ready files once you approve." },
-  { q: "What file formats do you deliver?", a: "Business cards, postcards, banners, and rigid signs all come as a print-ready PDF with proper bleed (and a die line for rigid signs), plus a high-resolution JPG and PNG — ready to send to any print shop, including ours." },
+  { q: "What file formats do you deliver?", a: "Business cards, postcards, banners, and rigid signs all come as a print-ready PDF with proper bleed (and a die line for rigid signs), plus a high-resolution JPG and PNG, ready to send to any print shop, including ours." },
   { q: "I don't have a finished design. Can you still help?", a: "Yes. Upload a logo, some brand colors, or just tell us what you're going for, and our AI-assisted brief tool helps capture the direction before a real designer starts the layout." },
   { q: "Can I request revisions?", a: "Yes. Every package includes 4 to 8 revisions depending on the tier. Need more than that? Additional revisions are available at a flat rate." },
-  { q: "Do you serve businesses outside Kansas City?", a: "We do. KC Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide — all ordering and file delivery happens online." },
+  { q: "Do you serve businesses outside Kansas City?", a: "We do. KC Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide. All ordering and file delivery happens online." },
 ];
 
 export default async function HomePage() {
@@ -88,7 +88,7 @@ export default async function HomePage() {
             </div>
 
             <h1 className="mb-6 max-w-lg text-4xl font-black leading-[1.08] tracking-tight text-kc-dark sm:text-5xl lg:text-[3.4rem]">
-              Business cards, postcards, banners, and rigid signs — designed and printed right.
+              Business cards, postcards, banners, and rigid signs, designed and printed right.
             </h1>
 
             <p className="mb-8 max-w-md text-lg leading-relaxed text-kc-muted">
@@ -205,7 +205,7 @@ export default async function HomePage() {
               Have the idea but not the finished file?
             </h2>
             <p className="max-w-xl text-kc-muted">
-              You don&apos;t need to be a designer to order from us. Tell us what you&apos;re picturing, upload a logo or a few reference images, and a real person will build the layout — the AI brief tool just helps you get your thoughts down first.
+              You don&apos;t need to be a designer to order from us. Tell us what you&apos;re picturing, upload a logo or a few reference images, and a real person will build the layout. The AI brief tool just helps you get your thoughts down first.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">

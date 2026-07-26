@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,10 +19,6 @@ import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/build
 import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
 import { getAnonymousToken } from "@/lib/business-card/local-autosave";
 import type { ServiceDef } from "@/lib/service-data";
-
-// Baked in at build time, same pattern as components/layout/Header.tsx — lets us know whether a
-// signed-in check is even possible without calling Clerk hooks outside a ClerkProvider.
-const CLERK_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 const bcSpecSchema = z.object({
   sizeId: z.number(),
@@ -53,6 +48,10 @@ const schema = z.object({
   brandColorsNotes: z.string().optional(),
   quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
   bcSpec: bcSpecSchema.optional(),
+  // Collected at Review regardless of sign-in state, since the client has no reliable way to know
+  // auth status before submitting: guests need it so there's somewhere to send confirmation and
+  // print files (the API only actually requires it when the request turns out to be unauthenticated).
+  guestEmail: z.string().min(1, "Email is required").email("Enter a valid email"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -88,7 +87,6 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [designMetaLoaded, setDesignMetaLoaded] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(!cardDesignId);
-  const router = useRouter();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -209,7 +207,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         }),
       });
       if (res.status === 401) {
-        setAiResult("Sign in to use the AI copy generator — your other details on this page are saved.");
+        setAiResult("Sign in to use the AI copy generator. Your other details on this page are saved.");
         return;
       }
       if (res.status === 429) {
@@ -219,7 +217,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
       const data = await res.json() as { text?: string; error?: string };
       setAiResult(data.text || "That didn't go through on our end. Try again in a moment, or describe what you'd like in the notes field above.");
     } catch {
-      setAiResult("Couldn't reach the AI service — check your connection and try again, or describe what you'd like in the notes field above.");
+      setAiResult("Couldn't reach the AI service. Check your connection and try again, or describe what you'd like in the notes field above.");
     } finally {
       setAiLoading(false);
     }
@@ -236,13 +234,6 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ service: service.slug, cardDesignId, ...typed }),
       });
-
-      if (res.status === 401) {
-        setSubmitError(
-          "You'll need to sign in to complete your order — your details are saved, so nothing will be lost. Sign in and come back to this page to finish checking out."
-        );
-        return;
-      }
 
       const result = await res.json() as { orderId?: string; error?: string };
 
@@ -326,7 +317,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         {step === 0 && isBusinessCards && (
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
-            <p className="text-sm text-kc-muted">Real print pricing — size, paper, sides, and quantity all affect your price.</p>
+            <p className="text-sm text-kc-muted">Real print pricing: size, paper, sides, and quantity all affect your price.</p>
             <BusinessCardPrintSpec spec={values.bcSpec ?? DEFAULT_BC_SPEC} onChange={(next) => setValue("bcSpec", next)} />
           </div>
         )}
@@ -406,7 +397,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         {step === 1 && isBusinessCards && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Design Service</h2>
-            <p className="text-sm text-kc-muted">Have your own artwork? Skip this — you can upload your file after checkout. Want us to design it for you? Pick a package below.</p>
+            <p className="text-sm text-kc-muted">Have your own artwork? Skip this: you can upload your file after checkout. Want us to design it for you? Pick a package below.</p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <button
                 type="button"
@@ -668,7 +659,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               {!aiResult && !aiLoading && (
                 <p className="text-xs text-kc-muted">
                   {values.businessName
-                    ? "Uses your business name, notes, and brand colors above — click “Generate Ideas” and copy anything useful into the notes field."
+                    ? "Uses your business name, notes, and brand colors above. Click “Generate Ideas” and copy anything useful into the notes field."
                     : "Enter your business name above, then click “Generate Ideas” to get AI-written copy for this project."}
                 </p>
               )}
@@ -780,6 +771,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               </CardContent>
             </Card>
 
+            <div className="space-y-2">
+              <Label htmlFor="guestEmail">Email for order confirmation *</Label>
+              <Input id="guestEmail" type="email" placeholder="you@example.com" {...register("guestEmail")} />
+              <p className="text-xs text-kc-muted">
+                We&apos;ll send your receipt and print files here. You don&apos;t need an account to order, only to save designs or use AI generation.
+              </p>
+              {errors.guestEmail && <p className="text-xs text-red-500">{errors.guestEmail.message}</p>}
+            </div>
+
             {submitError && (
               <div className="flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 p-3.5 text-sm text-red-700">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -816,12 +816,6 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               className="bg-kc-teal hover:bg-kc-teal/90 text-white"
             >
               Next <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          ) : submitError?.startsWith("You'll need to sign in") ? (
-            <Button key="sign-in-button" asChild className="bg-kc-coral hover:bg-kc-coral/90 text-white">
-              <a href={`/sign-in?redirect_url=${encodeURIComponent(typeof window !== "undefined" ? window.location.pathname : "")}`}>
-                Sign In to Continue <ArrowRight className="ml-2 h-4 w-4" />
-              </a>
             </Button>
           ) : (
             <Button

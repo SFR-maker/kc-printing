@@ -15,7 +15,7 @@ export function generatePostcardTemplates(): CardTemplate[] {
         schemaVersion: 1,
         id: slug,
         slug,
-        title: `${cat.label} — ${titleCase(archetype.name)}`,
+        title: `${cat.label}: ${titleCase(archetype.name)}`,
         description: `A ${archetype.style} ${archetype.name.replace(/-/g, " ")} postcard layout for ${cat.label.toLowerCase()} businesses.`,
         industry: cat.key,
         style: archetype.style,

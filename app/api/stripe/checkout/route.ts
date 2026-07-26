@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import type Stripe from "stripe";
-import { requireAuth } from "@/lib/auth/requireAdmin";
+import { safeClerkUserId } from "@/lib/safe-auth";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
 
@@ -11,8 +11,11 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const { error, user } = await requireAuth();
-  if (error) return error;
+  // Guest checkout: no account required to pay, matching /api/orders. Ownership here is only
+  // meaningful for signed-in customers (an order id is an unguessable cuid, so a guest checking
+  // out their own just-created order without a session is expected, not a security gap).
+  const clerkId = await safeClerkUserId();
+  const user = clerkId ? await db.user.findUnique({ where: { clerkId } }) : null;
 
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
@@ -35,7 +38,9 @@ export async function POST(req: Request) {
   });
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
-  if (order.userId !== user!.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // A guest order (order.userId is null) can be paid by anyone holding its id; a signed-in
+  // customer's order can only be paid by that same account.
+  if (order.userId && order.userId !== user?.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -72,8 +77,8 @@ export async function POST(req: Request) {
     discounts,
     success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/cancel`,
-    metadata: { orderId, userId: user!.id },
-    customer_email: user!.email,
+    metadata: { orderId, userId: user?.id ?? "" },
+    customer_email: user?.email ?? order.guestEmail ?? undefined,
   });
 
   await db.order.update({

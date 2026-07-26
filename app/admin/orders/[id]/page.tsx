@@ -30,8 +30,8 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
         <Card className="border-kc-border">
           <CardContent className="p-4 space-y-2">
             <h3 className="font-semibold text-kc-dark text-sm">Customer</h3>
-            <p className="text-sm text-kc-muted">{order.user?.name ?? "Unknown"}</p>
-            <p className="text-sm text-kc-muted">{order.user?.email}</p>
+            <p className="text-sm text-kc-muted">{order.user?.name ?? (order.guestEmail ? "Guest" : "Unknown")}</p>
+            <p className="text-sm text-kc-muted">{order.user?.email ?? order.guestEmail}</p>
           </CardContent>
         </Card>
         <Card className="border-kc-border">

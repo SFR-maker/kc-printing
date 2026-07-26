@@ -27,7 +27,7 @@ export function ProofScreen({ design, onBack, onConfirm, confirming }: ProofScre
     <div className="mx-auto max-w-3xl space-y-6 p-6">
       <div>
         <h2 className="text-2xl font-black text-kc-dark">Review Your Design</h2>
-        <p className="text-sm text-kc-muted">Take a close look before we send this to production. Automated checks catch common issues, but they do not guarantee a perfect print — please review carefully.</p>
+        <p className="text-sm text-kc-muted">Take a close look before we send this to production. Automated checks catch common issues, but they do not guarantee a perfect print. Please review carefully.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

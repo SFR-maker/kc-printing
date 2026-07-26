@@ -101,7 +101,7 @@ export function QrDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
           </div>
           {lowContrast && (
             <p className="text-xs text-amber-600">
-              Low contrast ({ratio.toFixed(1)}:1) — this QR code may not scan reliably. Aim for at least 3:1.
+              Low contrast ({ratio.toFixed(1)}:1). This QR code may not scan reliably. Aim for at least 3:1.
             </p>
           )}
         </div>

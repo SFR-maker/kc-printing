@@ -18,9 +18,15 @@ async function getClerkHandler() {
   const isAdminRoute = createRouteMatcher(["/admin(.*)", "/api/admin(.*)"]);
 
   _handler = clerkMiddleware(async (auth, request) => {
-    if (!isAccountRoute(request) && !isAdminRoute(request)) return;
-
+    // Call auth() unconditionally (not just for /account and /admin) — on this Next.js build,
+    // clerkMiddleware only attaches the auth-context headers that downstream route handlers'
+    // auth()/safeClerkUserId() calls depend on when this callback actually invokes auth() for
+    // the request. Skipping it on the pass-through path (the previous behavior) meant every other
+    // route — including every /api/* handler — never got that context, so requireAuth() treated
+    // every request as signed-out regardless of actual session state. See lib/safe-auth.ts.
     const { userId, sessionClaims } = await auth();
+
+    if (!isAccountRoute(request) && !isAdminRoute(request)) return;
 
     if (!userId) {
       return NextResponse.redirect(new URL("/sign-in", request.url));

@@ -177,6 +177,12 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
     ? AI_PALETTES.find((p) => p.id === values.colorPaletteId)?.label
     : undefined;
 
+  const aiCopyDescription =
+    service.slug === "business-cards" ? "Writes a tagline, service list, and contact line ready to paste onto your card." :
+    service.slug === "postcards" ? "Writes a headline, subheadline, short body copy, and call-to-action for your postcard." :
+    service.slug === "banners" ? "Writes 3 attention-grabbing headline options sized for a banner." :
+    "Turns your notes into a short creative-direction summary for your designer.";
+
   const generateAI = async () => {
     setAiLoading(true);
     try {
@@ -199,10 +205,14 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         setAiResult("Sign in to use the AI copy generator — your other details on this page are saved.");
         return;
       }
+      if (res.status === 429) {
+        setAiResult("You've hit the hourly limit for AI generations. Try again in a bit, or describe what you'd like in the notes field above.");
+        return;
+      }
       const data = await res.json() as { text?: string; error?: string };
-      setAiResult(data.text || "AI is temporarily unavailable. Please describe your requirements in the notes field.");
+      setAiResult(data.text || "That didn't go through on our end. Try again in a moment, or describe what you'd like in the notes field above.");
     } catch {
-      setAiResult("AI is temporarily unavailable. Please describe your requirements in the notes field.");
+      setAiResult("Couldn't reach the AI service — check your connection and try again, or describe what you'd like in the notes field above.");
     } finally {
       setAiLoading(false);
     }
@@ -610,7 +620,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                   </div>
                   <div>
                     <span className="block font-semibold text-kc-dark text-sm">AI Copy Generator</span>
-                    <span className="block text-xs text-kc-muted">Get headline &amp; tagline ideas tailored to your business</span>
+                    <span className="block text-xs text-kc-muted">{aiCopyDescription}</span>
                   </div>
                 </div>
                 <Button type="button" onClick={generateAI} disabled={aiLoading || !values.businessName}
@@ -629,7 +639,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               )}
               {!aiResult && !aiLoading && (
                 <p className="text-xs text-kc-muted">
-                  {values.businessName ? "Click “Generate Ideas” for AI copy suggestions based on your business." : "Enter your business name above to generate AI copy suggestions."}
+                  {values.businessName
+                    ? "Uses your business name, notes, and brand colors above — click “Generate Ideas” and copy anything useful into the notes field."
+                    : "Enter your business name above, then click “Generate Ideas” to get AI-written copy for this project."}
                 </p>
               )}
             </div>

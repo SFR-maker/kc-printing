@@ -47,6 +47,26 @@ export const ourFileRouter = {
       return { url: file.url, name: file.name, size: file.size };
     }),
 
+  brandFile: f({
+    "image/png": { maxFileSize: "32MB", maxFileCount: 10 },
+    "image/jpeg": { maxFileSize: "32MB", maxFileCount: 10 },
+    "image/gif": { maxFileSize: "32MB", maxFileCount: 10 },
+    "image/bmp": { maxFileSize: "32MB", maxFileCount: 10 },
+    "application/pdf": { maxFileSize: "32MB", maxFileCount: 10 },
+    // Catches formats browsers don't map to a standard MIME type (TIF, EPS, AI, PSD) — the order
+    // form advertises those extensions, and UploadThing routes anything unrecognized here instead
+    // of rejecting it outright.
+    blob: { maxFileSize: "32MB", maxFileCount: 10 },
+  })
+    .middleware(async () => {
+      // Guest checkout doesn't require an account (see app/api/orders), so brand-file uploads on
+      // the order form's Details step must stay unauthenticated too.
+      return {};
+    })
+    .onUploadComplete(async ({ file }) => {
+      return { url: file.url, name: file.name, size: file.size };
+    }),
+
   portfolioImage: f({ "image/jpeg": { maxFileSize: "8MB" }, "image/png": { maxFileSize: "8MB" }, "image/webp": { maxFileSize: "8MB" } })
     .middleware(async () => {
       const { userId } = await auth();

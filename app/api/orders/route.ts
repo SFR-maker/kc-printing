@@ -28,6 +28,7 @@ const schema = z.object({
   linkedin: z.string().optional(),
   colorPaletteId: z.string().optional(),
   brandColorsNotes: z.string().optional(),
+  brandFiles: z.array(z.object({ url: z.string(), name: z.string() })).optional().default([]),
   notes: z.string().optional(),
   quantity: z.number().int().min(1).default(1),
   cardDesignId: z.string().optional(),

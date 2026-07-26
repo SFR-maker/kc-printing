@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, CheckCircle2, Sparkles, Upload, ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles, ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +16,7 @@ import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
+import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
 import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
 import { getAnonymousToken } from "@/lib/business-card/local-autosave";
 import type { ServiceDef } from "@/lib/service-data";
@@ -46,6 +47,7 @@ const schema = z.object({
   linkedin: z.string().optional(),
   colorPaletteId: z.string().optional(),
   brandColorsNotes: z.string().optional(),
+  brandFiles: z.array(z.object({ url: z.string(), name: z.string() })),
   quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
   bcSpec: bcSpecSchema.optional(),
   // Collected at Review regardless of sign-in state, since the client has no reliable way to know
@@ -95,7 +97,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
-            return { selectedAddOns: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, ...JSON.parse(saved) };
+            return { selectedAddOns: [], brandFiles: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, ...JSON.parse(saved) };
           } catch {
             // fall through to plain defaults below
           }
@@ -107,6 +109,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         // param silently fails to pre-select anything.
         selectedPackage: service.packages.find((p) => p.name.toLowerCase() === defaultPackage?.toLowerCase())?.name ?? "",
         selectedAddOns: [],
+        brandFiles: [],
         quantity: 1,
         bcSpec: DEFAULT_BC_SPEC,
         colorPaletteId: AI_PALETTE_AUTO_ID,
@@ -665,12 +668,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               )}
             </div>
 
-            <div className="border-2 border-dashed border-kc-border rounded-xl p-6 text-center">
-              <Upload className="h-8 w-8 text-kc-muted mx-auto mb-2" />
-              <p className="text-sm font-medium text-kc-dark mb-1">Upload Brand Files</p>
-              <p className="text-xs text-kc-muted">TIF, TIFF, EPS, AI, PSD, BMP, GIF, JPG, PNG, PDF up to 50MB</p>
-              <p className="text-xs text-kc-muted mt-1">File upload available in your account dashboard after order</p>
-            </div>
+            <BrandFileUpload
+              value={values.brandFiles ?? []}
+              onChange={(files: BrandFile[]) => setValue("brandFiles", files)}
+            />
           </div>
         )}
 
@@ -762,6 +763,14 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                   <div className="text-sm">
                     <span className="text-kc-muted">Notes</span>
                     <p className="mt-1 font-medium text-kc-dark">{values.notes}</p>
+                  </div>
+                )}
+                {values.brandFiles && values.brandFiles.length > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-kc-muted">Brand Files</span>
+                    <span className="font-medium text-kc-dark text-right">
+                      {values.brandFiles.length} file{values.brandFiles.length === 1 ? "" : "s"} attached
+                    </span>
                   </div>
                 )}
                 <div className="border-t border-kc-border pt-3 flex justify-between font-bold">

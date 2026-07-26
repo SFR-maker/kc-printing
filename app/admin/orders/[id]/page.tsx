@@ -4,6 +4,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDollars } from "@/lib/utils";
 import { AdminOrderActions } from "@/components/admin/AdminOrderActions";
+import { FileIcon } from "lucide-react";
+
+interface ItemConfig {
+  businessName?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  linkedin?: string;
+  brandColorsNotes?: string;
+  notes?: string;
+  brandFiles?: { url: string; name: string }[];
+}
 
 export default async function AdminOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -70,6 +82,48 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           </CardContent>
         </Card>
       )}
+
+      {order.items.map((item) => {
+        const config = (item.config ?? {}) as ItemConfig;
+        const hasDetails = config.businessName || config.phone || config.email || config.website || config.linkedin || config.brandColorsNotes || config.notes || (config.brandFiles?.length ?? 0) > 0;
+        if (!hasDetails) return null;
+        return (
+          <Card key={item.id} className="border-kc-border">
+            <CardContent className="p-4 space-y-3">
+              <h3 className="font-semibold text-kc-dark text-sm">Project Details {order.items.length > 1 && `(${item.product.name})`}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                {config.businessName && <p><span className="text-kc-muted">Business:</span> <span className="text-kc-dark">{config.businessName}</span></p>}
+                {config.phone && <p><span className="text-kc-muted">Phone:</span> <span className="text-kc-dark">{config.phone}</span></p>}
+                {config.email && <p><span className="text-kc-muted">Email:</span> <span className="text-kc-dark">{config.email}</span></p>}
+                {config.website && <p><span className="text-kc-muted">Website:</span> <span className="text-kc-dark">{config.website}</span></p>}
+                {config.linkedin && <p><span className="text-kc-muted">LinkedIn:</span> <span className="text-kc-dark">{config.linkedin}</span></p>}
+                {config.brandColorsNotes && <p><span className="text-kc-muted">Brand Colors:</span> <span className="text-kc-dark">{config.brandColorsNotes}</span></p>}
+              </div>
+              {config.notes && (
+                <div className="text-sm">
+                  <span className="text-kc-muted">Project Notes</span>
+                  <p className="mt-1 text-kc-dark whitespace-pre-wrap">{config.notes}</p>
+                </div>
+              )}
+              {config.brandFiles && config.brandFiles.length > 0 && (
+                <div className="text-sm">
+                  <span className="text-kc-muted block mb-1.5">Brand Files</span>
+                  <ul className="space-y-1.5">
+                    {config.brandFiles.map((f) => (
+                      <li key={f.url}>
+                        <a href={f.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs text-kc-teal hover:underline w-fit">
+                          <FileIcon className="h-3.5 w-3.5 shrink-0" />
+                          {f.name}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
 
       <AdminOrderActions orderId={order.id} currentStatus={order.status} />
     </div>

@@ -1,24 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-// Style examples, not specific past client work — no completed-project photography exists yet for
-// this site. Labeled by style rather than attached to a company name so nothing here implies a
-// real client relationship that doesn't exist. Replace with real project photos as they're shot.
-const STYLE_SAMPLES = [
-  { title: "Earth-tone & botanical", category: "Business Cards", accent: "bg-kc-teal", description: "Warm, natural palette on ultra-thick 32pt stock — a common request from food, wellness, and garden businesses." },
-  { title: "Bold single-color block", category: "Banners", accent: "bg-kc-coral", description: "High-contrast vinyl banner style built to be readable from across a room at a trade show or festival." },
-  { title: "Friendly & approachable", category: "Postcards", accent: "bg-kc-yellow", description: "Rounded corners and a clear call to action — a good fit for EDDM mailers and appointment reminders." },
-  { title: "Clean corporate", category: "Banners", accent: "bg-kc-teal", description: "Minimal roll-up stand layout with a matched business card set, built for trade shows and office lobbies." },
-  { title: "Die-cut acrylic circle", category: "Rigid Signs", accent: "bg-kc-sage", description: "Clean, minimal circular sign on brushed acrylic with standoff mounts — a common request for offices and lobbies." },
-];
+export interface PortfolioSample {
+  slug: string;
+  title: string;
+  thumbnail: string;
+  category: string;
+  href: string;
+}
 
 const CATEGORIES = ["All", "Business Cards", "Postcards", "Banners", "Rigid Signs"];
 
-export function PortfolioGrid() {
+export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
   const [active, setActive] = useState("All");
-  const visible = active === "All" ? STYLE_SAMPLES : STYLE_SAMPLES.filter((s) => s.category === active);
+  const visible = active === "All" ? samples : samples.filter((s) => s.category === active);
 
   return (
     <>
@@ -42,19 +40,28 @@ export function PortfolioGrid() {
       </div>
 
       {visible.length === 0 ? (
-        <p className="text-sm text-kc-muted">No samples in this category yet.</p>
+        <p className="text-sm text-kc-muted">No examples in this category yet.</p>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {visible.map((item) => (
-            <div key={item.title} className="overflow-hidden rounded-md border border-kc-border bg-white">
-              <div className={`flex aspect-[4/3] items-center justify-center ${item.accent}`}>
-                <span className="text-xs font-bold uppercase tracking-widest text-white/70">{item.category}</span>
+            <Link
+              key={item.slug}
+              href={item.href}
+              className="group overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40"
+            >
+              <div className="aspect-square overflow-hidden bg-kc-bg">
+                <img
+                  src={item.thumbnail}
+                  alt={item.title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  loading="lazy"
+                />
               </div>
               <div className="p-4">
-                <h3 className="mb-1.5 text-sm font-bold text-kc-dark">{item.title}</h3>
-                <p className="text-xs leading-relaxed text-kc-muted">{item.description}</p>
+                <h3 className="mb-1 text-sm font-bold text-kc-dark group-hover:text-kc-teal">{item.title}</h3>
+                <p className="text-xs text-kc-muted">{item.category}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

@@ -127,7 +127,7 @@ export default async function HomePage() {
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {SERVICES.map((service) => (
-              <div key={service.href} className="group overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
+              <div key={service.href} className="group flex h-full flex-col overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
                 <Link href={service.href} className="block">
                   <div className="relative aspect-[4/3] overflow-hidden bg-kc-bg">
                     <Image
@@ -140,7 +140,7 @@ export default async function HomePage() {
                   </div>
                   <div className={`h-1.5 w-full ${service.accent}`} />
                 </Link>
-                <div className="p-6">
+                <div className="flex flex-1 flex-col p-6">
                   <div className="mb-3 flex items-baseline justify-between gap-2">
                     <Link href={service.href}>
                       <h3 className="text-lg font-bold text-kc-dark hover:text-kc-teal">{service.name}</h3>
@@ -157,7 +157,7 @@ export default async function HomePage() {
                       <dd>{service.bestFor}</dd>
                     </div>
                   </dl>
-                  <div className="mt-5 flex items-center gap-3">
+                  <div className="mt-auto flex items-center gap-3 pt-5">
                     <Button asChild size="sm" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
                       <Link href={service.orderHref}>
                         Order Now <ArrowRight className="ml-1.5 h-3.5 w-3.5" />

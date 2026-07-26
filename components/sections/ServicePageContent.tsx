@@ -68,14 +68,14 @@ export function ServicePageContent({ service, designStudioHref }: ServicePageCon
             {service.packages.map((pkg) => (
               <div
                 key={pkg.name}
-                className={`rounded-md border p-5 ${pkg.popular ? "border-kc-teal bg-kc-violet-tint" : "border-kc-border bg-white"}`}
+                className={`flex h-full flex-col rounded-md border p-5 ${pkg.popular ? "border-kc-teal bg-kc-violet-tint" : "border-kc-border bg-white"}`}
               >
                 <div className="mb-1 flex items-center justify-between">
                   <span className="text-xs font-semibold uppercase tracking-wider text-kc-muted">{pkg.name}</span>
                   {pkg.popular && <span className="text-[10px] font-bold uppercase tracking-wide text-kc-teal">Most popular</span>}
                 </div>
                 <div className="mb-4 text-3xl font-black text-kc-dark">{formatDollars(pkg.price)}</div>
-                <ul className="mb-5 space-y-2">
+                <ul className="mb-5 flex-1 space-y-2">
                   {pkg.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm text-kc-muted">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-kc-teal" />
@@ -85,7 +85,7 @@ export function ServicePageContent({ service, designStudioHref }: ServicePageCon
                 </ul>
                 <Button
                   asChild
-                  className={`w-full rounded-md ${pkg.popular ? "bg-kc-teal text-white hover:bg-kc-teal/90" : "bg-kc-dark text-white hover:bg-kc-dark/90"}`}
+                  className={`mt-auto w-full rounded-md ${pkg.popular ? "bg-kc-teal text-white hover:bg-kc-teal/90" : "bg-kc-dark text-white hover:bg-kc-dark/90"}`}
                 >
                   <Link href={`/services/${service.slug}/order?package=${pkg.name.toLowerCase()}`}>
                     Select {pkg.name}

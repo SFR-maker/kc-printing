@@ -51,7 +51,9 @@ async function seedProduct(product: "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "R
           front: t.front,
           back: t.back,
           source: "MANUAL",
-          active: true,
+          // Deliberately omitted from update (unlike create): re-running this script to fix
+          // content bugs must not silently reactivate templates that were curated out via
+          // active:false — see scripts/dedupe-templates.ts.
         },
         create: {
           slug: t.slug,

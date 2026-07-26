@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Search, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { CATEGORIES } from "@/lib/business-card/templates/categories";
 import { STYLE_TAGS } from "@/lib/business-card/templates/categories";
 import { PRODUCT_ROUTE_SEGMENT, type DesignProduct } from "@/lib/business-card/print-spec";
 import { CreateWithAiDialog } from "@/components/business-card/create-with-ai-dialog";
@@ -46,7 +45,6 @@ const THUMB_ASPECT: Record<DesignProduct, string> = {
 export function TemplateGallery({ product = "business-card" }: { product?: DesignProduct }) {
   const [templates, setTemplates] = useState<TemplateSummary[] | null>(null);
   const [error, setError] = useState(false);
-  const [industry, setIndustry] = useState("all");
   const [style, setStyle] = useState("all");
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
@@ -80,7 +78,6 @@ export function TemplateGallery({ product = "business-card" }: { product?: Desig
   const filtered = useMemo(() => {
     if (!templates) return [];
     return templates.filter((t) => {
-      if (industry !== "all" && t.industry !== industry) return false;
       if (style !== "all" && t.style !== style) return false;
       if (q.trim()) {
         const needle = q.trim().toLowerCase();
@@ -88,7 +85,7 @@ export function TemplateGallery({ product = "business-card" }: { product?: Desig
       }
       return true;
     });
-  }, [templates, industry, style, q]);
+  }, [templates, style, q]);
 
   const recentTemplates = (templates ?? []).filter((t) => recent.includes(t.slug));
 
@@ -110,10 +107,6 @@ export function TemplateGallery({ product = "business-card" }: { product?: Desig
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-kc-muted" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search templates..." className="pl-9" />
         </div>
-        <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="rounded-md border border-kc-border bg-white px-3 py-2 text-sm">
-          <option value="all">All Industries</option>
-          {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}
-        </select>
         <select value={style} onChange={(e) => setStyle(e.target.value)} className="rounded-md border border-kc-border bg-white px-3 py-2 text-sm">
           <option value="all">All Styles</option>
           {STYLE_TAGS.map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}

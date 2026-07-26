@@ -25,6 +25,7 @@ const SERVICES = [
   "Business Cards",
   "Postcards",
   "Banners",
+  "Rigid Signs",
   "Other / Not Sure",
 ];
 

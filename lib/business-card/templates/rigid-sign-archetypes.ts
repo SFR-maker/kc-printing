@@ -77,11 +77,15 @@ export const aiTextureCorporate: RigidSignArchetype = (ctx, signShape) => {
   // fixed-position element that's safe on a plain rectangle can clip awkwardly on at least one of
   // the 5 very different sign silhouettes (star points, arrow head/tail, house roof peak), so
   // everything stays centered in the shape's widest, safest band instead.
+  // rigid-sign-texture-1.jpg is a 3600x3600 upscale of the same banner-texture-3 art, generated
+  // specifically for this product's much smaller physical size (12-18in vs. banners' 33-96in) —
+  // the original 900x1800 source fell below the 150 DPI print-quality floor at these dimensions,
+  // which blocked every one of these templates from being ordered. See print-spec.ts MIN_PRINT_DPI.
   const front = side(signShape, { type: "solid", color: "#FFFFFF", gradient: null }, [
-    bgImage("/images/templates/banner-texture-3.jpg", 900, 1800, w, h),
-    text({ x: w * 0.1, y: h * 0.42, width: w * 0.8, height: h * 0.16, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: Math.min(w, h) * 4.5, fontWeight: "800", color: "#FFFFFF", align: "center", lineHeight: 1.05 }),
-    text({ x: w * 0.15, y: h * 0.58, width: w * 0.7, height: h * 0.07, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: Math.min(w, h) * 2.4, fontWeight: "600", color: s, align: "center" }),
-    text({ x: w * 0.15, y: h * 0.66, width: w * 0.7, height: h * 0.07, text: ctx.phone, fontFamily: ctx.bodyFont, fontSizePt: Math.min(w, h) * 2.2, color: "#FFFFFF", align: "center" }),
+    bgImage("/images/templates/rigid-sign-texture-1.jpg", 3600, 3600, w, h),
+    text({ x: w * 0.1, y: h * 0.38, width: w * 0.8, height: h * 0.15, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: Math.min(w, h) * 4.2, fontWeight: "800", color: "#FFFFFF", align: "center", lineHeight: 1.05 }),
+    text({ x: w * 0.15, y: h * 0.57, width: w * 0.7, height: h * 0.06, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: Math.min(w, h) * 2.2, fontWeight: "600", color: s, align: "center" }),
+    text({ x: w * 0.15, y: h * 0.67, width: w * 0.7, height: h * 0.06, text: ctx.phone, fontFamily: ctx.bodyFont, fontSizePt: Math.min(w, h) * 2.0, color: "#FFFFFF", align: "center" }),
   ]);
   return { front, back: blankBack(signShape) };
 };

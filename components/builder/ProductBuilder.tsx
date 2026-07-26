@@ -104,7 +104,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         }
       }
       return {
-        selectedPackage: defaultPackage ?? "",
+        // service page "Select X" links build ?package=gold (lowercase); package names are
+        // stored capitalized ("Gold"), so a case-insensitive match is required here or the
+        // param silently fails to pre-select anything.
+        selectedPackage: service.packages.find((p) => p.name.toLowerCase() === defaultPackage?.toLowerCase())?.name ?? "",
         selectedAddOns: [],
         quantity: 1,
         bcSpec: DEFAULT_BC_SPEC,
@@ -501,7 +504,23 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                 return ["PAPER", "MATERIAL", "SIZE", "TYPE", "SHAPE"].some((t) => up.includes(t));
               })
               .map((spec) => {
-                const choices = spec.value.split(",").map((v) => v.trim()).filter(Boolean);
+                // Not every matching spec is actually a clean list of discrete choices — some are
+                // prose ranges ("12x12 in up to 18x10 in depending on shape, custom sizes
+                // available") that happen to contain a comma, or a single sentence with no comma
+                // at all ("Roll-Up Stand or Vinyl Banner"). Splitting those naively produced
+                // garbage dropdown options. Only render a Select when the split genuinely yields
+                // 2+ short, non-range-sounding tokens; otherwise fall back to descriptive text.
+                const commaParts = spec.value.split(",").map((v) => v.trim()).filter(Boolean);
+                const choices = commaParts.length > 1 ? commaParts : spec.value.split(/\s+or\s+/i).map((v) => v.trim()).filter(Boolean);
+                const isCleanList = choices.length > 1 && choices.every((c) => c.length <= 35 && !/\bup to\b/i.test(c));
+                if (!isCleanList) {
+                  return (
+                    <div key={spec.label} className="space-y-2">
+                      <Label>{spec.label}</Label>
+                      <p className="text-sm text-kc-muted">{spec.value}</p>
+                    </div>
+                  );
+                }
                 const article = /^[aeiou]/i.test(spec.label) ? "an" : "a";
                 return (
                   <div key={spec.label} className="space-y-2">

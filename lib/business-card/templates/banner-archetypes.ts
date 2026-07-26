@@ -156,7 +156,7 @@ export const aiTextureVinyl: BannerArchetype = (ctx) => {
 export const aiTextureCorporateRollup: BannerArchetype = (ctx) => {
   const [, s] = ctx.palette;
   const front = rollupSide({ type: "solid", color: "#FFFFFF", gradient: null }, [
-    bgImage("/images/templates/banner-texture-3.jpg", 900, 1800, ROLLUP_W, ROLLUP_H),
+    bgImage("/images/templates/banner-texture-3.jpg", 6000, 12000, ROLLUP_W, ROLLUP_H),
     shape({ x: ROLLUP_W / 2 - 2.2, y: 5, width: 4.4, height: 4.4, shape: "rect", fill: null, stroke: "#FFFFFF", strokeWidthPx: 3, cornerRadiusIn: 2.2 }),
     text({ x: ROLLUP_W / 2 - 2.2, y: 6.7, width: 4.4, height: 1, text: "LOGO", fontFamily: "Inter", fontSizePt: 30, color: "#FFFFFF", align: "center", letterSpacing: 2 }),
     text({ x: 2, y: 22, width: ROLLUP_W - 4, height: 12, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 130, fontWeight: "800", color: "#FFFFFF", align: "center", lineHeight: 1.08 }),
@@ -173,7 +173,7 @@ export const aiTextureCorporateRollup: BannerArchetype = (ctx) => {
 export const aiTextureCorporateVinyl: BannerArchetype = (ctx) => {
   const [, s] = ctx.palette;
   const front = vinylSide({ type: "solid", color: "#FFFFFF", gradient: null }, [
-    bgImage("/images/templates/banner-texture-4.jpg", 1800, 900, VINYL_W, VINYL_H),
+    bgImage("/images/templates/banner-texture-4.jpg", 16000, 8000, VINYL_W, VINYL_H),
     shape({ x: 3, y: 4, width: 9, height: 9, shape: "rect", fill: null, stroke: "#FFFFFF", strokeWidthPx: 3, cornerRadiusIn: 4.5 }),
     text({ x: 3, y: 6.7, width: 9, height: 3.5, text: "LOGO", fontFamily: "Inter", fontSizePt: 40, color: "#FFFFFF", align: "center", letterSpacing: 2 }),
     text({ x: 15, y: 8, width: VINYL_W - 30, height: 12, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 190, fontWeight: "800", color: "#FFFFFF", align: "center", lineHeight: 1.05 }),

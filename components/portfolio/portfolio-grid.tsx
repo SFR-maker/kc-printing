@@ -11,9 +11,10 @@ const STYLE_SAMPLES = [
   { title: "Bold single-color block", category: "Banners", accent: "bg-kc-coral", description: "High-contrast vinyl banner style built to be readable from across a room at a trade show or festival." },
   { title: "Friendly & approachable", category: "Postcards", accent: "bg-kc-yellow", description: "Rounded corners and a clear call to action — a good fit for EDDM mailers and appointment reminders." },
   { title: "Clean corporate", category: "Banners", accent: "bg-kc-teal", description: "Minimal roll-up stand layout with a matched business card set, built for trade shows and office lobbies." },
+  { title: "Die-cut acrylic circle", category: "Rigid Signs", accent: "bg-kc-sage", description: "Clean, minimal circular sign on brushed acrylic with standoff mounts — a common request for offices and lobbies." },
 ];
 
-const CATEGORIES = ["All", "Business Cards", "Postcards", "Banners"];
+const CATEGORIES = ["All", "Business Cards", "Postcards", "Banners", "Rigid Signs"];
 
 export function PortfolioGrid() {
   const [active, setActive] = useState("All");

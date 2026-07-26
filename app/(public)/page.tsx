@@ -8,9 +8,9 @@ import { PrintStack } from "@/components/sections/PrintStack";
 import { db } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "KC Printing - Business Cards, Postcards & Banners | Kansas City",
+  title: "KC Printing - Business Cards, Postcards, Banners & Rigid Signs | Kansas City",
   description:
-    "Custom business cards, postcards, and banners. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
+    "Custom business cards, postcards, banners, and rigid signs. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
 };
 
 // Homepage pulls live testimonials from the DB (see below) — revalidate periodically so a newly
@@ -48,11 +48,21 @@ const SERVICES = [
     bestFor: "Storefronts, trade shows, events",
     accent: "bg-kc-yellow",
   },
+  {
+    name: "Rigid Signs",
+    href: "/services/rigid-signs",
+    orderHref: "/services/rigid-signs/order",
+    image: "/images/homepage/rigid-signs.jpg",
+    price: "from $59",
+    sizes: "Circle, star, arrow, house, or rounded square",
+    bestFor: "Offices, storefronts, yard and event signage",
+    accent: "bg-kc-sage",
+  },
 ];
 
 const FAQS = [
   { q: "How does the ordering process work?", a: "Choose your product and package, upload your artwork or notes, and our designers get to work. You'll see your first draft within 1-3 business days. Request revisions and download your print-ready files once you approve." },
-  { q: "What file formats do you deliver?", a: "Business cards, postcards, and banners all come as a print-ready PDF with proper bleed, plus a high-resolution JPG and PNG — ready to send to any print shop, including ours." },
+  { q: "What file formats do you deliver?", a: "Business cards, postcards, banners, and rigid signs all come as a print-ready PDF with proper bleed (and a die line for rigid signs), plus a high-resolution JPG and PNG — ready to send to any print shop, including ours." },
   { q: "I don't have a finished design. Can you still help?", a: "Yes. Upload a logo, some brand colors, or just tell us what you're going for, and our AI-assisted brief tool helps capture the direction before a real designer starts the layout." },
   { q: "Can I request revisions?", a: "Yes. Every package includes 4 to 8 revisions depending on the tier. Need more than that? Additional revisions are available at a flat rate." },
   { q: "Do you serve businesses outside Kansas City?", a: "We do. KC Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide — all ordering and file delivery happens online." },
@@ -78,7 +88,7 @@ export default async function HomePage() {
             </div>
 
             <h1 className="mb-6 max-w-lg text-4xl font-black leading-[1.08] tracking-tight text-kc-dark sm:text-5xl lg:text-[3.4rem]">
-              Business cards, postcards, and banners — designed and printed right.
+              Business cards, postcards, banners, and rigid signs — designed and printed right.
             </h1>
 
             <p className="mb-8 max-w-md text-lg leading-relaxed text-kc-muted">
@@ -111,11 +121,11 @@ export default async function HomePage() {
       <section className="section-pad bg-kc-surface">
         <div className="container-tight">
           <div className="mb-10 max-w-xl">
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Three products. Done well.</h2>
+            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Four products. Done well.</h2>
             <p className="mt-3 text-kc-muted">We keep the catalog focused so every order gets real attention from a designer who knows the format.</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {SERVICES.map((service) => (
               <div key={service.href} className="group overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
                 <Link href={service.href} className="block">

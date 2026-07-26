@@ -7,7 +7,7 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 const createSchema = z.object({
   title: z.string().min(1).max(120).default("Untitled Design"),
   templateId: z.string().nullable().optional(),
-  product: z.enum(["BUSINESS_CARD", "POSTCARD", "BANNER"]).default("BUSINESS_CARD"),
+  product: z.enum(["BUSINESS_CARD", "POSTCARD", "BANNER", "RIGID_SIGN"]).default("BUSINESS_CARD"),
   front: CardSideSchema,
   back: CardSideSchema,
   anonymousToken: z.string().optional(),

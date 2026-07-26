@@ -56,7 +56,12 @@ export function validateSide(side: CardSide, label: "front" | "back"): DesignWar
       warnings.push({ elementId: el.id, severity: "warning", code: "clipped", message: `An element on the ${label} is positioned entirely outside the printable area.` });
     }
 
-    if (el.type === "text" || el.type === "qr" || el.type === "image") {
+    // A locked image covering the full canvas is a full-bleed background (see bgImage() in the
+    // template archetype files) — deliberately meant to extend to and past the edge, so it's
+    // exempt from the safe-zone check that otherwise protects user-placed content from being
+    // trimmed. Without this, every ai-texture-* template flags a spurious "unsafe zone" warning.
+    const isFullBleedBackground = el.type === "image" && el.locked && elementBounds(el).left <= 0 && elementBounds(el).top <= 0 && elementBounds(el).right >= side.physicalWidthIn && elementBounds(el).bottom >= side.physicalHeightIn;
+    if ((el.type === "text" || el.type === "qr" || el.type === "image") && !isFullBleedBackground) {
       if (isOutsideSafeZone(el, side)) {
         warnings.push({ elementId: el.id, severity: "warning", code: "unsafe-zone", message: `An element on the ${label} extends past the safe zone and may be trimmed.` });
       }

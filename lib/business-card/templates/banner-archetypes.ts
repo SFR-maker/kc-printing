@@ -152,6 +152,37 @@ export const aiTextureVinyl: BannerArchetype = (ctx) => {
   return { front, back: blankBack(VINYL_W, VINYL_H) };
 };
 
+/** 7. Roll-up stand — AI-generated navy skyline texture, badge-style logo mark, corporate/civic mood. */
+export const aiTextureCorporateRollup: BannerArchetype = (ctx) => {
+  const [, s] = ctx.palette;
+  const front = rollupSide({ type: "solid", color: "#FFFFFF", gradient: null }, [
+    bgImage("/images/templates/banner-texture-3.jpg", 900, 1800, ROLLUP_W, ROLLUP_H),
+    shape({ x: ROLLUP_W / 2 - 2.2, y: 5, width: 4.4, height: 4.4, shape: "rect", fill: null, stroke: "#FFFFFF", strokeWidthPx: 3, cornerRadiusIn: 2.2 }),
+    text({ x: ROLLUP_W / 2 - 2.2, y: 6.7, width: 4.4, height: 1, text: "LOGO", fontFamily: "Inter", fontSizePt: 30, color: "#FFFFFF", align: "center", letterSpacing: 2 }),
+    text({ x: 2, y: 22, width: ROLLUP_W - 4, height: 12, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 130, fontWeight: "800", color: "#FFFFFF", align: "center", lineHeight: 1.08 }),
+    text({ x: 2, y: 36, width: ROLLUP_W - 4, height: 4, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: 42, color: s, align: "center" }),
+    shape({ x: ROLLUP_W / 2 - 4, y: 41, width: 8, height: 0.1, shape: "divider", fill: "#FFFFFF" }),
+    shape({ x: 0, y: ROLLUP_H - 14, width: ROLLUP_W, height: 14, shape: "rect", fill: "#000000", opacity: 0.35 }),
+    text({ x: 2, y: ROLLUP_H - 11.5, width: ROLLUP_W - 4, height: 3, text: ctx.phone, fontFamily: ctx.bodyFont, fontSizePt: 32, color: "#FFFFFF", align: "center" }),
+    text({ x: 2, y: ROLLUP_H - 6.5, width: ROLLUP_W - 4, height: 3, text: ctx.website, fontFamily: ctx.bodyFont, fontSizePt: 32, color: "#FFFFFF", align: "center" }),
+  ]);
+  return { front, back: blankBack(ROLLUP_W, ROLLUP_H) };
+};
+
+/** 8. Vinyl banner — AI-generated navy skyline texture, badge-style logo mark, corporate/civic mood. */
+export const aiTextureCorporateVinyl: BannerArchetype = (ctx) => {
+  const [, s] = ctx.palette;
+  const front = vinylSide({ type: "solid", color: "#FFFFFF", gradient: null }, [
+    bgImage("/images/templates/banner-texture-4.jpg", 1800, 900, VINYL_W, VINYL_H),
+    shape({ x: 3, y: 4, width: 9, height: 9, shape: "rect", fill: null, stroke: "#FFFFFF", strokeWidthPx: 3, cornerRadiusIn: 4.5 }),
+    text({ x: 3, y: 6.7, width: 9, height: 3.5, text: "LOGO", fontFamily: "Inter", fontSizePt: 40, color: "#FFFFFF", align: "center", letterSpacing: 2 }),
+    text({ x: 15, y: 8, width: VINYL_W - 30, height: 12, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 190, fontWeight: "800", color: "#FFFFFF", align: "center", lineHeight: 1.05 }),
+    text({ x: 15, y: 26, width: VINYL_W - 30, height: 6, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: 62, color: s, align: "center" }),
+    text({ x: 15, y: 36, width: VINYL_W - 30, height: 6, text: `${ctx.phone}   •   ${ctx.website}`, fontFamily: ctx.bodyFont, fontSizePt: 55, color: "#FFFFFF", align: "center" }),
+  ]);
+  return { front, back: blankBack(VINYL_W, VINYL_H) };
+};
+
 export const BANNER_ARCHETYPES: { name: string; style: string; fn: BannerArchetype }[] = [
   { name: "rollup-bold", style: "bold", fn: rollupBold },
   { name: "rollup-top-block", style: "corporate", fn: rollupTopBlock },
@@ -159,4 +190,6 @@ export const BANNER_ARCHETYPES: { name: string; style: string; fn: BannerArchety
   { name: "vinyl-split", style: "modern", fn: vinylSplit },
   { name: "ai-texture-rollup", style: "luxury", fn: aiTextureRollup },
   { name: "ai-texture-vinyl", style: "elegant", fn: aiTextureVinyl },
+  { name: "ai-texture-corporate-rollup", style: "corporate", fn: aiTextureCorporateRollup },
+  { name: "ai-texture-corporate-vinyl", style: "corporate", fn: aiTextureCorporateVinyl },
 ];

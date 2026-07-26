@@ -9,7 +9,9 @@ export function generateBannerTemplates(): CardTemplate[] {
     BANNER_ARCHETYPES.forEach((archetype) => {
       const { front, back } = archetype.fn(cat);
       const slug = `${cat.key}-${archetype.name}`;
-      const isRollup = archetype.name.startsWith("rollup");
+      // "startsWith" missed the ai-texture-rollup archetype (format suffix, not prefix), which
+      // mislabeled it — a real portrait 33x81in roll-up stand — as a landscape vinyl banner.
+      const isRollup = archetype.name.includes("rollup");
       templates.push({
         schemaVersion: 1,
         id: slug,

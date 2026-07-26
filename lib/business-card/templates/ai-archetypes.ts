@@ -95,7 +95,45 @@ export const aiTextureLuxury: AiArchetype = (ctx) => {
   return { front, back };
 };
 
+/** 3. AI-generated botanical watercolor + line-art texture, centered name block on open cream space. */
+export const aiTextureBotanical: AiArchetype = (ctx) => {
+  const [p, , inkRaw] = ctx.palette;
+  const ink = readableInk(inkRaw);
+  const front = solidSide("#FFFFFF", [
+    bgImage("/images/templates/business-card-texture-3.jpg", 1500, 900, W, H),
+    shape({ x: 0.35, y: 0.55, width: 2.6, height: 1.15, shape: "rect", fill: "#FFFFFF", opacity: 0.55, cornerRadiusIn: 0.06 }),
+    text({ x: 0.5, y: 0.68, width: 2.3, height: 0.3, text: ctx.name, fontFamily: ctx.headingFont, fontSizePt: 14, fontWeight: "700", color: ink }),
+    text({ x: 0.5, y: 0.95, width: 2.3, height: 0.2, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: 8.5, color: p }),
+    ...contactBlock(ctx, 0.5, 1.22, 2.3, "#333333"),
+  ]);
+  const back = solidSide("#F7F5F0", [
+    bgImage("/images/templates/business-card-texture-3.jpg", 1500, 900, W, H),
+    shape({ x: 0, y: 0, width: W, height: H, shape: "rect", fill: "#FFFFFF", opacity: 0.5 }),
+    text({ x: 0.3, y: 0.9, width: W - 0.6, height: 0.35, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 16, fontWeight: "700", color: ink, align: "center" }),
+  ]);
+  return { front, back };
+};
+
+/** 4. AI-generated bold black-and-white paintbrush texture, clean open right side for the name block. */
+export const aiTexturePaintbrush: AiArchetype = (ctx) => {
+  const [p, s] = ctx.palette;
+  const front = solidSide("#FFFFFF", [
+    bgImage("/images/templates/business-card-texture-4.jpg", 1500, 900, W, H),
+    text({ x: 2.05, y: 0.55, width: 1.55, height: 0.3, text: ctx.name, fontFamily: ctx.headingFont, fontSizePt: 13, fontWeight: "700", color: "#111111" }),
+    text({ x: 2.05, y: 0.81, width: 1.55, height: 0.2, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: 8, color: p }),
+    shape({ x: 2.05, y: 1.05, width: 0.4, height: 0.015, shape: "divider", fill: s }),
+    ...contactBlock(ctx, 2.05, 1.2, 1.55, "#333333"),
+  ]);
+  const back = solidSide("#111111", [
+    text({ x: 0.3, y: 0.9, width: W - 0.6, height: 0.35, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 16, fontWeight: "700", color: "#FFFFFF", align: "center" }),
+    shape({ x: W / 2 - 0.3, y: 1.28, width: 0.6, height: 0.015, shape: "divider", fill: p }),
+  ]);
+  return { front, back };
+};
+
 export const AI_ARCHETYPES: { name: string; style: string; fn: AiArchetype }[] = [
   { name: "ai-texture-elegant", style: "elegant", fn: aiTextureElegant },
   { name: "ai-texture-luxury", style: "luxury", fn: aiTextureLuxury },
+  { name: "ai-texture-botanical", style: "elegant", fn: aiTextureBotanical },
+  { name: "ai-texture-paintbrush", style: "bold", fn: aiTexturePaintbrush },
 ];

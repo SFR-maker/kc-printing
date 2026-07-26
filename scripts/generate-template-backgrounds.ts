@@ -47,12 +47,37 @@ const SHOTS: Shot[] = [
     prompt: "Abstract background texture, wide horizontal bold gradient in deep teal with soft warm light streaks, smooth open space in the center for large headline text overlay, bold storefront banner aesthetic, no text, no logos, landscape orientation, very wide aspect ratio.",
     width: 1800, height: 900,
   },
+  {
+    name: "business-card-texture-3",
+    prompt: "Abstract background texture, soft watercolor wash in muted sage green and cream, delicate fine botanical line art of leaves and branches woven through the composition, plenty of smooth open space for text overlay, elegant and organic, no text, no logos, landscape orientation.",
+    width: 1500, height: 900,
+  },
+  {
+    name: "business-card-texture-4",
+    prompt: "Abstract background texture, bold dry-brush paint strokes in black and white, dramatic high-contrast editorial texture, plenty of smooth open space for text overlay, modern and striking, no text, no logos, landscape orientation.",
+    width: 1500, height: 900,
+  },
+  {
+    name: "banner-texture-3",
+    prompt: "Abstract background texture, deep navy blue gradient with a faint abstract city skyline silhouette along the bottom edge, subtle corporate and architectural mood, plenty of smooth open space in the upper two-thirds for large headline text overlay, no text, no logos, portrait orientation, very tall aspect ratio.",
+    width: 900, height: 1800,
+  },
+  {
+    name: "banner-texture-4",
+    prompt: "Abstract background texture, deep navy blue gradient with a faint abstract city skyline silhouette along the bottom edge, subtle corporate and architectural mood, plenty of smooth open space in the upper two-thirds for large headline text overlay, no text, no logos, landscape orientation, very wide aspect ratio.",
+    width: 1800, height: 900,
+  },
 ];
 
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 
-  for (const shot of SHOTS) {
+  // Optional CLI filter so re-runs don't re-pay to regenerate textures that already exist and are
+  // fine, e.g. `tsx scripts/generate-template-backgrounds.ts texture-3,texture-4`.
+  const filter = process.argv[2]?.split(",").map((s) => s.trim()).filter(Boolean);
+  const shots = filter && filter.length > 0 ? SHOTS.filter((s) => filter.some((f) => s.name.includes(f))) : SHOTS;
+
+  for (const shot of shots) {
     console.log(`Generating ${shot.name}...`);
     try {
       const result = await generateImageWithOpenRouter({ prompt: shot.prompt });

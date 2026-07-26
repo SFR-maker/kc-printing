@@ -5,6 +5,7 @@ const SERVICES = [
   { label: "Business Cards", href: "/services/business-cards" },
   { label: "Postcards", href: "/services/postcards" },
   { label: "Banners", href: "/services/banners" },
+  { label: "Rigid Signs", href: "/services/rigid-signs" },
 ];
 
 const COMPANY = [
@@ -38,7 +39,7 @@ export function Footer() {
               </div>
             </div>
             <p className="mb-5 text-sm leading-relaxed text-kc-muted">
-              Business cards, postcards, and banners, designed by a real person and delivered print-ready. Ordered entirely online.
+              Business cards, postcards, banners, and rigid signs, designed by a real person and delivered print-ready. Ordered entirely online.
             </p>
             <div className="space-y-2.5">
               <a href="tel:+18165210462" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">

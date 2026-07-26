@@ -7,7 +7,7 @@ import { formatDollars } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Transparent Pricing for All Design Services",
   description:
-    "Clear, upfront pricing for business cards, postcards, and banners. No hidden fees. Multiple packages to fit any budget.",
+    "Clear, upfront pricing for business cards, postcards, banners, and rigid signs. No hidden fees. Multiple packages to fit any budget.",
 };
 
 const ALL_SERVICES = [
@@ -36,6 +36,15 @@ const ALL_SERVICES = [
       { name: "Silver", price: 79, features: ["1-2 images", "Up to 4 revisions", "PDF with bleed"] },
       { name: "Gold", price: 139, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
       { name: "Platinum", price: 199, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
+    ],
+  },
+  {
+    name: "Rigid Signs",
+    href: "/services/rigid-signs",
+    packages: [
+      { name: "Silver", price: 59, features: ["1-2 images", "Up to 4 revisions", "PDF with die line"] },
+      { name: "Gold", price: 99, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
+      { name: "Platinum", price: 149, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
     ],
   },
 ];

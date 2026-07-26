@@ -4,9 +4,9 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
-  title: "Design Services - Business Cards, Postcards, Banners",
+  title: "Design Services - Business Cards, Postcards, Banners, Rigid Signs",
   description:
-    "Browse all KC Printing services: business cards, postcards, and banners (roll-up stands and vinyl).",
+    "Browse all KC Printing services: business cards, postcards, banners (roll-up stands and vinyl), and die-cut rigid signs.",
 };
 
 const SERVICES = [
@@ -34,6 +34,14 @@ const SERVICES = [
     highlights: ["Roll-up stands and vinyl, 24″ to 10 ft", "Bleed, safe zone, and grommet specs included", "Up to 8 revisions included"],
     accent: "bg-kc-yellow",
   },
+  {
+    slug: "rigid-signs",
+    name: "Rigid Signs",
+    price: "from $59",
+    description: "Die-cut rigid signage in circle, star, arrow, house, or rounded-square shapes — acrylic, aluminum, PVC, foam board, or corrugated plastic.",
+    highlights: ["5 shapes, 5 materials", "Print-ready file with die line included", "Up to 8 revisions included"],
+    accent: "bg-kc-sage",
+  },
 ];
 
 export default function ServicesPage() {
@@ -43,13 +51,13 @@ export default function ServicesPage() {
         <div className="container-tight max-w-2xl">
           <h1 className="mb-3 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">All Services</h1>
           <p className="text-lg text-kc-muted">
-            Three products, each built around a designer who knows the format — not a template engine.
+            Four products, each built around a designer who knows the format — not a template engine.
           </p>
         </div>
       </div>
 
       <div className="container-tight px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {SERVICES.map((s) => (
             <Link key={s.slug} href={`/services/${s.slug}`} className="group flex flex-col overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
               <div className={`h-1.5 w-full ${s.accent}`} />

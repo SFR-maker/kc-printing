@@ -40,6 +40,7 @@ const THUMB_ASPECT: Record<DesignProduct, string> = {
   "business-card": "aspect-[7/4.2]",
   postcard: "aspect-[3/2]",
   banner: "aspect-[4/3]",
+  "rigid-sign": "aspect-square",
 };
 
 export function TemplateGallery({ product = "business-card" }: { product?: DesignProduct }) {

@@ -498,7 +498,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               .filter((s) => {
                 const up = s.label.toUpperCase();
                 if (up.includes("CUSTOM")) return false;
-                return ["PAPER", "MATERIAL", "SIZE", "TYPE"].some((t) => up.includes(t));
+                return ["PAPER", "MATERIAL", "SIZE", "TYPE", "SHAPE"].some((t) => up.includes(t));
               })
               .map((spec) => {
                 const choices = spec.value.split(",").map((v) => v.trim()).filter(Boolean);

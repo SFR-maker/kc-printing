@@ -1,5 +1,6 @@
 import type { CardElement, CardSide, ImageElement, QrElement, ShapeElement, TextElement } from "./schema";
 import { buildQrModuleMatrix, QUIET_ZONE_MODULES } from "./qr";
+import { shapeClipPath } from "./shape-paths";
 
 /**
  * Renders a CardSide to an SVG string. The viewBox is always "0 0 W H" in
@@ -32,7 +33,15 @@ export function renderSideToSvg(side: CardSide, targetDpi: number = 300): string
 
   const body = sorted.map(renderElement).join("\n");
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${pxW}" height="${pxH}" viewBox="0 0 ${w} ${h}">${bg}${body}</svg>`;
+  const clipD = shapeClipPath(side.shapeMask, w, h);
+  if (!clipD) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${pxW}" height="${pxH}" viewBox="0 0 ${w} ${h}">${bg}${body}</svg>`;
+  }
+  // Die-cut product: clip the whole composition to the shape outline, then stroke that same
+  // outline so the die line reads clearly even against a light background.
+  const defs = `<defs><clipPath id="shape-clip"><path d="${clipD}"/></clipPath></defs>`;
+  const outline = `<path d="${clipD}" fill="none" stroke="#00000022" stroke-width="${Math.max(w, h) * 0.004}"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${pxW}" height="${pxH}" viewBox="0 0 ${w} ${h}">${defs}<g clip-path="url(#shape-clip)">${bg}${body}</g>${outline}</svg>`;
 }
 
 function renderElement(el: CardElement): string {

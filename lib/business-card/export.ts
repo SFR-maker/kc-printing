@@ -111,5 +111,7 @@ export async function exportSideThumbnail(side: CardSide, maxWidthPx = 480, maxH
   // this is a display thumbnail, not a print asset — sharpness only needs to hold up at gallery size.
   const thumbDpi = Math.min(maxWidthPx / side.physicalWidthIn, maxHeightPx / side.physicalHeightIn);
   const svg = renderSideToSvg(resolved, thumbDpi);
-  return sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer();
+  // JPEG has no alpha channel — sharp defaults transparent areas (outside a die-cut shapeMask) to
+  // black, which reads as an ugly matte behind the shape. Flatten to white instead.
+  return sharp(Buffer.from(svg)).flatten({ background: "#FFFFFF" }).jpeg({ quality: 82 }).toBuffer();
 }

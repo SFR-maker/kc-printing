@@ -66,6 +66,7 @@ enum DesignProduct {
   BUSINESS_CARD
   POSTCARD
   BANNER
+  RIGID_SIGN
 }
 
 enum SettingType {

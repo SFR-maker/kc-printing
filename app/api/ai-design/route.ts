@@ -75,7 +75,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "limit-reached", used, limit: FREE_AI_DESIGN_LIMIT }, { status: 429 });
   }
 
-  const product = data.product as DesignProduct;
+  const product = data.product;
   const isRollup = product === "banner" && data.bannerFormat === "rollup";
 
   let dataUrl: string;

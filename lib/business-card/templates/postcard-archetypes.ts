@@ -44,7 +44,7 @@ const W = 6;
 const H = 4;
 
 function side(background: CardSide["background"], elements: CardSide["elements"]): CardSide {
-  return { physicalWidthIn: W, physicalHeightIn: H, bleedIn: 0.125, safeZoneInsetIn: 0.125, background, elements };
+  return { physicalWidthIn: W, physicalHeightIn: H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle", background, elements };
 }
 
 function solidSide(color: string, elements: CardSide["elements"]): CardSide {

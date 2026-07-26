@@ -95,7 +95,7 @@ export function buildCustomBusinessCard(info: CustomDesignInfo, imageSrc: string
   const contactLine1 = joinNonEmpty([info.phone, info.email], "  ·  ");
   const contactLine2 = joinNonEmpty([info.website, info.linkedin], "  ·  ");
   const front: CardSide = {
-    physicalWidthIn: BC_W, physicalHeightIn: BC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125,
+    physicalWidthIn: BC_W, physicalHeightIn: BC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle",
     background: { type: "solid", color: "#FFFFFF", gradient: null },
     elements: [
       bgImage(imageSrc, naturalW, naturalH, BC_W, BC_H),
@@ -111,7 +111,7 @@ export function buildCustomBusinessCard(info: CustomDesignInfo, imageSrc: string
     ],
   };
   const back: CardSide = {
-    physicalWidthIn: BC_W, physicalHeightIn: BC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125,
+    physicalWidthIn: BC_W, physicalHeightIn: BC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle",
     background: { type: "solid", color: p, gradient: null },
     elements: [
       text({ x: 0.3, y: BC_H / 2 - 0.18, width: BC_W - 0.6, height: 0.35, text: info.businessName, fontFamily: info.headingFont, fontSizePt: 15, fontWeight: "700", color: "#FFFFFF", align: "center" }),
@@ -128,7 +128,7 @@ export function buildCustomPostcard(info: CustomDesignInfo, imageSrc: string, na
   const ink = readableInk(inkRaw);
   const qrValue = info.includeQrCode ? qrValueFor(info) : null;
   const front: CardSide = {
-    physicalWidthIn: PC_W, physicalHeightIn: PC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125,
+    physicalWidthIn: PC_W, physicalHeightIn: PC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle",
     background: { type: "solid", color: "#FFFFFF", gradient: null },
     elements: [
       bgImage(imageSrc, naturalW, naturalH, PC_W, PC_H),
@@ -143,7 +143,7 @@ export function buildCustomPostcard(info: CustomDesignInfo, imageSrc: string, na
     ],
   };
   const back: CardSide = {
-    physicalWidthIn: PC_W, physicalHeightIn: PC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125,
+    physicalWidthIn: PC_W, physicalHeightIn: PC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle",
     background: { type: "solid", color: "#FFFFFF", gradient: null },
     elements: [
       text({ x: 0.35, y: 0.35, width: 2.6, height: 0.22, text: info.businessName, fontFamily: info.headingFont, fontSizePt: 10, fontWeight: "700", color: ink }),
@@ -168,7 +168,7 @@ export function buildCustomBanner(info: CustomDesignInfo, imageSrc: string, natu
   const qrValue = info.includeQrCode ? qrValueFor(info) : null;
   if (format === "rollup") {
     const front: CardSide = {
-      physicalWidthIn: ROLLUP_W, physicalHeightIn: ROLLUP_H, bleedIn: 0.125, safeZoneInsetIn: 0.5,
+      physicalWidthIn: ROLLUP_W, physicalHeightIn: ROLLUP_H, bleedIn: 0.125, safeZoneInsetIn: 0.5, shapeMask: "rectangle",
       background: { type: "solid", color: "#FFFFFF", gradient: null },
       elements: [
         bgImage(imageSrc, naturalW, naturalH, ROLLUP_W, ROLLUP_H),
@@ -184,7 +184,7 @@ export function buildCustomBanner(info: CustomDesignInfo, imageSrc: string, natu
     return { front, back: blankBack(ROLLUP_W, ROLLUP_H) };
   }
   const front: CardSide = {
-    physicalWidthIn: VINYL_W, physicalHeightIn: VINYL_H, bleedIn: 0.125, safeZoneInsetIn: 0.25,
+    physicalWidthIn: VINYL_W, physicalHeightIn: VINYL_H, bleedIn: 0.125, safeZoneInsetIn: 0.25, shapeMask: "rectangle",
     background: { type: "solid", color: "#FFFFFF", gradient: null },
     elements: [
       bgImage(imageSrc, naturalW, naturalH, VINYL_W, VINYL_H),
@@ -199,7 +199,7 @@ export function buildCustomBanner(info: CustomDesignInfo, imageSrc: string, natu
 }
 
 function blankBack(w: number, h: number): CardSide {
-  return { physicalWidthIn: w, physicalHeightIn: h, bleedIn: 0.125, safeZoneInsetIn: 0.25, background: { type: "solid", color: "#FFFFFF", gradient: null }, elements: [] };
+  return { physicalWidthIn: w, physicalHeightIn: h, bleedIn: 0.125, safeZoneInsetIn: 0.25, shapeMask: "rectangle", background: { type: "solid", color: "#FFFFFF", gradient: null }, elements: [] };
 }
 
 export const BANNER_DIMS: Record<BannerFormat, { w: number; h: number }> = {

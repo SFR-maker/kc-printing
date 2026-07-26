@@ -46,17 +46,17 @@ const VINYL_W = 96;
 const VINYL_H = 48;
 
 function rollupSide(background: CardSide["background"], elements: CardSide["elements"]): CardSide {
-  return { physicalWidthIn: ROLLUP_W, physicalHeightIn: ROLLUP_H, bleedIn: 0.125, safeZoneInsetIn: 0.5, background, elements };
+  return { physicalWidthIn: ROLLUP_W, physicalHeightIn: ROLLUP_H, bleedIn: 0.125, safeZoneInsetIn: 0.5, shapeMask: "rectangle", background, elements };
 }
 
 function vinylSide(background: CardSide["background"], elements: CardSide["elements"]): CardSide {
-  return { physicalWidthIn: VINYL_W, physicalHeightIn: VINYL_H, bleedIn: 0.125, safeZoneInsetIn: 0.25, background, elements };
+  return { physicalWidthIn: VINYL_W, physicalHeightIn: VINYL_H, bleedIn: 0.125, safeZoneInsetIn: 0.25, shapeMask: "rectangle", background, elements };
 }
 
 // Banners don't have a meaningful "back" (only one side prints) — the schema always needs one, so
 // back mirrors front at a small scale as a design reference rather than a second printed side.
 function blankBack(w: number, h: number): CardSide {
-  return { physicalWidthIn: w, physicalHeightIn: h, bleedIn: 0.125, safeZoneInsetIn: 0.25, background: { type: "solid", color: "#FFFFFF", gradient: null }, elements: [] };
+  return { physicalWidthIn: w, physicalHeightIn: h, bleedIn: 0.125, safeZoneInsetIn: 0.25, shapeMask: "rectangle", background: { type: "solid", color: "#FFFFFF", gradient: null }, elements: [] };
 }
 
 export type BannerArchetype = (ctx: CategoryContent) => { front: CardSide; back: CardSide };

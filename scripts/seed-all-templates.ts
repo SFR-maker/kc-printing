@@ -5,6 +5,7 @@ import { generateAllTemplates } from "../lib/business-card/templates/generate";
 import { generateAiCardTemplates } from "../lib/business-card/templates/generate-ai";
 import { generatePostcardTemplates } from "../lib/business-card/templates/generate-postcard";
 import { generateBannerTemplates } from "../lib/business-card/templates/generate-banner";
+import { generateRigidSignTemplates } from "../lib/business-card/templates/generate-rigid-sign";
 import { exportSideThumbnail } from "../lib/business-card/export";
 import type { CardTemplate } from "../lib/business-card/schema";
 
@@ -15,7 +16,7 @@ async function toDataUri(buffer: Buffer): Promise<string> {
   return `data:image/jpeg;base64,${buffer.toString("base64")}`;
 }
 
-async function seedProduct(product: "BUSINESS_CARD" | "POSTCARD" | "BANNER", templates: CardTemplate[]) {
+async function seedProduct(product: "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN", templates: CardTemplate[]) {
   console.log(`\n${product}: generating ${templates.length} templates...`);
   let created = 0;
   let updated = 0;
@@ -98,6 +99,9 @@ async function main() {
   }
   if (products.includes("all") || products.includes("banner")) {
     totalFailed += await seedProduct("BANNER", generateBannerTemplates());
+  }
+  if (products.includes("all") || products.includes("rigid-sign")) {
+    totalFailed += await seedProduct("RIGID_SIGN", generateRigidSignTemplates());
   }
 
   const counts = await db.cardTemplate.groupBy({ by: ["product"], _count: true, where: { active: true } });

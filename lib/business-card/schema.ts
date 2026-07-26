@@ -94,6 +94,11 @@ export const CardSideSchema = z.object({
   physicalHeightIn: z.number().positive().default(PRINT_SPEC.trimHeightIn + PRINT_SPEC.bleedIn * 2),
   bleedIn: z.number().min(0).default(PRINT_SPEC.bleedIn),
   safeZoneInsetIn: z.number().min(0).default(PRINT_SPEC.safeZoneInsetIn),
+  // Only meaningful for die-cut products (rigid signs) — clips the rendered/exported output to a
+  // non-rectangular outline. The live Konva editor intentionally ignores this and always shows a
+  // plain rectangle (see lib/business-card/shape-paths.ts) — customers design on a familiar
+  // canvas, and the shape is applied at render time for thumbnails/exports.
+  shapeMask: z.enum(["rectangle", "rounded-square", "circle", "star", "arrow", "house"]).default("rectangle"),
   background: z.object({
     type: z.enum(["solid", "gradient"]).default("solid"),
     color: z.string().default("#FFFFFF"),

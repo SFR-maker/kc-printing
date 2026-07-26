@@ -133,4 +133,38 @@ export const SERVICES: Record<string, ServiceDef> = {
       { q: "Can I order a custom vinyl banner size?", a: "Yes. We support custom vinyl banner sizes from 1x2 ft up to 6x20 ft. Specify your dimensions in the order notes and we will match it precisely." },
     ],
   },
+  "rigid-signs": {
+    slug: "rigid-signs",
+    name: "Rigid Signs",
+    tagline: "Die-cut rigid signage in custom shapes and materials — acrylic, aluminum, PVC, foam board, and corrugated plastic.",
+    description:
+      "Custom rigid sign designs cut to shape — circle, star, arrow, house, or rounded square — in the material that fits your use case. Files include proper bleed and a clean die line for professional cutting.",
+    icon: "🪧",
+    specs: [
+      { label: "Shapes", value: "Rounded Square, Circle, Star, Arrow, House" },
+      { label: "Materials", value: "Acrylic, Aluminum, PVC, Foam Board, Corrugated Plastic" },
+      { label: "Sizes", value: "12x12 in up to 18x10 in depending on shape, custom sizes available" },
+      { label: "Bleed", value: "0.125 in on all sides" },
+      { label: "Safe Zone", value: "0.5 to 0.75 in from the die line depending on shape" },
+      { label: "Delivery", value: "Print-ready PDF with die line, high-res JPG" },
+    ],
+    packages: [
+      { name: "Silver", price: 59, features: ["1-2 images or logos", "Basic copy", "Up to 4 revisions", "Print-ready PDF with die line"] },
+      { name: "Gold", price: 99, popular: true, features: ["3-4 images or logos", "Basic copy", "Up to 6 revisions", "Print-ready PDF with die line", "Two layout concepts"] },
+      { name: "Platinum", price: 149, features: ["5 or more images or logos", "Comprehensive copy", "Up to 8 revisions", "Full file bundle", "Three layout concepts", "Priority delivery"] },
+    ],
+    addOns: [
+      { name: "Rush Delivery", price: 59, desc: "Completed within 24 hours" },
+      { name: "Extra Concept", price: 39, desc: "One additional layout concept" },
+      { name: "Custom Shape", price: 79, desc: "A die-cut shape beyond the standard set, cut to your outline" },
+      { name: "Mounting Hardware Spec", price: 15, desc: "Print-ready standoff or bracket placement diagram" },
+    ],
+    faqs: [
+      { q: "Which material should I choose?", a: "Acrylic and aluminum give a premium, long-lasting look for storefronts and offices. PVC and foam board are lightweight and budget-friendly for indoor use or short-term displays. Corrugated plastic is the most weather-resistant, affordable choice for yard and event signs. Tell us your use case and we'll recommend the right material." },
+      { q: "Can I get a shape that's not in the standard list?", a: "Yes — add the Custom Shape add-on and describe (or upload) the outline you need. We'll cut a die line to match." },
+      { q: "How does the die line work?", a: "We design on a standard rectangular canvas sized to comfortably contain your chosen shape, then apply the shape as a precise cut line at export — what you design maps exactly onto the final die-cut sign, with 0.125 in bleed so color runs to the edge with no white gaps." },
+      { q: "What file format does the printer need?", a: "We deliver a print-ready PDF with the die line marked, plus a high-res JPG preview. Both include bleed and safe-zone guides." },
+      { q: "Can I use my existing brand colors and logo?", a: "Yes. Upload your existing logo and brand guidelines in the order. If you do not have a style guide, fill out the brand questionnaire and our designer will match your colors as closely as possible." },
+    ],
+  },
 };

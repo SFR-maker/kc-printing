@@ -22,7 +22,7 @@ export const MIN_PRINT_DPI = 150;
 export const RECOMMENDED_DPI = 300;
 export const MIN_FONT_SIZE_PT = 6;
 
-export type DesignProduct = "business-card" | "postcard" | "banner";
+export type DesignProduct = "business-card" | "postcard" | "banner" | "rigid-sign";
 
 export interface SizePreset {
   key: string;
@@ -61,9 +61,23 @@ export const BANNER_SIZES: SizePreset[] = [
   { key: "vinyl-4x10", label: "Vinyl Banner 4 x 10 ft", trimWidthIn: 120, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
 ];
 
+// Bounding-box size per shape — the live editor designs on a plain rectangle of this size (see
+// lib/business-card/shape-paths.ts), and the shape is applied as a clip mask at render/export
+// time, so these dimensions just need to comfortably contain each shape's silhouette.
+export const RIGID_SIGN_SIZES: SizePreset[] = [
+  { key: "rounded-square", label: "Rounded Square 12 x 12 in", trimWidthIn: 12, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "circle", label: "Circle 12 in diameter", trimWidthIn: 12, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "star", label: "Star 14 x 14 in", trimWidthIn: 14, trimHeightIn: 14, bleedIn: 0.125, safeZoneInsetIn: 0.75 },
+  { key: "arrow", label: "Arrow 18 x 10 in", trimWidthIn: 18, trimHeightIn: 10, bleedIn: 0.125, safeZoneInsetIn: 0.75 },
+  { key: "house", label: "House 12 x 13 in", trimWidthIn: 12, trimHeightIn: 13, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+];
+
+export const RIGID_SIGN_MATERIALS = ["Acrylic", "Aluminum", "PVC", "Foam Board", "Corrugated Plastic"] as const;
+
 export function sizePresetsFor(product: DesignProduct): SizePreset[] {
   if (product === "postcard") return POSTCARD_SIZES;
   if (product === "banner") return BANNER_SIZES;
+  if (product === "rigid-sign") return RIGID_SIGN_SIZES;
   return BUSINESS_CARD_SIZES;
 }
 
@@ -76,14 +90,16 @@ export const PRODUCT_ROUTE_SEGMENT: Record<DesignProduct, string> = {
   "business-card": "business-cards",
   postcard: "postcards",
   banner: "banners",
+  "rigid-sign": "rigid-signs",
 };
 
 /** Matches the Prisma DesignProduct enum values (kept as plain strings here so this file has no
  * dependency on the generated Prisma client). */
-export const PRODUCT_DB_VALUE: Record<DesignProduct, "BUSINESS_CARD" | "POSTCARD" | "BANNER"> = {
+export const PRODUCT_DB_VALUE: Record<DesignProduct, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN"> = {
   "business-card": "BUSINESS_CARD",
   postcard: "POSTCARD",
   banner: "BANNER",
+  "rigid-sign": "RIGID_SIGN",
 };
 
 export function inchesToPx(inches: number, dpi: number = DPI): number {

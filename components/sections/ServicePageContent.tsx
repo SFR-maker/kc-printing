@@ -3,42 +3,67 @@ import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { ServiceDef } from "@/lib/service-data";
+import type { ProductThumbnail } from "@/lib/product-thumbnails";
 import { formatDollars } from "@/lib/utils";
 
 interface ServicePageContentProps {
   service: ServiceDef;
   designStudioHref?: string;
+  heroImages?: ProductThumbnail[];
 }
 
-export function ServicePageContent({ service, designStudioHref }: ServicePageContentProps) {
+export function ServicePageContent({ service, designStudioHref, heroImages }: ServicePageContentProps) {
   return (
     <>
       {/* Hero */}
       <section className="section-pad-tight bg-kc-bg">
-        <div className="container-tight max-w-3xl">
-          <div className="mb-4 text-sm font-semibold uppercase tracking-wide text-kc-teal">{service.name}</div>
-          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">{service.tagline}</h1>
-          <p className="mb-8 text-lg leading-relaxed text-kc-muted">{service.description}</p>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            {designStudioHref ? (
-              <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
-                <Link href={designStudioHref}>
-                  Design It Yourself <ArrowRight className="ml-2 h-4 w-4" />
+        <div className="container-tight grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div>
+            <div className="mb-4 text-sm font-semibold uppercase tracking-wide text-kc-teal">{service.name}</div>
+            <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">{service.tagline}</h1>
+            <p className="mb-8 text-lg leading-relaxed text-kc-muted">{service.description}</p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {designStudioHref ? (
+                <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
+                  <Link href={designStudioHref}>
+                    Design It Yourself <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
+                  <Link href={`/services/${service.slug}/order`}>
+                    Order Now <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              )}
+              <Button asChild size="lg" variant="outline" className="rounded-md border-kc-border text-kc-dark hover:bg-kc-surface">
+                <Link href={designStudioHref ? `/services/${service.slug}/order` : "/contact"}>
+                  {designStudioHref ? "Order Without Designing" : "Get a Free Quote"}
                 </Link>
               </Button>
-            ) : (
-              <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
-                <Link href={`/services/${service.slug}/order`}>
-                  Order Now <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            )}
-            <Button asChild size="lg" variant="outline" className="rounded-md border-kc-border text-kc-dark hover:bg-kc-surface">
-              <Link href={designStudioHref ? `/services/${service.slug}/order` : "/contact"}>
-                {designStudioHref ? "Order Without Designing" : "Get a Free Quote"}
-              </Link>
-            </Button>
+            </div>
           </div>
+
+          {heroImages && heroImages.length > 0 && (
+            <div className="relative hidden aspect-[4/3] w-full lg:block">
+              {heroImages.slice(0, 3).map((img, i) => (
+                <div
+                  key={img.url}
+                  className="absolute overflow-hidden rounded-md border border-kc-border bg-white shadow-lg"
+                  style={{
+                    width: i === 0 ? "68%" : "46%",
+                    top: i === 0 ? "0" : i === 1 ? "40%" : "10%",
+                    left: i === 0 ? "0" : i === 1 ? "44%" : "50%",
+                    zIndex: i === 0 ? 1 : i === 1 ? 3 : 2,
+                    transform: i === 2 ? "rotate(3deg)" : undefined,
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.url} alt={img.title} className="aspect-square w-full object-cover" loading="eager" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

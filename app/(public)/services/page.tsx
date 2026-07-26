@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getFeaturedThumbnails, type ProductThumbnail } from "@/lib/product-thumbnails";
 
 export const metadata: Metadata = {
   title: "Design Services - Business Cards, Postcards, Banners, Rigid Signs",
@@ -44,7 +45,16 @@ const SERVICES = [
   },
 ];
 
-export default function ServicesPage() {
+export const revalidate = 3600;
+
+export default async function ServicesPage() {
+  const thumbnails = await Promise.all(
+    SERVICES.map((s) => getFeaturedThumbnails(s.slug as Parameters<typeof getFeaturedThumbnails>[0], 1))
+  );
+  const thumbnailBySlug: Record<string, ProductThumbnail | undefined> = Object.fromEntries(
+    SERVICES.map((s, i) => [s.slug, thumbnails[i][0]])
+  );
+
   return (
     <div>
       <div className="section-pad-tight bg-kc-bg">
@@ -58,9 +68,18 @@ export default function ServicesPage() {
 
       <div className="container-tight px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {SERVICES.map((s) => (
+          {SERVICES.map((s) => {
+            const thumb = thumbnailBySlug[s.slug];
+            return (
             <Link key={s.slug} href={`/services/${s.slug}`} className="group flex flex-col overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
-              <div className={`h-1.5 w-full ${s.accent}`} />
+              {thumb ? (
+                <div className="aspect-[16/10] w-full overflow-hidden bg-kc-bg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={thumb.url} alt={thumb.title} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
+                </div>
+              ) : (
+                <div className={`h-1.5 w-full ${s.accent}`} />
+              )}
               <div className="flex flex-1 flex-col p-6">
                 <div className="mb-3 flex items-baseline justify-between gap-2">
                   <h2 className="text-xl font-bold text-kc-dark group-hover:text-kc-teal transition-colors">{s.name}</h2>
@@ -77,7 +96,8 @@ export default function ServicesPage() {
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-16 flex flex-col items-start justify-between gap-6 rounded-md border border-kc-border bg-kc-violet-tint p-8 sm:flex-row sm:items-center">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { ServiceDef } from "@/lib/service-data";
@@ -9,10 +9,19 @@ import { formatDollars } from "@/lib/utils";
 interface ServicePageContentProps {
   service: ServiceDef;
   designStudioHref?: string;
+  aiDesignHref?: string;
   heroImages?: ProductThumbnail[];
 }
 
-export function ServicePageContent({ service, designStudioHref, heroImages }: ServicePageContentProps) {
+function FreeBadge() {
+  return (
+    <span className="absolute -top-2 -right-2 z-10 rounded-full bg-kc-yellow px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-kc-dark shadow-sm">
+      Free
+    </span>
+  );
+}
+
+export function ServicePageContent({ service, designStudioHref, aiDesignHref, heroImages }: ServicePageContentProps) {
   return (
     <>
       {/* Hero */}
@@ -22,13 +31,28 @@ export function ServicePageContent({ service, designStudioHref, heroImages }: Se
             <div className="mb-4 text-sm font-semibold uppercase tracking-wide text-kc-teal">{service.name}</div>
             <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">{service.tagline}</h1>
             <p className="mb-8 text-lg leading-relaxed text-kc-muted">{service.description}</p>
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-wrap gap-3">
               {designStudioHref ? (
-                <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
-                  <Link href={designStudioHref}>
-                    Design It Yourself <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
+                <>
+                  <div className="relative">
+                    <FreeBadge />
+                    <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
+                      <Link href={designStudioHref}>
+                        Design It Yourself <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                  {aiDesignHref && (
+                    <div className="relative">
+                      <FreeBadge />
+                      <Button asChild size="lg" variant="outline" className="rounded-md border-kc-orange/50 text-kc-orange hover:bg-kc-orange/5">
+                        <Link href={aiDesignHref}>
+                          <Sparkles className="mr-2 h-4 w-4" /> Design with AI
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
                   <Link href={`/services/${service.slug}/order`}>

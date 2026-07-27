@@ -50,6 +50,7 @@ export function TemplateGallery({ product = "business-card" }: { product?: Desig
   const [recent, setRecent] = useState<string[]>([]);
   const routeSegment = PRODUCT_ROUTE_SEGMENT[product];
   const thumbAspect = THUMB_ASPECT[product];
+  const supportsAi = product !== "rigid-sign";
 
   useEffect(() => {
     // localStorage isn't available during SSR, so this can only be read post-mount.
@@ -116,11 +117,13 @@ export function TemplateGallery({ product = "business-card" }: { product?: Desig
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Link
           href={`/services/${routeSegment}/design/new`}
-          className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-kc-teal/40 bg-kc-teal/5 px-6 py-5 text-sm font-semibold text-kc-teal transition-colors hover:bg-kc-teal/10"
+          className={`flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-kc-teal/40 bg-kc-teal/5 px-6 py-5 text-sm font-semibold text-kc-teal transition-colors hover:bg-kc-teal/10 ${supportsAi ? "" : "sm:col-span-2"}`}
         >
           <Sparkles className="h-4 w-4" /> Start From a Blank Design
         </Link>
-        <CreateWithAiDialog product={product} />
+        {/* AI generation only supports business cards, postcards, and banners today — see the
+            product enum in app/api/ai-design/route.ts. */}
+        {supportsAi && <CreateWithAiDialog product={product} />}
       </div>
 
       {recentTemplates.length > 0 && (

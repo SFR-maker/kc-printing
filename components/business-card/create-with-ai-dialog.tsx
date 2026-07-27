@@ -47,6 +47,15 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [preview, setPreview] = useState<PreviewData | null>(null);
 
+  // Lets the service page hero's "Design with AI" button link straight into this dialog
+  // (?startAi=1) instead of just landing on the gallery and making the visitor find the button.
+  useEffect(() => {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("startAi") === "1") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setOpen(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     fetch("/api/ai-design")

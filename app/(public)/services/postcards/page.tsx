@@ -16,5 +16,12 @@ export const revalidate = 3600;
 export default async function ServicePage() {
   if (!service) notFound();
   const heroImages = await getFeaturedThumbnails("postcards");
-  return <ServicePageContent service={service} designStudioHref="/services/postcards/design" heroImages={heroImages} />;
+  return (
+    <ServicePageContent
+      service={service}
+      designStudioHref="/services/postcards/design"
+      aiDesignHref="/services/postcards/design?startAi=1"
+      heroImages={heroImages}
+    />
+  );
 }

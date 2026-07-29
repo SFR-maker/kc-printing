@@ -31,7 +31,7 @@ const bcSpecSchema = z.object({
   manualProof: z.boolean(),
 });
 
-const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 100, rush: false, roundCorners: false, manualProof: false };
+const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 1000, rush: false, roundCorners: false, manualProof: false };
 
 const schema = z.object({
   selectedOption: z.record(z.string(), z.string()).optional(),

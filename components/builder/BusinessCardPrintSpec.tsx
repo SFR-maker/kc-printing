@@ -2,7 +2,6 @@
 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { formatDollars } from "@/lib/utils";
 import {
   BC_SIZES,
@@ -25,6 +24,10 @@ export interface BusinessCardSpec {
 }
 
 const RUSH_MAX_QUANTITY = 2500;
+
+// European Standard sizes (339/340) are excluded from the picker — KC Printing only sells to a
+// U.S. customer base and the extra options were just adding noise to the size dropdown.
+const DISPLAYED_BC_SIZES = BC_SIZES.filter((s) => s.id !== 339 && s.id !== 340);
 
 function formatQuantity(q: number): string {
   return q.toLocaleString("en-US");
@@ -56,133 +59,140 @@ export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSp
     onChange(next);
   }
 
+  const hasAddOns = price.rushSurcharge > 0 || price.roundCornersPrice > 0 || price.proofPrice > 0;
+
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label>Size</Label>
-          <Select value={String(spec.sizeId)} onValueChange={(v) => v && set("sizeId", Number(v))}>
-            <SelectTrigger><SelectValue>{(v: string) => BC_SIZES.find((s) => String(s.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {BC_SIZES.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Core selection, boxed and given visual priority: this is the decision that actually
+          drives price, so it gets the price shown immediately below it rather than buried under
+          the add-ons list. */}
+      <div className="rounded-xl border-2 border-kc-teal/30 bg-white p-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
+            <Label>Size</Label>
+            <Select value={String(spec.sizeId)} onValueChange={(v) => v && set("sizeId", Number(v))}>
+              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => DISPLAYED_BC_SIZES.find((s) => String(s.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
+              <SelectContent>
+                {DISPLAYED_BC_SIZES.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
+            <Label>Paper Stock</Label>
+            <Select value={String(spec.paperId)} onValueChange={(v) => v && set("paperId", Number(v))}>
+              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => BC_PAPERS.find((p) => String(p.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
+              <SelectContent>
+                {BC_PAPERS.map((p) => (
+                  <SelectItem key={p.id} value={String(p.id)}>{p.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
+            <Label>Sides</Label>
+            <Select value={String(spec.colorId)} onValueChange={(v) => v && set("colorId", Number(v))}>
+              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => BC_COLORS.find((c) => String(c.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
+              <SelectContent>
+                {BC_COLORS.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!comboOk && (
+              <p className="text-xs text-amber-600">This paper doesn&apos;t support that side option. Pick a different paper or sides.</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
+            <Label>Quantity</Label>
+            <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))} disabled={quantities.length === 0}>
+              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => `${formatQuantity(Number(v))} cards`}</SelectValue></SelectTrigger>
+              <SelectContent>
+                {quantities.map((q) => (
+                  <SelectItem key={q} value={String(q)}>{formatQuantity(q)} cards</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label>Paper Stock</Label>
-          <Select value={String(spec.paperId)} onValueChange={(v) => v && set("paperId", Number(v))}>
-            <SelectTrigger><SelectValue>{(v: string) => BC_PAPERS.find((p) => String(p.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {BC_PAPERS.map((p) => (
-                <SelectItem key={p.id} value={String(p.id)}>{p.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label>Sides</Label>
-          <Select value={String(spec.colorId)} onValueChange={(v) => v && set("colorId", Number(v))}>
-            <SelectTrigger><SelectValue>{(v: string) => BC_COLORS.find((c) => String(c.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {BC_COLORS.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>{c.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {!comboOk && (
-            <p className="text-xs text-amber-600">This paper doesn&apos;t support that side option. Pick a different paper or sides.</p>
+        {/* Price, front and center right after quantity — the add-ons below only ever add a
+            small line to this same total, so they shouldn't need their own competing summary. */}
+        <div className="mt-5 border-t border-kc-border pt-4">
+          {price.valid ? (
+            <>
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Print Total</div>
+                  <div className="text-xs text-kc-muted">{formatQuantity(spec.quantity)} cards</div>
+                </div>
+                <div className="text-3xl font-black text-kc-teal">{formatDollars(price.total)}</div>
+              </div>
+              {hasAddOns && (
+                <div className="mt-3 space-y-1 border-t border-dashed border-kc-border pt-3 text-xs text-kc-muted">
+                  <div className="flex justify-between"><span>Base printing</span><span>{formatDollars(price.basePrice)}</span></div>
+                  {price.rushSurcharge > 0 && <div className="flex justify-between"><span>Rush turnaround</span><span>+{formatDollars(price.rushSurcharge)}</span></div>}
+                  {price.roundCornersPrice > 0 && <div className="flex justify-between"><span>Round corners</span><span>+{formatDollars(price.roundCornersPrice)}</span></div>}
+                  {price.proofPrice > 0 && <div className="flex justify-between"><span>Manual proof</span><span>+{formatDollars(price.proofPrice)}</span></div>}
+                </div>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-amber-600">{price.error ?? "Select a valid combination to see pricing."}</p>
           )}
         </div>
+      </div>
 
-        <div className="space-y-1.5">
-          <Label>Quantity</Label>
-          <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))} disabled={quantities.length === 0}>
-            <SelectTrigger><SelectValue>{(v: string) => `${formatQuantity(Number(v))} cards`}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {quantities.map((q) => (
-                <SelectItem key={q} value={String(q)}>{formatQuantity(q)} cards</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Add-ons: kept plain and low-key on purpose — these are optional extras, not a second
+          set of decisions competing with size/paper/sides/quantity above. */}
+      <div>
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-kc-muted">Optional add-ons</p>
+        <div className="divide-y divide-kc-border overflow-hidden rounded-lg border border-kc-border">
+          <label className={`flex items-center justify-between gap-3 p-3 ${spec.quantity > RUSH_MAX_QUANTITY ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-kc-bg"}`}>
+            <span className="flex items-center gap-2.5">
+              <input
+                type="checkbox"
+                checked={spec.rush}
+                disabled={spec.quantity > RUSH_MAX_QUANTITY}
+                onChange={() => set("rush", !spec.rush)}
+                className="h-4 w-4 shrink-0 accent-kc-teal"
+              />
+              <span>
+                <span className="block text-sm text-kc-dark">Rush Turnaround</span>
+                <span className="block text-xs text-kc-muted">
+                  {spec.quantity > RUSH_MAX_QUANTITY ? `Only available up to ${formatQuantity(RUSH_MAX_QUANTITY)} cards.` : "Faster production."}
+                </span>
+              </span>
+            </span>
+            {price.valid && spec.rush && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(price.rushSurcharge)}</span>}
+          </label>
+
+          <label className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
+            <span className="flex items-center gap-2.5">
+              <input type="checkbox" checked={spec.roundCorners} onChange={() => set("roundCorners", !spec.roundCorners)} className="h-4 w-4 shrink-0 accent-kc-teal" />
+              <span>
+                <span className="block text-sm text-kc-dark">Round Corners</span>
+                <span className="block text-xs text-kc-muted">A softer, more premium edge.</span>
+              </span>
+            </span>
+            {price.valid && spec.roundCorners && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(price.roundCornersPrice)}</span>}
+          </label>
+
+          <label className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
+            <span className="flex items-center gap-2.5">
+              <input type="checkbox" checked={spec.manualProof} onChange={() => set("manualProof", !spec.manualProof)} className="h-4 w-4 shrink-0 accent-kc-teal" />
+              <span>
+                <span className="block text-sm text-kc-dark">Manual Proof Review</span>
+                <span className="block text-xs text-kc-muted">A person checks your file before print (24 hrs). Instant automated proofing is free and used by default.</span>
+              </span>
+            </span>
+            {spec.manualProof && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(3)}</span>}
+          </label>
         </div>
-      </div>
-
-      <div className="space-y-3">
-        <button
-          type="button"
-          onClick={() => set("rush", !spec.rush)}
-          disabled={spec.quantity > RUSH_MAX_QUANTITY}
-          className={`flex w-full items-center justify-between rounded-lg border-2 p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${spec.rush ? "border-kc-coral bg-kc-coral/5" : "border-kc-border bg-white hover:border-kc-coral/40"}`}
-        >
-          <div>
-            <span className="text-sm font-semibold text-kc-dark">Rush Turnaround</span>
-            <p className="text-xs text-kc-muted">Faster production. {spec.quantity > RUSH_MAX_QUANTITY ? `Only available up to ${formatQuantity(RUSH_MAX_QUANTITY)} cards.` : "Adds a surcharge to the print cost."}</p>
-          </div>
-          {price.valid && spec.rush && <Badge className="border-0 bg-kc-coral/20 text-kc-coral text-xs">+{formatDollars(price.rushSurcharge)}</Badge>}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => set("roundCorners", !spec.roundCorners)}
-          className={`flex w-full items-center justify-between rounded-lg border-2 p-3 text-left transition-colors ${spec.roundCorners ? "border-kc-teal bg-kc-teal/5" : "border-kc-border bg-white hover:border-kc-teal/40"}`}
-        >
-          <div>
-            <span className="text-sm font-semibold text-kc-dark">Round Corners</span>
-            <p className="text-xs text-kc-muted">A softer, more premium edge.</p>
-          </div>
-          {price.valid && spec.roundCorners && <Badge className="border-0 bg-kc-teal/20 text-kc-teal text-xs">+{formatDollars(price.roundCornersPrice)}</Badge>}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => set("manualProof", !spec.manualProof)}
-          className={`flex w-full items-center justify-between rounded-lg border-2 p-3 text-left transition-colors ${spec.manualProof ? "border-kc-teal bg-kc-teal/5" : "border-kc-border bg-white hover:border-kc-teal/40"}`}
-        >
-          <div>
-            <span className="text-sm font-semibold text-kc-dark">Manual Proof Review</span>
-            <p className="text-xs text-kc-muted">A person checks your file before print (24 hrs). Instant automated proofing is free and used by default.</p>
-          </div>
-          {spec.manualProof && <Badge className="border-0 bg-kc-teal/20 text-kc-teal text-xs">+{formatDollars(3)}</Badge>}
-        </button>
-      </div>
-
-      <div className="rounded-xl border border-kc-border bg-kc-bg p-4">
-        {price.valid ? (
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between text-kc-muted">
-              <span>Printing ({formatQuantity(spec.quantity)} cards)</span>
-              <span>{formatDollars(price.basePrice)}</span>
-            </div>
-            {price.rushSurcharge > 0 && (
-              <div className="flex justify-between text-kc-muted">
-                <span>Rush surcharge</span>
-                <span>{formatDollars(price.rushSurcharge)}</span>
-              </div>
-            )}
-            {price.roundCornersPrice > 0 && (
-              <div className="flex justify-between text-kc-muted">
-                <span>Round corners</span>
-                <span>{formatDollars(price.roundCornersPrice)}</span>
-              </div>
-            )}
-            {price.proofPrice > 0 && (
-              <div className="flex justify-between text-kc-muted">
-                <span>Manual proof</span>
-                <span>{formatDollars(price.proofPrice)}</span>
-              </div>
-            )}
-            <div className="flex justify-between border-t border-kc-border pt-1.5 font-bold text-kc-dark">
-              <span>Print Total</span>
-              <span className="text-kc-teal">{formatDollars(price.total)}</span>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-amber-600">{price.error ?? "Select a valid combination to see pricing."}</p>
-        )}
       </div>
     </div>
   );

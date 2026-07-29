@@ -31,7 +31,9 @@ const bcSpecSchema = z.object({
   manualProof: z.boolean(),
 });
 
-const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 1000, rush: false, roundCorners: false, manualProof: false };
+// Cheapest real combo (100 lb. Matte Cover, 250 cards, single-sided) so the order flow opens on
+// its lowest-friction, lowest-price starting point rather than nudging toward a bigger order.
+const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 7, colorId: 1, quantity: 250, rush: false, roundCorners: false, manualProof: false };
 
 const schema = z.object({
   selectedOption: z.record(z.string(), z.string()).optional(),
@@ -325,69 +327,94 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           </div>
         )}
         {step === 0 && !isBusinessCards && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select a Package</h2>
-            <div className={`grid grid-cols-1 gap-4 ${service.packages.length <= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"}`}>
-              {service.packages.map((pkg) => (
-                <button
-                  key={pkg.name}
-                  type="button"
-                  onClick={() => setValue("selectedPackage", pkg.name)}
-                  className={cn(
-                    "relative rounded-xl border-2 p-5 text-left transition-all",
-                    values.selectedPackage === pkg.name
-                      ? "border-kc-teal bg-kc-teal/5 shadow-md"
-                      : "border-kc-border bg-white hover:border-kc-teal/40"
-                  )}
-                >
-                  {pkg.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-kc-teal text-white border-0 text-xs">
-                      Most Popular
-                    </Badge>
-                  )}
-                  <div className="text-xs font-semibold uppercase tracking-wider text-kc-muted mb-1">{pkg.name}</div>
-                  <div className="text-3xl font-black text-kc-dark mb-3">{formatDollars(pkg.price)}</div>
-                  <ul className="space-y-1.5">
-                    {pkg.features.slice(0, 4).map((f) => (
-                      <li key={f} className="flex items-center gap-2 text-xs text-kc-muted">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-kc-teal shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                </button>
-              ))}
-            </div>
-            {errors.selectedPackage && <p className="text-xs text-red-500">{errors.selectedPackage.message}</p>}
+            {/* Boxed and given visual priority: the package pick is what actually drives price for
+                this product (see the `price` calc above), so the total is shown immediately below
+                it rather than waiting until the add-ons list or the footer. */}
+            <div className="rounded-xl border-2 border-kc-teal/30 bg-white p-5">
+              <div className={`grid grid-cols-1 gap-4 ${service.packages.length <= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+                {service.packages.map((pkg) => (
+                  <button
+                    key={pkg.name}
+                    type="button"
+                    onClick={() => setValue("selectedPackage", pkg.name)}
+                    className={cn(
+                      "relative rounded-xl border-2 p-5 text-left transition-all",
+                      values.selectedPackage === pkg.name
+                        ? "border-kc-teal bg-kc-teal/5 shadow-md"
+                        : "border-kc-border bg-white hover:border-kc-teal/40"
+                    )}
+                  >
+                    {pkg.popular && (
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-kc-teal text-white border-0 text-xs">
+                        Most Popular
+                      </Badge>
+                    )}
+                    <div className="text-xs font-semibold uppercase tracking-wider text-kc-muted mb-1">{pkg.name}</div>
+                    <div className="text-3xl font-black text-kc-dark mb-3">{formatDollars(pkg.price)}</div>
+                    <ul className="space-y-1.5">
+                      {pkg.features.slice(0, 4).map((f) => (
+                        <li key={f} className="flex items-center gap-2 text-xs text-kc-muted">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-kc-teal shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </button>
+                ))}
+              </div>
+              {errors.selectedPackage && <p className="mt-3 text-xs text-red-500">{errors.selectedPackage.message}</p>}
 
+              {selectedPkg && price && (
+                <div className="mt-5 border-t border-kc-border pt-4">
+                  <div className="flex items-end justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Package Total</div>
+                      <div className="text-xs text-kc-muted">{selectedPkg.name}</div>
+                    </div>
+                    <div className="text-3xl font-black text-kc-teal">{formatDollars(price.total)}</div>
+                  </div>
+                  {selectedAddOnPrices.some((p) => p > 0) && (
+                    <div className="mt-3 space-y-1 border-t border-dashed border-kc-border pt-3 text-xs text-kc-muted">
+                      <div className="flex justify-between"><span>{selectedPkg.name} package</span><span>{formatDollars(selectedPkg.price)}</span></div>
+                      {(values.selectedAddOns ?? []).map((name) => {
+                        const ao = service.addOns.find((a) => a.name === name);
+                        return ao ? <div key={name} className="flex justify-between"><span>{ao.name}</span><span>+{formatDollars(ao.price)}</span></div> : null;
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Add-ons: plain and low-key on purpose — optional extras, not a second set of
+                decisions competing with the package choice above. */}
             {service.addOns.length > 0 && (
-              <div className="mt-6">
-                <h3 className="font-semibold text-kc-dark mb-3">Add-Ons (optional)</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-kc-muted">Optional add-ons</p>
+                <div className="divide-y divide-kc-border overflow-hidden rounded-lg border border-kc-border">
                   {service.addOns.map((ao) => {
                     const isSelected = (values.selectedAddOns ?? []).includes(ao.name);
                     return (
-                      <button
-                        key={ao.name}
-                        type="button"
-                        onClick={() => {
-                          const current = values.selectedAddOns ?? [];
-                          setValue(
-                            "selectedAddOns",
-                            isSelected ? current.filter((n) => n !== ao.name) : [...current, ao.name]
-                          );
-                        }}
-                        className={cn(
-                          "rounded-lg border-2 p-3 text-left transition-all",
-                          isSelected ? "border-kc-coral bg-kc-coral/5" : "border-kc-border bg-white hover:border-kc-coral/40"
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-kc-dark">{ao.name}</span>
-                          <Badge className="bg-kc-yellow/30 text-kc-dark border-0 text-xs">+{formatDollars(ao.price)}</Badge>
-                        </div>
-                        <p className="text-xs text-kc-muted mt-0.5">{ao.desc}</p>
-                      </button>
+                      <label key={ao.name} className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
+                        <span className="flex items-center gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              const current = values.selectedAddOns ?? [];
+                              setValue("selectedAddOns", isSelected ? current.filter((n) => n !== ao.name) : [...current, ao.name]);
+                            }}
+                            className="h-4 w-4 shrink-0 accent-kc-teal"
+                          />
+                          <span>
+                            <span className="block text-sm text-kc-dark">{ao.name}</span>
+                            <span className="block text-xs text-kc-muted">{ao.desc}</span>
+                          </span>
+                        </span>
+                        {isSelected && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(ao.price)}</span>}
+                      </label>
                     );
                   })}
                 </div>
@@ -483,62 +510,64 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         {step === 1 && !isBusinessCards && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select Options</h2>
-            {service.specs
-              .filter((s) => ["ORIENTATION", "CUSTOM"].some((t) => s.label.toUpperCase().includes(t)))
-              .map((spec) => (
-                <div key={spec.label} className="space-y-2">
-                  <Label>{spec.label}</Label>
-                  <p className="text-sm text-kc-muted">{spec.value}</p>
-                </div>
-              ))}
-            {service.specs
-              .filter((s) => {
-                const up = s.label.toUpperCase();
-                if (up.includes("CUSTOM")) return false;
-                return ["PAPER", "MATERIAL", "SIZE", "TYPE", "SHAPE"].some((t) => up.includes(t));
-              })
-              .map((spec) => {
-                // Not every matching spec is actually a clean list of discrete choices — some are
-                // prose ranges ("12x12 in up to 18x10 in depending on shape, custom sizes
-                // available") that happen to contain a comma, or a single sentence with no comma
-                // at all ("Roll-Up Stand or Vinyl Banner"). Splitting those naively produced
-                // garbage dropdown options. Only render a Select when the split genuinely yields
-                // 2+ short, non-range-sounding tokens; otherwise fall back to descriptive text.
-                const commaParts = spec.value.split(",").map((v) => v.trim()).filter(Boolean);
-                const choices = commaParts.length > 1 ? commaParts : spec.value.split(/\s+or\s+/i).map((v) => v.trim()).filter(Boolean);
-                const isCleanList = choices.length > 1 && choices.every((c) => c.length <= 35 && !/\bup to\b/i.test(c));
-                if (!isCleanList) {
-                  return (
-                    <div key={spec.label} className="space-y-2">
+            <div className="rounded-xl border-2 border-kc-teal/30 bg-white p-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {service.specs
+                  .filter((s) => ["ORIENTATION", "CUSTOM"].some((t) => s.label.toUpperCase().includes(t)))
+                  .map((spec) => (
+                    <div key={spec.label} className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
                       <Label>{spec.label}</Label>
                       <p className="text-sm text-kc-muted">{spec.value}</p>
                     </div>
-                  );
-                }
-                const article = /^[aeiou]/i.test(spec.label) ? "an" : "a";
-                return (
-                  <div key={spec.label} className="space-y-2">
-                    <Label>{spec.label}</Label>
-                    <Select
-                      value={values.selectedOption?.[spec.label] ?? ""}
-                      onValueChange={(v) => v && setValue("selectedOption", { ...values.selectedOption, [spec.label]: v })}
-                    >
-                      <SelectTrigger className="max-w-sm">
-                        <SelectValue placeholder={`Choose ${article} ${spec.label.toLowerCase().replace(/s$/, "")}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {choices.map((c) => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                );
-              })}
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity / Scope</Label>
-              <Input id="quantity" type="number" min="1" {...register("quantity", { valueAsNumber: true })} className="max-w-xs" />
-              {errors.quantity && <p className="text-xs text-red-500">{errors.quantity.message}</p>}
+                  ))}
+                {service.specs
+                  .filter((s) => {
+                    const up = s.label.toUpperCase();
+                    if (up.includes("CUSTOM")) return false;
+                    return ["PAPER", "MATERIAL", "SIZE", "TYPE", "SHAPE"].some((t) => up.includes(t));
+                  })
+                  .map((spec) => {
+                    // Not every matching spec is actually a clean list of discrete choices — some are
+                    // prose ranges ("12x12 in up to 18x10 in depending on shape, custom sizes
+                    // available") that happen to contain a comma, or a single sentence with no comma
+                    // at all ("Roll-Up Stand or Vinyl Banner"). Splitting those naively produced
+                    // garbage dropdown options. Only render a Select when the split genuinely yields
+                    // 2+ short, non-range-sounding tokens; otherwise fall back to descriptive text.
+                    const commaParts = spec.value.split(",").map((v) => v.trim()).filter(Boolean);
+                    const choices = commaParts.length > 1 ? commaParts : spec.value.split(/\s+or\s+/i).map((v) => v.trim()).filter(Boolean);
+                    const isCleanList = choices.length > 1 && choices.every((c) => c.length <= 35 && !/\bup to\b/i.test(c));
+                    if (!isCleanList) {
+                      return (
+                        <div key={spec.label} className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
+                          <Label>{spec.label}</Label>
+                          <p className="text-sm text-kc-muted">{spec.value}</p>
+                        </div>
+                      );
+                    }
+                    const article = /^[aeiou]/i.test(spec.label) ? "an" : "a";
+                    return (
+                      <div key={spec.label} className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
+                        <Label>{spec.label}</Label>
+                        <Select
+                          value={values.selectedOption?.[spec.label] ?? ""}
+                          onValueChange={(v) => v && setValue("selectedOption", { ...values.selectedOption, [spec.label]: v })}
+                        >
+                          <SelectTrigger className="bg-white"><SelectValue placeholder={`Choose ${article} ${spec.label.toLowerCase().replace(/s$/, "")}`} /></SelectTrigger>
+                          <SelectContent>
+                            {choices.map((c) => (
+                              <SelectItem key={c} value={c}>{c}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    );
+                  })}
+                <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
+                  <Label htmlFor="quantity">Quantity / Scope</Label>
+                  <Input id="quantity" type="number" min="1" {...register("quantity", { valueAsNumber: true })} className="bg-white" />
+                  {errors.quantity && <p className="text-xs text-red-500">{errors.quantity.message}</p>}
+                </div>
+              </div>
             </div>
           </div>
         )}

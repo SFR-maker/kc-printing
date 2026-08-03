@@ -202,6 +202,12 @@ model Order {
   // Set when the customer ticks the approval box. Null means no approved proof exists yet.
   proofApprovedAt      DateTime?
 
+  // Which version of the Terms of Sale the customer agreed to, and when. Recorded per order rather
+  // than only at signup: the terms that bind a sale are the ones in force when that sale was made,
+  // and guests can order without ever creating an account.
+  termsVersion         String?
+  termsAcceptedAt      DateTime?
+
   // `total` above is the pre-tax figure we calculated and showed the customer. Sales tax is worked
   // out by Stripe from the delivery address at checkout, so these record what was actually charged.
   taxAmount            Float?

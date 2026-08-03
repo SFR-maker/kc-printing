@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth/requireAdmin";
 import { safeClerkUserId } from "@/lib/safe-auth";
 import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
+import { TERMS_VERSION } from "@/lib/legal/terms";
 
 const bcSpecSchema = z.object({
   sizeId: z.number(),
@@ -39,6 +40,7 @@ const schema = z.object({
   // used instead, but the field is accepted either way so the client doesn't need to know the
   // customer's auth state before submitting.
   guestEmail: z.string().email().optional(),
+  acceptedTerms: z.boolean().optional(),
   // Business cards only. The proof approval is a consent record, so it is stored on the order
   // rather than buried in the item config, and re-derived here from the client payload rather than
   // trusted wholesale: only the file reference, the measured size and the approval flag are kept.
@@ -96,7 +98,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, acceptedTerms, ...config } = parsed.data;
+
+  if (!acceptedTerms) {
+    return NextResponse.json(
+      { error: "Please accept the Terms of Sale to place your order", details: { fieldErrors: { acceptedTerms: ["Required"] } } },
+      { status: 400 }
+    );
+  }
 
   const product = await db.product.findUnique({ where: { slug: service }, include: { packages: true, addOns: true } });
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -142,6 +151,9 @@ export async function POST(req: Request) {
       artworkFitApplied: artwork?.inspection ? artwork.inspection.matchesRequiredSize === false : false,
       artworkPlacement: artwork?.path === "UPLOAD" && artwork.placement ? artwork.placement : undefined,
       proofApprovedAt: artwork?.path === "UPLOAD" && artwork.approved ? new Date() : null,
+      // Stamped server-side so the record reflects when we actually received the agreement.
+      termsVersion: TERMS_VERSION,
+      termsAcceptedAt: new Date(),
       items: {
         create: {
           productId: product.id,

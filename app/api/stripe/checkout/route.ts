@@ -6,6 +6,7 @@ import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/app-url";
 import { buildStripeLineItems, lineItemsTotalCents } from "@/lib/pricing/line-items";
+import { buildShippingOptions } from "@/lib/shipping/rates";
 
 const schema = z.object({
   orderId: z.string().min(1),
@@ -108,6 +109,10 @@ export async function POST(req: Request) {
       // charges tax where the account holds an active tax registration; with none configured it
       // resolves to zero rather than failing, so this is safe to ship ahead of registering.
       automatic_tax: { enabled: true },
+      // Flat tiers rather than live carrier quotes. Stripe renders each one with a delivery date
+      // range worked out against the customer's own calendar, and taxes the shipping line according
+      // to the destination - some states tax carriage, some do not.
+      shipping_options: buildShippingOptions(),
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

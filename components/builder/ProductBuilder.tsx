@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
+import { SHIPPING_TIERS, transitLabel } from "@/lib/shipping/rates";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
@@ -59,6 +60,7 @@ const schema = z.object({
   // auth status before submitting: guests need it so there's somewhere to send confirmation and
   // print files (the API only actually requires it when the request turns out to be unauthenticated).
   guestEmail: z.string().min(1, "Email is required").email("Enter a valid email"),
+  acceptedTerms: z.boolean(),
   // Business cards only. `inspection` is the API's measurement payload, kept loose here because it
   // is produced and validated server-side by lib/business-card/inspect-artwork.
   // Not `.default()`: that makes the field optional on the schema's input type but required on its
@@ -78,6 +80,9 @@ const schema = z.object({
   // path skips, so the form failed validation against a field the customer was never shown.
   if (v.artwork?.path !== "UPLOAD" && !v.businessName?.trim()) {
     ctx.addIssue({ code: "custom", path: ["businessName"], message: "Business name is required" });
+  }
+  if (!v.acceptedTerms) {
+    ctx.addIssue({ code: "custom", path: ["acceptedTerms"], message: "Please accept the Terms of Sale" });
   }
 });
 
@@ -121,7 +126,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
-            return { selectedAddOns: [], brandFiles: [], quantity: 1, businessName: "", bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, artwork: EMPTY_ARTWORK, ...JSON.parse(saved) };
+            return { selectedAddOns: [], brandFiles: [], quantity: 1, businessName: "", acceptedTerms: false, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, artwork: EMPTY_ARTWORK, ...JSON.parse(saved) };
           } catch {
             // fall through to plain defaults below
           }
@@ -136,6 +141,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         brandFiles: [],
         quantity: 1,
         businessName: "",
+        acceptedTerms: false,
         bcSpec: DEFAULT_BC_SPEC,
         colorPaletteId: AI_PALETTE_AUTO_ID,
         artwork: EMPTY_ARTWORK,
@@ -980,11 +986,30 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               </div>
             )}
 
-            <p className="text-xs text-kc-muted">
-              Your delivery address is collected securely on the next screen, along with payment.
-              Sales tax is worked out from that address and added at checkout, so the total above is
-              before tax.
-            </p>
+            <div className="rounded-lg border border-kc-border p-4">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-kc-muted">Shipping</p>
+              <ul className="divide-y divide-kc-border">
+                {SHIPPING_TIERS.map((tier) => (
+                  <li key={tier.id} className="flex items-baseline justify-between gap-3 py-2 text-sm">
+                    <span className="text-kc-dark">
+                      {tier.label}
+                      {tier.recommended && (
+                        <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-kc-magenta-deep">
+                          Most popular
+                        </span>
+                      )}
+                      <span className="block text-xs text-kc-muted">{transitLabel(tier)} after despatch</span>
+                    </span>
+                    <span className="shrink-0 font-mono text-[13px] text-kc-dark">{formatDollars(tier.price)}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 text-xs leading-relaxed text-kc-muted">
+                You pick a speed on the next screen, where your delivery address and payment are
+                collected securely. Sales tax is worked out from that address, so the total above is
+                before shipping and tax.
+              </p>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="guestEmail">Email for order confirmation *</Label>
@@ -993,6 +1018,31 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                 We&apos;ll send your receipt and print files here. You don&apos;t need an account to order, only to save designs or use AI generation.
               </p>
               {errors.guestEmail && <p className="text-xs text-red-500">{errors.guestEmail.message}</p>}
+            </div>
+
+            <div>
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={values.acceptedTerms}
+                  onChange={(e) => setValue("acceptedTerms", e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-kc-coral"
+                />
+                <span className="text-sm leading-relaxed text-kc-dark">
+                  I agree to the{" "}
+                  <a href="/terms" target="_blank" rel="noreferrer" className="font-semibold text-kc-magenta-deep hover:text-kc-dark">
+                    Terms of Sale
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold text-kc-magenta-deep hover:text-kc-dark">
+                    Privacy Policy
+                  </a>
+                  . I understand that once I approve a proof, the design is final.
+                </span>
+              </label>
+              {errors.acceptedTerms && (
+                <p className="mt-1.5 text-xs text-red-500">{errors.acceptedTerms.message}</p>
+              )}
             </div>
 
             {submitError && (

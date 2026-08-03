@@ -79,6 +79,11 @@ export async function POST(req: Request) {
     cancel_url: `${appUrl}/cancel`,
     metadata: { orderId, userId: user?.id ?? "" },
     customer_email: user?.email ?? order.guestEmail ?? undefined,
+    // Printed cards have to be posted somewhere. Collecting the address here rather than in our own
+    // form means Stripe validates it, offers autofill, and we never hold it before payment. The
+    // webhook copies it onto the order once the session completes.
+    shipping_address_collection: { allowed_countries: ["US"] },
+    phone_number_collection: { enabled: true },
   });
 
   await db.order.update({

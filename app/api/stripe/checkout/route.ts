@@ -5,6 +5,7 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/app-url";
+import { buildStripeLineItems, lineItemsTotalCents } from "@/lib/pricing/line-items";
 
 const schema = z.object({
   orderId: z.string().min(1),
@@ -44,17 +45,31 @@ export async function POST(req: Request) {
   if (order.userId && order.userId !== user?.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
 
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.items.map((item: { product: { name: string; description: string }; packageTier: { name: string } | null; price: number; quantity: number }) => ({
-    price_data: {
-      currency: "usd",
-      product_data: {
-        name: `${item.product.name}${item.packageTier ? ` - ${item.packageTier.name}` : ""}`,
-        description: item.product.description.substring(0, 200),
-      },
-      unit_amount: Math.round(item.price * 100),
-    },
-    quantity: item.quantity,
-  }));
+  const lineItems = buildStripeLineItems(
+    order.items.map((item: { product: { name: string; description: string }; packageTier: { name: string } | null; price: number; quantity: number }) => ({
+      price: item.price,
+      quantity: item.quantity,
+      productName: item.product.name,
+      productDescription: item.product.description,
+      packageTierName: item.packageTier?.name ?? null,
+    }))
+  );
+
+  // The amount Stripe will charge must equal the total we recorded and showed the customer. This
+  // exists because it did not: OrderItem.quantity (250 cards) was being passed to Stripe as the
+  // line quantity while OrderItem.price already held the whole line total, so a $21 order for 250
+  // cards was billed at $5,250. Refuse to open a session rather than overcharge.
+  const expectedCents = Math.round(order.total * 100);
+  const chargeCents = lineItemsTotalCents(lineItems);
+  if (chargeCents !== expectedCents) {
+    console.error(
+      `Refusing checkout for order ${orderId}: line items total ${chargeCents} cents but order total is ${expectedCents} cents`
+    );
+    return NextResponse.json(
+      { error: "This order's pricing doesn't add up. Please contact us at (816) 521-0462." },
+      { status: 500 }
+    );
+  }
 
   let discounts: Stripe.Checkout.SessionCreateParams["discounts"];
   if (couponCode) {
@@ -78,7 +93,7 @@ export async function POST(req: Request) {
     session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "payment",
-      line_items: lineItems,
+        line_items: lineItems as Stripe.Checkout.SessionCreateParams.LineItem[],
       discounts,
       success_url: absoluteUrl("success?session_id={CHECKOUT_SESSION_ID}"),
       cancel_url: absoluteUrl("cancel"),

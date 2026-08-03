@@ -30,7 +30,9 @@ export const metadata: Metadata = {
   },
   description:
     "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  // Trimmed for the same reason as next-sitemap.config.js: the deployed env value carries a
+  // trailing newline. `new URL()` happens to tolerate it, but don't rely on that.
+  metadataBase: new URL((process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").trim()),
   // A relative canonical in the root layout resolves per-route, so every page gets a correct
   // self-referencing canonical without repeating it in 20 files. This also collapses the
   // ?package=silver/gold/platinum order-page variants onto one indexable URL.

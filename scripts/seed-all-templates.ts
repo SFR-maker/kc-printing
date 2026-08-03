@@ -6,14 +6,14 @@ import { generateAiCardTemplates } from "../lib/business-card/templates/generate
 import { generatePostcardTemplates } from "../lib/business-card/templates/generate-postcard";
 import { generateBannerTemplates } from "../lib/business-card/templates/generate-banner";
 import { generateRigidSignTemplates } from "../lib/business-card/templates/generate-rigid-sign";
-import { exportSideThumbnail } from "../lib/business-card/export";
+import { exportSideThumbnail, THUMBNAIL_WIDTH } from "../lib/business-card/export";
 import type { CardTemplate } from "../lib/business-card/schema";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" });
 const db = new PrismaClient({ adapter });
 
 async function toDataUri(buffer: Buffer): Promise<string> {
-  return `data:image/jpeg;base64,${buffer.toString("base64")}`;
+  return `data:image/webp;base64,${buffer.toString("base64")}`;
 }
 
 async function seedProduct(product: "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN", templates: CardTemplate[]) {
@@ -24,7 +24,9 @@ async function seedProduct(product: "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "R
 
   for (const t of templates) {
     try {
-      const thumbWidth = product === "BUSINESS_CARD" ? 480 : 400;
+      // Widths live in one place (lib/business-card/export.ts) so seeding and
+      // scripts/refresh-thumbnails.ts cannot drift apart.
+      const thumbWidth = THUMBNAIL_WIDTH[product] ?? 640;
       const [thumbFront, thumbBack] = await Promise.all([
         exportSideThumbnail(t.front, thumbWidth),
         exportSideThumbnail(t.back, thumbWidth),

@@ -61,7 +61,24 @@ function renderElement(el: CardElement): string {
   }
 }
 
+/**
+ * Text is emitted inside a `scale(1 / TEXT_UNIT_SCALE)` group with every text coordinate and size
+ * multiplied by TEXT_UNIT_SCALE. The rendered geometry is identical, but the font-size the
+ * rasterizer sees is a sane number instead of a fraction of a user unit.
+ *
+ * Why: the viewBox is in inches, so 7pt type is `7/72` = 0.097 user units. librsvg/pango lays the
+ * glyphs out at that nominal size and only then scales the result up by ~200x, which shreds small
+ * type - characters come out with pieces missing and body copy is unreadable. Verified with an A/B
+ * render: same output size, inch-unit font-size unreadable, pixel-unit font-size clean.
+ *
+ * This affected every raster export (template thumbnails and the customer-facing PNG/JPG
+ * deliverables), not just the gallery. The viewBox stays in inches so the PDF path, which rescales
+ * through the same viewBox, is geometrically unchanged.
+ */
+const TEXT_UNIT_SCALE = 1000;
+
 function renderText(el: TextElement): string {
+  const K = TEXT_UNIT_SCALE;
   const fontSizeIn = el.fontSizePt / 72;
   const lineHeightIn = fontSizeIn * el.lineHeight;
   const anchor = el.align === "center" ? "middle" : el.align === "right" ? "end" : "start";
@@ -73,10 +90,11 @@ function renderText(el: TextElement): string {
   const tspans = lines
     .map(
       (line, i) =>
-        `<tspan x="${anchorX}" y="${el.y + fontSizeIn * 0.9 + lineHeightIn * i}">${esc(line)}</tspan>`
+        `<tspan x="${anchorX * K}" y="${(el.y + fontSizeIn * 0.9 + lineHeightIn * i) * K}">${esc(line)}</tspan>`
     )
     .join("");
-  return `${bgRect}<text font-family="${esc(el.fontFamily)}" font-size="${fontSizeIn}" font-weight="${el.fontWeight}" font-style="${el.italic ? "italic" : "normal"}" letter-spacing="${el.letterSpacing / 72}" fill="${esc(el.color)}" text-anchor="${anchor}"${decoration}>${tspans}</text>`;
+  const textEl = `<text font-family="${esc(el.fontFamily)}" font-size="${fontSizeIn * K}" font-weight="${el.fontWeight}" font-style="${el.italic ? "italic" : "normal"}" letter-spacing="${(el.letterSpacing / 72) * K}" fill="${esc(el.color)}" text-anchor="${anchor}"${decoration}>${tspans}</text>`;
+  return `${bgRect}<g transform="scale(${1 / K})">${textEl}</g>`;
 }
 
 function renderImage(el: ImageElement): string {

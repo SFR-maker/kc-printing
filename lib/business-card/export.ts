@@ -103,7 +103,20 @@ export async function exportCardPdf(front: CardSide, back: CardSide): Promise<Pd
 }
 
 /** Generates a small preview thumbnail (JPEG) used for template/design gallery cards. */
-export async function exportSideThumbnail(side: CardSide, maxWidthPx = 480, maxHeightPx = maxWidthPx): Promise<Buffer> {
+export interface ThumbnailFormat {
+  /** Encoded format. WebP is roughly half the bytes of JPEG at equivalent quality, which is what
+   *  makes a higher-resolution thumbnail affordable — these are stored as base64 data URIs and
+   *  inlined into the HTML, so bytes are the binding constraint, not pixels. */
+  format?: "webp" | "jpeg";
+  quality?: number;
+}
+
+export async function exportSideThumbnail(
+  side: CardSide,
+  maxWidthPx = 480,
+  maxHeightPx = maxWidthPx,
+  { format = "webp", quality = 80 }: ThumbnailFormat = {}
+): Promise<Buffer> {
   const resolved = await resolveSideImages(side);
   // Bounded by both dimensions, not just width — a business card fits maxWidthPx comfortably at a
   // sensible height, but an 81in-tall roll-up banner at the same "just cap width" logic would come
@@ -111,7 +124,19 @@ export async function exportSideThumbnail(side: CardSide, maxWidthPx = 480, maxH
   // this is a display thumbnail, not a print asset — sharpness only needs to hold up at gallery size.
   const thumbDpi = Math.min(maxWidthPx / side.physicalWidthIn, maxHeightPx / side.physicalHeightIn);
   const svg = renderSideToSvg(resolved, thumbDpi);
-  // JPEG has no alpha channel — sharp defaults transparent areas (outside a die-cut shapeMask) to
-  // black, which reads as an ugly matte behind the shape. Flatten to white instead.
-  return sharp(Buffer.from(svg)).flatten({ background: "#FFFFFF" }).jpeg({ quality: 82 }).toBuffer();
+  // Neither output format carries alpha here — sharp would default transparent areas (outside a
+  // die-cut shapeMask) to black, which reads as an ugly matte behind the shape. Flatten to white.
+  const pipeline = sharp(Buffer.from(svg)).flatten({ background: "#FFFFFF" });
+  return format === "webp"
+    ? pipeline.webp({ quality, effort: 5 }).toBuffer()
+    : pipeline.jpeg({ quality }).toBuffer();
 }
+
+/** Thumbnail render width per product. Business cards are the largest on screen (the 3-up rail on
+ *  the service pages), so they get the most pixels. */
+export const THUMBNAIL_WIDTH: Record<string, number> = {
+  BUSINESS_CARD: 960,
+  POSTCARD: 800,
+  BANNER: 800,
+  RIGID_SIGN: 800,
+};

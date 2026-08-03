@@ -2,13 +2,13 @@ import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { generateAllTemplates } from "../lib/business-card/templates/generate";
-import { exportSideThumbnail } from "../lib/business-card/export";
+import { exportSideThumbnail, THUMBNAIL_WIDTH } from "../lib/business-card/export";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" });
 const db = new PrismaClient({ adapter });
 
 async function toDataUri(buffer: Buffer): Promise<string> {
-  return `data:image/jpeg;base64,${buffer.toString("base64")}`;
+  return `data:image/webp;base64,${buffer.toString("base64")}`;
 }
 
 async function main() {
@@ -22,8 +22,8 @@ async function main() {
   for (const t of templates) {
     try {
       const [thumbFront, thumbBack] = await Promise.all([
-        exportSideThumbnail(t.front, 480),
-        exportSideThumbnail(t.back, 480),
+        exportSideThumbnail(t.front, THUMBNAIL_WIDTH.BUSINESS_CARD),
+        exportSideThumbnail(t.back, THUMBNAIL_WIDTH.BUSINESS_CARD),
       ]);
       const thumbnailFront = await toDataUri(thumbFront);
       const thumbnailBack = await toDataUri(thumbBack);

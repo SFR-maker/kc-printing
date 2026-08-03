@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 import { safeClerkUserId } from "@/lib/safe-auth";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
+import { absoluteUrl } from "@/lib/app-url";
 
 const schema = z.object({
   orderId: z.string().min(1),
@@ -42,7 +43,6 @@ export async function POST(req: Request) {
   // customer's order can only be paid by that same account.
   if (order.userId && order.userId !== user?.id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = order.items.map((item: { product: { name: string; description: string }; packageTier: { name: string } | null; price: number; quantity: number }) => ({
     price_data: {
@@ -70,21 +70,31 @@ export async function POST(req: Request) {
     }
   }
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    mode: "payment",
-    line_items: lineItems,
-    discounts,
-    success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/cancel`,
-    metadata: { orderId, userId: user?.id ?? "" },
-    customer_email: user?.email ?? order.guestEmail ?? undefined,
-    // Printed cards have to be posted somewhere. Collecting the address here rather than in our own
-    // form means Stripe validates it, offers autofill, and we never hold it before payment. The
-    // webhook copies it onto the order once the session completes.
-    shipping_address_collection: { allowed_countries: ["US"] },
-    phone_number_collection: { enabled: true },
-  });
+  // Wrapped so a Stripe rejection surfaces as a readable reason instead of an unhandled 500. This
+  // call previously threw `url_invalid` on success_url for every order and the customer only ever
+  // saw "we couldn't start checkout", with nothing in the response to say why.
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      mode: "payment",
+      line_items: lineItems,
+      discounts,
+      success_url: absoluteUrl("success?session_id={CHECKOUT_SESSION_ID}"),
+      cancel_url: absoluteUrl("cancel"),
+      metadata: { orderId, userId: user?.id ?? "" },
+      customer_email: user?.email ?? order.guestEmail ?? undefined,
+      // Printed cards have to be posted somewhere. Collecting the address here rather than in our own
+      // form means Stripe validates it, offers autofill, and we never hold it before payment. The
+      // webhook copies it onto the order once the session completes.
+      shipping_address_collection: { allowed_countries: ["US"] },
+      phone_number_collection: { enabled: true },
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    console.error("Stripe checkout session creation failed:", detail, err);
+    return NextResponse.json({ error: "Could not start checkout.", detail }, { status: 502 });
+  }
 
   await db.order.update({
     where: { id: orderId },

@@ -1,3 +1,4 @@
+import { APP_URL } from "@/lib/app-url";
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 
 export interface GenerateOptions {
@@ -31,7 +32,7 @@ export async function generateWithOpenRouter(opts: GenerateOptions): Promise<Gen
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+      "HTTP-Referer": APP_URL,
       "X-Title": "KC Printing",
     },
     body: JSON.stringify({
@@ -91,7 +92,7 @@ export async function generateImageWithOpenRouter(opts: GenerateImageOptions): P
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+      "HTTP-Referer": APP_URL,
       "X-Title": "KC Printing",
     },
     body: JSON.stringify({

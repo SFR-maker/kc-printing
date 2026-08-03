@@ -418,7 +418,9 @@ function ProductTile({ service, wide = false }: { service: Service; wide?: boole
         href={service.href}
         aria-label={service.name}
         className={`relative block overflow-hidden bg-kc-paper ${
-          wide ? "aspect-[4/3] lg:aspect-[16/9]" : "aspect-[4/3]"
+          // 16:9 clipped the tops off the taller pieces in the rigid-sign shot; 16:10 keeps the
+          // letterbox rhythm without cutting into the subject.
+          wide ? "aspect-[4/3] lg:aspect-[16/10]" : "aspect-[4/3]"
         }`}
       >
         <Image

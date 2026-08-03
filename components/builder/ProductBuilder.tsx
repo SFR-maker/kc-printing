@@ -17,6 +17,7 @@ import { calculatePrice } from "@/lib/pricing";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
+import { ArtworkStep, EMPTY_ARTWORK, artworkComplete, type ArtworkState } from "@/components/builder/ArtworkStep";
 import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
 import { getAnonymousToken } from "@/lib/business-card/local-autosave";
 import type { ServiceDef } from "@/lib/service-data";
@@ -56,9 +57,23 @@ const schema = z.object({
   // auth status before submitting: guests need it so there's somewhere to send confirmation and
   // print files (the API only actually requires it when the request turns out to be unauthenticated).
   guestEmail: z.string().min(1, "Email is required").email("Enter a valid email"),
+  // Business cards only. `inspection` is the API's measurement payload, kept loose here because it
+  // is produced and validated server-side by lib/business-card/inspect-artwork.
+  // Not `.default()`: that makes the field optional on the schema's input type but required on its
+  // output, and react-hook-form's resolver typing rejects the mismatch. It is supplied through
+  // defaultValues instead, including for drafts saved before this field existed.
+  artwork: z.object({
+    path: z.enum(["UPLOAD", "DESIGN_SERVICE"]).nullable(),
+    fileUrl: z.string().nullable(),
+    fileName: z.string().nullable(),
+    inspection: z.any().nullable(),
+    approved: z.boolean(),
+  }),
 });
 
 type FormValues = z.infer<typeof schema>;
+
+type StepKey = "package" | "options" | "specs" | "design" | "details" | "payment";
 
 interface ProductBuilderProps {
   service: ServiceDef;
@@ -76,19 +91,13 @@ function round2(n: number): number {
 
 export function ProductBuilder({ service, defaultPackage, cardDesignId }: ProductBuilderProps) {
   const isBusinessCards = service.slug === "business-cards";
-  const STEPS = isBusinessCards ? ["Print Specs", "Design Service", "Details", "Review"] : ["Package", "Options", "Details", "Review"];
-  // Which fields must be valid before advancing past each step — business cards validate the print
-  // spec combo imperatively in goNext instead (its "always has a value" defaults make zod's presence
-  // check meaningless), and don't use the generic quantity field at all.
-  const STEP_FIELDS: (keyof FormValues)[][] = isBusinessCards
-    ? [[], [], ["businessName"], []]
-    : [["selectedPackage"], ["quantity"], ["businessName"], []];
 
   const [step, setStep] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [artworkError, setArtworkError] = useState<string | null>(null);
   const [designMetaLoaded, setDesignMetaLoaded] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(!cardDesignId);
 
@@ -99,7 +108,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
-            return { selectedAddOns: [], brandFiles: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, ...JSON.parse(saved) };
+            return { selectedAddOns: [], brandFiles: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, artwork: EMPTY_ARTWORK, ...JSON.parse(saved) };
           } catch {
             // fall through to plain defaults below
           }
@@ -115,12 +124,55 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         quantity: 1,
         bcSpec: DEFAULT_BC_SPEC,
         colorPaletteId: AI_PALETTE_AUTO_ID,
+        artwork: EMPTY_ARTWORK,
       };
     })(),
   });
 
   const { watch, setValue, register, handleSubmit, trigger, formState: { errors } } = form;
   const values = watch();
+
+  /**
+   * Steps are driven by which route the customer took, not by a fixed index.
+   *
+   * Someone uploading finished artwork has nothing to tell us about their brand and no design
+   * package to pick, so they go straight from print specs to payment. Someone asking us to design
+   * it keeps the full path. Rendering off a key rather than a number means adding or removing a
+   * step can't silently shift what another step renders.
+   */
+  const artwork: ArtworkState = values.artwork ?? EMPTY_ARTWORK;
+  const stepKeys: StepKey[] = !isBusinessCards
+    ? ["package", "options", "details", "payment"]
+    : artwork.path === "UPLOAD"
+      ? ["specs", "payment"]
+      : ["specs", "design", "details", "payment"];
+  const currentStep = stepKeys[Math.min(step, stepKeys.length - 1)];
+  const stepLabels: Record<StepKey, string> = {
+    package: "Package",
+    options: "Options",
+    specs: "Print Specs",
+    design: "Design Service",
+    details: "Details",
+    payment: "Payment",
+  };
+  const STEP_FIELDS: Record<StepKey, (keyof FormValues)[]> = {
+    package: ["selectedPackage"],
+    options: ["quantity"],
+    specs: [],
+    design: [],
+    details: ["businessName"],
+    payment: [],
+  };
+
+  // Add-ons that only make sense when our designers are doing the work. On the upload path the
+  // customer has supplied finished artwork, so a design rush, an extra layout concept, or us adding
+  // a QR code to a design we aren't making have nothing to attach to. Print turnaround is a separate
+  // control in the print specs, which is why "Rush Delivery" is hidden here rather than merged.
+  const DESIGN_ONLY_ADDONS = new Set(["Rush Delivery", "QR Code", "Extra Concept"]);
+  const availableAddOns =
+    isBusinessCards && artwork.path === "UPLOAD"
+      ? service.addOns.filter((a) => !DESIGN_ONLY_ADDONS.has(a.name))
+      : service.addOns;
 
   // Save the in-progress order to sessionStorage so a sign-in redirect (or an accidental reload)
   // doesn't throw away everything the customer just filled in.
@@ -274,12 +326,27 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
   };
 
   const goNext = async () => {
-    if (isBusinessCards && step === 0 && !bcPrice?.valid) return;
+    if (isBusinessCards && currentStep === "specs") {
+      if (!bcPrice?.valid) return;
+      // Either our designers are doing it, or there is an uploaded file with an approved proof.
+      // Without this an unapproved proof could be carried straight to payment.
+      if (!artworkComplete(artwork)) {
+        setArtworkError(
+          artwork.path === null
+            ? "Choose whether to upload your own design or have us design it."
+            : !artwork.fileUrl
+              ? "Upload your artwork to continue, or switch to having us design it."
+              : "Please approve the proof before continuing."
+        );
+        return;
+      }
+      setArtworkError(null);
+    }
     if (!isBusinessCards && step === 0 && !values.selectedPackage) {
       form.setError("selectedPackage", { message: "Please select a package" });
       return;
     }
-    const fields = STEP_FIELDS[step];
+    const fields = STEP_FIELDS[currentStep];
     const valid = fields.length === 0 || (await trigger(fields));
     if (valid) setStep((s) => s + 1);
   };
@@ -297,8 +364,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           </div>
         )}
         <div className="flex items-center gap-2">
-          {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
+          {stepKeys.map((key, i) => (
+            <div key={key} className="flex items-center gap-2">
               <button
                 onClick={() => i < step && setStep(i)}
                 className={cn(
@@ -310,8 +377,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               >
                 {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
               </button>
-              <span className={cn("text-sm", i === step ? "font-semibold text-kc-dark" : "hidden text-kc-muted sm:block")}>{s}</span>
-              {i < STEPS.length - 1 && <div className="hidden h-px w-6 bg-kc-border sm:block" />}
+              <span className={cn("text-sm", i === step ? "font-semibold text-kc-dark" : "hidden text-kc-muted sm:block")}>{stepLabels[key]}</span>
+              {i < stepKeys.length - 1 && <div className="hidden h-px w-6 bg-kc-border sm:block" />}
             </div>
           ))}
         </div>
@@ -319,14 +386,41 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
 
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Step 0: Package (or, for business cards, real print specs priced off gotprint.com) */}
-        {step === 0 && isBusinessCards && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
-            <p className="text-sm text-kc-muted">Real print pricing: size, paper, sides, and quantity all affect your price.</p>
-            <BusinessCardPrintSpec spec={values.bcSpec ?? DEFAULT_BC_SPEC} onChange={(next) => setValue("bcSpec", next)} />
+        {currentStep === "specs" && (
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
+              <p className="text-sm text-kc-muted">Real print pricing: size, paper, sides, and quantity all affect your price.</p>
+              <BusinessCardPrintSpec
+                spec={values.bcSpec ?? DEFAULT_BC_SPEC}
+                onChange={(next) => {
+                  const prev = values.bcSpec ?? DEFAULT_BC_SPEC;
+                  setValue("bcSpec", next);
+                  // Corner finish decides the document size, so a file measured against the old
+                  // finish is no longer proofed correctly. Drop the proof and make them re-upload
+                  // rather than let an approved proof silently apply to a different spec.
+                  if (prev.roundCorners !== next.roundCorners && artwork.path === "UPLOAD" && artwork.fileUrl) {
+                    setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                  }
+                }}
+              />
+            </div>
+
+            <div className="space-y-4 border-t border-kc-border pt-8">
+              <h2 className="text-xl font-bold text-kc-dark">Your Artwork</h2>
+              <p className="text-sm text-kc-muted">Upload a print-ready file, or have our designers build it for you.</p>
+              <ArtworkStep
+                value={artwork}
+                onChange={(next) => setValue("artwork", next)}
+                roundCorners={(values.bcSpec ?? DEFAULT_BC_SPEC).roundCorners}
+              />
+              {artworkError && (
+                <p role="alert" className="text-sm text-red-600">{artworkError}</p>
+              )}
+            </div>
           </div>
         )}
-        {step === 0 && !isBusinessCards && (
+        {currentStep === "package" && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select a Package</h2>
             {/* Boxed and given visual priority: the package pick is what actually drives price for
@@ -424,7 +518,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         )}
 
         {/* Step 1: Options (or, for business cards, the optional design service upsell) */}
-        {step === 1 && isBusinessCards && (
+        {currentStep === "design" && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Design Service</h2>
             <p className="text-sm text-kc-muted">Have your own artwork? Skip this: you can upload your file after checkout. Want us to design it for you? Pick a package below.</p>
@@ -507,7 +601,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
             )}
           </div>
         )}
-        {step === 1 && !isBusinessCards && (
+        {currentStep === "options" && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select Options</h2>
             <div className="rounded-xl border-2 border-kc-coral/30 bg-white p-5">
@@ -573,7 +667,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         )}
 
         {/* Step 2: Details */}
-        {step === 2 && (
+        {currentStep === "details" && (
           <div className="space-y-5">
             <h2 className="text-xl font-bold text-kc-dark">Project Details</h2>
             <div className="space-y-2">
@@ -705,15 +799,25 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         )}
 
         {/* Step 3: Review */}
-        {step === 3 && (
+        {currentStep === "payment" && (
           <div className="space-y-5">
-            <h2 className="text-xl font-bold text-kc-dark">Order Review</h2>
+            <h2 className="text-xl font-bold text-kc-dark">Review and Pay</h2>
             <Card className="border-kc-border">
               <CardContent className="p-5 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-kc-muted">Service</span>
                   <span className="font-medium text-kc-dark">{service.name}</span>
                 </div>
+                {isBusinessCards && artwork.path && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-kc-muted">Artwork</span>
+                    <span className="font-medium text-kc-dark text-right">
+                      {artwork.path === "UPLOAD"
+                        ? `${artwork.fileName ?? "Uploaded file"} · proof approved`
+                        : "Designed by KC Printing"}
+                    </span>
+                  </div>
+                )}
                 {isBusinessCards && values.bcSpec && bcPrice?.valid && (
                   <>
                     <div className="flex justify-between text-sm">
@@ -809,6 +913,41 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               </CardContent>
             </Card>
 
+            {availableAddOns.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-kc-muted">Optional add-ons</p>
+                <div className="divide-y divide-kc-border overflow-hidden rounded-lg border border-kc-border">
+                  {availableAddOns.map((ao) => {
+                    const isSelected = (values.selectedAddOns ?? []).includes(ao.name);
+                    return (
+                      <label key={ao.name} className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
+                        <span className="flex items-center gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              const current = values.selectedAddOns ?? [];
+                              setValue("selectedAddOns", isSelected ? current.filter((n) => n !== ao.name) : [...current, ao.name]);
+                            }}
+                            className="h-4 w-4 shrink-0 accent-kc-coral"
+                          />
+                          <span>
+                            <span className="block text-sm text-kc-dark">{ao.name}</span>
+                            <span className="block text-xs text-kc-muted">{ao.desc}</span>
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(ao.price)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <p className="text-xs text-kc-muted">
+              Your delivery address is collected securely on the next screen, along with payment.
+            </p>
+
             <div className="space-y-2">
               <Label htmlFor="guestEmail">Email for order confirmation *</Label>
               <Input id="guestEmail" type="email" placeholder="you@example.com" {...register("guestEmail")} />
@@ -846,7 +985,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
             </div>
           )}
 
-          {step < STEPS.length - 1 ? (
+          {step < stepKeys.length - 1 ? (
             <Button
               key="next-button"
               type="button"

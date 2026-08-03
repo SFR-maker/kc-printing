@@ -37,6 +37,26 @@ const schema = z.object({
   // used instead, but the field is accepted either way so the client doesn't need to know the
   // customer's auth state before submitting.
   guestEmail: z.string().email().optional(),
+  // Business cards only. The proof approval is a consent record, so it is stored on the order
+  // rather than buried in the item config, and re-derived here from the client payload rather than
+  // trusted wholesale: only the file reference, the measured size and the approval flag are kept.
+  artwork: z
+    .object({
+      path: z.enum(["UPLOAD", "DESIGN_SERVICE"]).nullable(),
+      fileUrl: z.string().url().nullable(),
+      fileName: z.string().max(300).nullable(),
+      inspection: z
+        .object({
+          widthIn: z.number().optional(),
+          heightIn: z.number().optional(),
+          effectiveDpi: z.number().optional(),
+          matchesRequiredSize: z.boolean().optional(),
+        })
+        .passthrough()
+        .nullable(),
+      approved: z.boolean(),
+    })
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -56,7 +76,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, ...config } = parsed.data;
 
   const product = await db.product.findUnique({ where: { slug: service }, include: { packages: true, addOns: true } });
   if (!product) return NextResponse.json({ error: "Product not found" }, { status: 404 });
@@ -91,6 +111,16 @@ export async function POST(req: Request) {
       guestEmail: user ? null : guestEmail,
       status: "DRAFT",
       total,
+      // An uploaded file is only accepted as approved when the client says the box was ticked; the
+      // timestamp is set here, server-side, so it reflects when we recorded the consent.
+      artworkPath: artwork?.path === "UPLOAD" ? "UPLOAD" : "DESIGN_SERVICE",
+      artworkFileUrl: artwork?.path === "UPLOAD" ? artwork.fileUrl : null,
+      artworkFileName: artwork?.path === "UPLOAD" ? artwork.fileName : null,
+      artworkWidthIn: artwork?.inspection?.widthIn ?? null,
+      artworkHeightIn: artwork?.inspection?.heightIn ?? null,
+      artworkDpi: artwork?.inspection?.effectiveDpi ? Math.round(artwork.inspection.effectiveDpi) : null,
+      artworkFitApplied: artwork?.inspection ? artwork.inspection.matchesRequiredSize === false : false,
+      proofApprovedAt: artwork?.path === "UPLOAD" && artwork.approved ? new Date() : null,
       items: {
         create: {
           productId: product.id,

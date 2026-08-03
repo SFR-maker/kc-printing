@@ -1,4 +1,4 @@
-import { safeClerkUserId } from "@/lib/safe-auth";
+import { ensureUser } from "@/lib/auth/ensure-user";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/prisma";
@@ -8,9 +8,7 @@ import { formatDollars } from "@/lib/utils";
 import { FileText } from "lucide-react";
 
 export default async function InvoicesPage() {
-  const userId = await safeClerkUserId();
-  if (!userId) redirect("/sign-in");
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
+  const user = await ensureUser();
   if (!user) redirect("/sign-in");
 
   const orders = await db.order.findMany({

@@ -1,79 +1,62 @@
-import { safeClerkAuth } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
-import { db } from "@/lib/prisma";
-import {
-  LayoutDashboard, Package, Users, Boxes, Settings2,
-  FolderKanban, Upload, Sparkles, Tag, Star, Image,
-  Globe, Search, Wrench, FileText, ScrollText
-} from "lucide-react";
-
-const NAV = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/orders", label: "Orders", icon: Package },
-  { href: "/admin/users", label: "Users", icon: Users },
-  { href: "/admin/products", label: "Products", icon: Boxes },
-  { href: "/admin/pricing", label: "Pricing", icon: Settings2 },
-  { href: "/admin/projects", label: "Projects", icon: FolderKanban },
-  { href: "/admin/uploads", label: "Uploads", icon: Upload },
-  { href: "/admin/ai-generations", label: "AI Logs", icon: Sparkles },
-  { href: "/admin/coupons", label: "Coupons", icon: Tag },
-  { href: "/admin/testimonials", label: "Testimonials", icon: Star },
-  { href: "/admin/portfolio", label: "Portfolio", icon: Image },
-  { href: "/admin/homepage", label: "Homepage", icon: Globe },
-  { href: "/admin/seo", label: "SEO", icon: Search },
-  { href: "/admin/site-settings", label: "Site Settings", icon: Wrench },
-  { href: "/admin/audit-log", label: "Audit Log", icon: ScrollText },
-];
+import { ensureUser, isAdminRole } from "@/lib/auth/ensure-user";
+import { AdminNav, AdminNavMobile } from "@/components/admin/AdminNav";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { userId, sessionClaims } = await safeClerkAuth();
-  if (!userId) redirect("/sign-in");
-  const role = (sessionClaims as { metadata?: { role?: string } } | null)?.metadata?.role;
-  if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
-    const user = await db.user.findUnique({ where: { clerkId: userId } });
-    if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) redirect("/account");
-  }
+  // ensureUser creates the row on first sign-in, so a fresh Clerk account whose email matches
+  // ADMIN_EMAIL lands here as SUPER_ADMIN without anyone touching the database by hand.
+  const user = await ensureUser();
+  if (!user) redirect("/sign-in");
+  if (!isAdminRole(user.role)) redirect("/account");
 
   return (
     <div className="flex min-h-screen bg-kc-bg">
-      <aside className="hidden lg:flex w-52 shrink-0 flex-col bg-kc-dark border-r border-white/10">
-        <div className="flex h-14 items-center px-4 border-b border-white/10">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-kc-dark lg:flex">
+        <div className="flex h-14 items-center border-b border-white/10 px-4">
           <Link href="/admin" className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-kc-teal">
               <span className="text-xs font-black text-kc-coral">KC</span>
             </div>
-            <span className="text-xs font-bold text-white tracking-widest uppercase">Admin</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-white">Admin</span>
           </Link>
         </div>
-        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <item.icon className="h-3.5 w-3.5" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="p-3 border-t border-white/10">
+
+        <AdminNav />
+
+        <div className="border-t border-white/10 p-3">
           <div className="flex items-center gap-2">
             <UserButton />
-            <span className="text-xs text-white/40">Admin</span>
+            <div className="min-w-0">
+              <p className="truncate text-xs text-white/70">{user.name ?? user.email}</p>
+              <p className="text-[10px] uppercase tracking-wide text-white/35">
+                {user.role === "SUPER_ADMIN" ? "Owner" : "Admin"}
+              </p>
+            </div>
           </div>
         </div>
       </aside>
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="flex h-14 items-center justify-between px-4 sm:px-6 border-b border-kc-border bg-white">
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 items-center justify-between border-b border-kc-border bg-white px-4 sm:px-6">
           <span className="text-sm font-bold text-kc-dark">KC Printing Admin</span>
-          <div className="flex items-center gap-3">
-            <Link href="/" className="text-xs text-kc-teal hover:underline">View Site</Link>
-            <UserButton />
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-kc-magenta-deep hover:text-kc-dark"
+            >
+              View the live site <ExternalLink className="h-3 w-3" strokeWidth={1.75} />
+            </Link>
+            <span className="lg:hidden"><UserButton /></span>
           </div>
         </header>
+
+        <AdminNavMobile />
+
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>

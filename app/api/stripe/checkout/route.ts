@@ -7,6 +7,7 @@ import { db } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/app-url";
 import { buildStripeLineItems, lineItemsTotalCents } from "@/lib/pricing/line-items";
 import { buildShippingOptions, FREE_TEST_SHIPPING } from "@/lib/shipping/rates";
+import { getPricingSettings } from "@/lib/pricing/settings-server";
 
 const schema = z.object({
   orderId: z.string().min(1),
@@ -114,7 +115,9 @@ export async function POST(req: Request) {
       // to the destination - some states tax carriage, some do not.
       // A zero-value order is a gated test order (see lib/pricing/test-order.ts) - nothing else in
       // the shop totals zero. Charging carriage on it would defeat the point, so it ships free.
-      shipping_options: buildShippingOptions(order.total === 0 ? [FREE_TEST_SHIPPING] : undefined),
+      shipping_options: buildShippingOptions(
+        order.total === 0 ? [FREE_TEST_SHIPPING] : (await getPricingSettings()).shippingTiers
+      ),
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

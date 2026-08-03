@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { SERVICES } from "@/lib/service-data";
 import { ProductBuilder } from "@/components/builder/ProductBuilder";
 import { TEST_ORDER_PARAM, isTestOrderCode } from "@/lib/pricing/test-order";
+import { getPricingSettings } from "@/lib/pricing/settings-server";
 
 export const metadata: Metadata = {
   title: "Order Business Cards",
@@ -28,6 +29,7 @@ export default async function OrderPage({
       defaultPackage={params.package}
       cardDesignId={params.designId}
       testCode={testCode}
+      pricing={await getPricingSettings()}
     />
   );
 }

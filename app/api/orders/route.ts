@@ -5,7 +5,9 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
 import { isTestOrderCode } from "@/lib/pricing/test-order";
+import { getPricingSettings } from "@/lib/pricing/settings-server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
+import { recordOrderEvent } from "@/lib/orders/events";
 
 const bcSpecSchema = z.object({
   sizeId: z.number(),
@@ -135,7 +137,7 @@ export async function POST(req: Request) {
 
   if (service === "business-cards") {
     if (!bcSpec) return NextResponse.json({ error: "Missing print specifications" }, { status: 400 });
-    const priced = calculateBusinessCardPrice(bcSpec);
+    const priced = calculateBusinessCardPrice(bcSpec, await getPricingSettings());
     if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid print specifications" }, { status: 400 });
     printPrice = priced.total;
     orderQuantity = bcSpec.quantity;
@@ -177,6 +179,15 @@ export async function POST(req: Request) {
         },
       },
     },
+  });
+
+  await recordOrderEvent({
+    orderId: order.id,
+    kind: "created",
+    status: order.status,
+    message: freeTestOrder
+      ? `Free test order placed for ${orderQuantity} x ${product.name}`
+      : `Order placed by ${user?.email ?? guestEmail ?? "a guest"} for ${orderQuantity} x ${product.name}`,
   });
 
   return NextResponse.json({ orderId: order.id });

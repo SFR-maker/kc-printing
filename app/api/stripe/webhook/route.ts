@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
+import { recordOrderEvent } from "@/lib/orders/events";
 import { sendOrderConfirmation, sendAdminNewOrder } from "@/lib/resend";
 
 export async function POST(req: Request) {
@@ -79,6 +80,16 @@ export async function POST(req: Request) {
         },
       });
 
+      await recordOrderEvent({
+        orderId: order.id,
+        kind: "payment",
+        status: order.status,
+        message:
+          session.payment_status === "no_payment_required"
+            ? "Checkout completed with nothing to pay. Ready for production."
+            : `Payment of $${(session.amount_total ?? 0) / 100} received via Stripe. Ready for production.`,
+      });
+
       // Project tracking (the account-dashboard timeline) only applies to signed-in customers who
       // have somewhere to view it — guest orders still get marked PAID and emailed above/below,
       // just without a Project row.
@@ -129,6 +140,11 @@ export async function POST(req: Request) {
       await db.order.update({
         where: { id: session.metadata.orderId },
         data: { stripePaymentStatus: "failed" },
+      });
+      await recordOrderEvent({
+        orderId: session.metadata.orderId,
+        kind: "payment",
+        message: `Card payment failed${intent.last_payment_error?.message ? `: ${intent.last_payment_error.message}` : ""}`,
       });
     }
   }

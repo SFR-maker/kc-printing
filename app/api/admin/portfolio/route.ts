@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/prisma";
 
 const schema = z.object({
@@ -12,7 +13,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const { error } = await requireAdmin();
+  const { error, user: admin } = await requireAdmin();
   if (error) return error;
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
@@ -28,11 +29,16 @@ export async function POST(req: Request) {
       ...(parsed.data.featured !== undefined && { featured: parsed.data.featured }),
     },
   });
+  await logAudit({
+    userId: admin!.id, action: "portfolio.create", entity: "PortfolioItem", entityId: item.id,
+    after: { title: item.title }, ip: req.headers.get("x-forwarded-for") ?? undefined,
+  });
+
   return NextResponse.json(item, { status: 201 });
 }
 
 export async function GET() {
-  const { error } = await requireAdmin();
+  const { error, user: admin } = await requireAdmin();
   if (error) return error;
   const items = await db.portfolioItem.findMany({ orderBy: { sortOrder: "asc" } });
   return NextResponse.json(items);

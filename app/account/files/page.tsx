@@ -1,4 +1,4 @@
-import { safeClerkUserId } from "@/lib/safe-auth";
+import { ensureUser } from "@/lib/auth/ensure-user";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,9 +6,7 @@ import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default async function FilesPage() {
-  const userId = await safeClerkUserId();
-  if (!userId) redirect("/sign-in");
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
+  const user = await ensureUser();
   if (!user) redirect("/sign-in");
 
   const uploads = await db.upload.findMany({

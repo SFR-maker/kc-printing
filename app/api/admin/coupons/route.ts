@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/prisma";
 
 const schema = z.object({
@@ -12,7 +13,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const { error } = await requireAdmin();
+  const { error, user: admin } = await requireAdmin();
   if (error) return error;
 
   const body = await req.json().catch(() => null);
@@ -27,6 +28,12 @@ export async function POST(req: Request) {
       ...parsed.data,
       expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
     },
+  });
+
+  await logAudit({
+    userId: admin!.id, action: "coupon.create", entity: "Coupon", entityId: coupon.id,
+    after: { code: coupon.code, discount: coupon.discount, type: coupon.type },
+    ip: req.headers.get("x-forwarded-for") ?? undefined,
   });
 
   return NextResponse.json(coupon, { status: 201 });

@@ -1,4 +1,4 @@
-import { safeClerkUserId } from "@/lib/safe-auth";
+import { ensureUser } from "@/lib/auth/ensure-user";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/prisma";
@@ -15,9 +15,7 @@ const STATUS_PROGRESS: Record<string, number> = {
 };
 
 export default async function ProjectsPage() {
-  const userId = await safeClerkUserId();
-  if (!userId) redirect("/sign-in");
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
+  const user = await ensureUser();
   if (!user) redirect("/sign-in");
 
   const projects = await db.project.findMany({

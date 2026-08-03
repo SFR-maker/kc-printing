@@ -223,18 +223,53 @@ model Order {
   shippingPostalCode   String?
   shippingCountry      String?
 
+  // Despatch details, entered by an admin when the parcel goes out. Kept on the order rather than
+  // in an events row because the shop needs to answer "where is it" without replaying a timeline.
+  trackingCarrier      String?
+  trackingNumber       String?
+  shippedAt            DateTime?
+
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
   user    User?       @relation(fields: [userId], references: [id])
   coupon  Coupon?     @relation(fields: [couponId], references: [id])
   items   OrderItem[]
+  events  OrderEvent[]
   project Project?
   uploads Upload[]
 
   @@index([userId])
   @@index([status])
   @@index([stripeSessionId])
+}
+
+/**
+ * Append-only history of everything that has happened to an order.
+ *
+ * Order.status alone answers "where is it now" but destroys "how did it get here", which is what a
+ * shop actually needs when a customer disputes a print or asks why something took three weeks.
+ * Rows are never updated or deleted - a correction is another row.
+ */
+model OrderEvent {
+  id        String       @id @default(cuid())
+  orderId   String
+  /** "created" | "status" | "payment" | "shipped" | "note" | "refund" */
+  kind      String
+  /** The status the order moved to. Null for events that are not status changes. */
+  status    OrderStatus?
+  /** Human-readable line shown on the order timeline. */
+  message   String
+  /** Null when the actor was Stripe or the public order API rather than a person. */
+  actorId   String?
+  /** Denormalised so the timeline still reads correctly after an admin account is removed. */
+  actorName String?
+  createdAt DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
 }
 
 model OrderItem {

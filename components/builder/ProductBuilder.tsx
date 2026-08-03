@@ -14,7 +14,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
-import { SHIPPING_TIERS, FREE_TEST_SHIPPING, transitLabel } from "@/lib/shipping/rates";
+import { FREE_TEST_SHIPPING, transitLabel } from "@/lib/shipping/rates";
+import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
@@ -100,6 +101,8 @@ interface ProductBuilderProps {
    * /api/orders, which re-validates it before zeroing anything.
    */
   testCode?: string;
+  /** Margin, flat fees and shipping tiers as configured in /admin/pricing. */
+  pricing?: PricingSettings;
 }
 
 function draftKey(serviceSlug: string): string {
@@ -110,7 +113,7 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode }: ProductBuilderProps) {
+export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode, pricing = DEFAULT_PRICING }: ProductBuilderProps) {
   const isBusinessCards = service.slug === "business-cards";
 
   const [step, setStep] = useState(0);
@@ -240,7 +243,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
     return ao?.price ?? 0;
   });
 
-  const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec) : null;
+  const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec, pricing) : null;
 
   const rawPrice = isBusinessCards
     ? (bcPrice?.valid
@@ -453,6 +456,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
               <p className="text-sm text-kc-muted">Real print pricing: size, paper, sides, and quantity all affect your price.</p>
               <BusinessCardPrintSpec
+                pricing={pricing}
                 spec={values.bcSpec ?? DEFAULT_BC_SPEC}
                 onChange={(next) => {
                   const prev = values.bcSpec ?? DEFAULT_BC_SPEC;
@@ -1010,7 +1014,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
             <div className="rounded-lg border border-kc-border p-4">
               <p className="mb-3 text-xs font-medium uppercase tracking-wide text-kc-muted">Shipping</p>
               <ul className="divide-y divide-kc-border">
-                {(testCode ? [FREE_TEST_SHIPPING] : SHIPPING_TIERS).map((tier) => (
+                {(testCode ? [FREE_TEST_SHIPPING] : pricing.shippingTiers).map((tier) => (
                   <li key={tier.id} className="flex items-baseline justify-between gap-3 py-2 text-sm">
                     <span className="text-kc-dark">
                       {tier.label}

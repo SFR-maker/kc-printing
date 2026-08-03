@@ -12,6 +12,7 @@ import {
   isComboAvailable,
   type BcPriceBreakdown,
 } from "@/lib/pricing/business-cards";
+import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
 
 export interface BusinessCardSpec {
   sizeId: number;
@@ -33,10 +34,19 @@ function formatQuantity(q: number): string {
   return q.toLocaleString("en-US");
 }
 
-export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSpec; onChange: (next: BusinessCardSpec) => void }) {
+export function BusinessCardPrintSpec({
+  spec,
+  onChange,
+  pricing = DEFAULT_PRICING,
+}: {
+  spec: BusinessCardSpec;
+  onChange: (next: BusinessCardSpec) => void;
+  /** Margin and flat fees from /admin/pricing, so the quote reflects what the owner has set. */
+  pricing?: PricingSettings;
+}) {
   const comboOk = isComboAvailable(spec.sizeId, spec.paperId, spec.colorId);
   const quantities = comboOk ? availableQuantities(spec.sizeId, spec.paperId, spec.colorId) : [];
-  const price: BcPriceBreakdown = calculateBusinessCardPrice(spec);
+  const price: BcPriceBreakdown = calculateBusinessCardPrice(spec, pricing);
 
   function set<K extends keyof BusinessCardSpec>(key: K, value: BusinessCardSpec[K]) {
     const next = { ...spec, [key]: value };

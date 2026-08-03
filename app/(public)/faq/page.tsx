@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { ClosingCta } from "@/components/layout/ClosingCta";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
@@ -50,34 +50,34 @@ const FAQS = [
 
 export default function FaqPage() {
   return (
-    <div>
-      <section className="section-pad-tight bg-kc-bg">
-        <div className="container-tight max-w-2xl">
-          <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Frequently asked questions</h1>
-          <p className="text-lg text-kc-muted">
-            Everything you need to know about ordering, design, files, and billing.
-          </p>
-        </div>
-      </section>
+    <>
+      <PageHeader
+        title="Frequently asked questions"
+        lead="Everything you need to know about ordering, design, files, and billing."
+      />
 
-      <section className="section-pad bg-kc-bg">
-        <div className="container-tight max-w-3xl space-y-10">
+      <section className="band-tight bg-kc-paper">
+        <div className="container-tight space-y-14">
           {FAQS.map((section) => (
-            <div key={section.category}>
-              <h2 className="text-lg font-bold text-kc-dark mb-4 pb-2 border-b border-kc-border">
+            <div
+              key={section.category}
+              className="grid grid-cols-1 gap-6 lg:grid-cols-[0.55fr_1.45fr] lg:gap-16"
+            >
+              <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem] lg:sticky lg:top-28 lg:self-start">
                 {section.category}
               </h2>
-              <Accordion className="space-y-2">
+
+              <Accordion className="border-t border-kc-dark/12">
                 {section.items.map((item, i) => (
                   <AccordionItem
                     key={i}
                     value={`${section.category}-${i}`}
-                    className="border border-kc-border rounded-lg px-4"
+                    className="border-b border-kc-dark/12"
                   >
-                    <AccordionTrigger className="text-left font-semibold text-kc-dark hover:text-kc-teal hover:no-underline">
+                    <AccordionTrigger className="py-5 text-left text-[16px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
                       {item.q}
                     </AccordionTrigger>
-                    <AccordionContent className="text-kc-muted leading-relaxed pb-4">
+                    <AccordionContent className="max-w-[62ch] pb-5 text-[15px] leading-relaxed text-kc-dark/65">
                       {item.a}
                     </AccordionContent>
                   </AccordionItem>
@@ -85,18 +85,16 @@ export default function FaqPage() {
               </Accordion>
             </div>
           ))}
-
-          <div className="rounded-md bg-kc-teal p-8 text-center text-white">
-            <h3 className="mb-2 text-lg font-bold">Still have questions?</h3>
-            <p className="mb-5 text-sm text-white/80">
-              Call or text us at (816) 521-0462 or send a message and we&apos;ll get back to you quickly.
-            </p>
-            <Button asChild className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
-              <Link href="/contact">Contact Us</Link>
-            </Button>
-          </div>
         </div>
       </section>
+
+      <ClosingCta
+        title="Still have questions?"
+        body="Call or text us and we'll get back to you quickly."
+        primary={{ label: "Contact us", href: "/contact" }}
+        secondary={{ label: "Browse products", href: "/services" }}
+        showContactDetails
+      />
 
       <script
         type="application/ld+json"
@@ -114,6 +112,6 @@ export default function FaqPage() {
           }),
         }}
       />
-    </div>
+    </>
   );
 }

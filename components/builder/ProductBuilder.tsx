@@ -289,9 +289,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
       <div className="mb-8">
         <h1 className="text-3xl font-black text-kc-dark mb-2">Order {service.name}</h1>
         {cardDesignId && (
-          <div className="mb-4 flex items-center justify-between rounded-lg border border-kc-teal/30 bg-kc-teal/5 px-4 py-2.5 text-sm">
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-kc-coral/30 bg-kc-coral/5 px-4 py-2.5 text-sm">
             <span className="text-kc-dark">Using your custom design from the Design Studio.</span>
-            <a href={`/services/${service.slug}/design/${cardDesignId}`} className="font-semibold text-kc-teal hover:underline">
+            <a href={`/services/${service.slug}/design/${cardDesignId}`} className="font-semibold text-kc-magenta-deep hover:underline">
               Edit design
             </a>
           </div>
@@ -303,8 +303,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                 onClick={() => i < step && setStep(i)}
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
-                  i === step ? "bg-kc-teal text-white" :
-                  i < step ? "bg-kc-teal/20 text-kc-teal cursor-pointer" :
+                  i === step ? "bg-kc-coral text-white" :
+                  i < step ? "bg-kc-coral/20 text-kc-magenta-deep cursor-pointer" :
                   "bg-kc-border text-kc-muted"
                 )}
               >
@@ -332,7 +332,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
             {/* Boxed and given visual priority: the package pick is what actually drives price for
                 this product (see the `price` calc above), so the total is shown immediately below
                 it rather than waiting until the add-ons list or the footer. */}
-            <div className="rounded-xl border-2 border-kc-teal/30 bg-white p-5">
+            <div className="rounded-xl border-2 border-kc-coral/30 bg-white p-5">
               <div className={`grid grid-cols-1 gap-4 ${service.packages.length <= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"}`}>
                 {service.packages.map((pkg) => (
                   <button
@@ -342,12 +342,12 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                     className={cn(
                       "relative rounded-xl border-2 p-5 text-left transition-all",
                       values.selectedPackage === pkg.name
-                        ? "border-kc-teal bg-kc-teal/5 shadow-md"
-                        : "border-kc-border bg-white hover:border-kc-teal/40"
+                        ? "border-kc-coral bg-kc-coral/5 shadow-md"
+                        : "border-kc-border bg-white hover:border-kc-coral/40"
                     )}
                   >
                     {pkg.popular && (
-                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-kc-teal text-white border-0 text-xs">
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-kc-coral text-white border-0 text-xs">
                         Most Popular
                       </Badge>
                     )}
@@ -356,7 +356,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                     <ul className="space-y-1.5">
                       {pkg.features.slice(0, 4).map((f) => (
                         <li key={f} className="flex items-center gap-2 text-xs text-kc-muted">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-kc-teal shrink-0" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-kc-magenta-deep shrink-0" />
                           {f}
                         </li>
                       ))}
@@ -373,7 +373,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                       <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Package Total</div>
                       <div className="text-xs text-kc-muted">{selectedPkg.name}</div>
                     </div>
-                    <div className="text-3xl font-black text-kc-teal">{formatDollars(price.total)}</div>
+                    <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
                   </div>
                   {selectedAddOnPrices.some((p) => p > 0) && (
                     <div className="mt-3 space-y-1 border-t border-dashed border-kc-border pt-3 text-xs text-kc-muted">
@@ -406,7 +406,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                               const current = values.selectedAddOns ?? [];
                               setValue("selectedAddOns", isSelected ? current.filter((n) => n !== ao.name) : [...current, ao.name]);
                             }}
-                            className="h-4 w-4 shrink-0 accent-kc-teal"
+                            className="h-4 w-4 shrink-0 accent-kc-coral"
                           />
                           <span>
                             <span className="block text-sm text-kc-dark">{ao.name}</span>
@@ -434,7 +434,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                 onClick={() => setValue("selectedPackage", "")}
                 className={cn(
                   "relative rounded-xl border-2 p-5 text-left transition-all",
-                  !values.selectedPackage ? "border-kc-teal bg-kc-teal/5 shadow-md" : "border-kc-border bg-white hover:border-kc-teal/40"
+                  !values.selectedPackage ? "border-kc-coral bg-kc-coral/5 shadow-md" : "border-kc-border bg-white hover:border-kc-coral/40"
                 )}
               >
                 <div className="text-xs font-semibold uppercase tracking-wider text-kc-muted mb-1">Self-Serve</div>
@@ -449,12 +449,12 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                   className={cn(
                     "relative rounded-xl border-2 p-5 text-left transition-all",
                     values.selectedPackage === pkg.name
-                      ? "border-kc-teal bg-kc-teal/5 shadow-md"
-                      : "border-kc-border bg-white hover:border-kc-teal/40"
+                      ? "border-kc-coral bg-kc-coral/5 shadow-md"
+                      : "border-kc-border bg-white hover:border-kc-coral/40"
                   )}
                 >
                   {pkg.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-kc-teal text-white border-0 text-xs">
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-kc-coral text-white border-0 text-xs">
                       Most Popular
                     </Badge>
                   )}
@@ -463,7 +463,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                   <ul className="space-y-1.5">
                     {pkg.features.slice(0, 4).map((f) => (
                       <li key={f} className="flex items-center gap-2 text-xs text-kc-muted">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-kc-teal shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 text-kc-magenta-deep shrink-0" />
                         {f}
                       </li>
                     ))}
@@ -510,7 +510,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         {step === 1 && !isBusinessCards && (
           <div className="space-y-6">
             <h2 className="text-xl font-bold text-kc-dark">Select Options</h2>
-            <div className="rounded-xl border-2 border-kc-teal/30 bg-white p-5">
+            <div className="rounded-xl border-2 border-kc-coral/30 bg-white p-5">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {service.specs
                   .filter((s) => ["ORIENTATION", "CUSTOM"].some((t) => s.label.toUpperCase().includes(t)))
@@ -583,9 +583,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
             </div>
 
             {designMetaLoaded && !detailsExpanded ? (
-              <div className="flex items-start justify-between gap-3 rounded-xl border border-kc-teal/30 bg-kc-teal/5 p-4">
+              <div className="flex items-start justify-between gap-3 rounded-xl border border-kc-coral/30 bg-kc-coral/5 p-4">
                 <div className="flex items-start gap-2.5">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-kc-teal" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-kc-magenta-deep" />
                   <div className="text-sm">
                     <p className="font-medium text-kc-dark">Using contact info &amp; colors from your design</p>
                     <p className="mt-0.5 text-xs text-kc-muted">
@@ -619,8 +619,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                       className={cn(
                         "flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-medium transition-colors",
                         (values.colorPaletteId ?? AI_PALETTE_AUTO_ID) === AI_PALETTE_AUTO_ID
-                          ? "border-kc-teal bg-kc-teal/10 text-kc-teal"
-                          : "border-kc-border text-kc-muted hover:border-kc-teal/40"
+                          ? "border-kc-coral bg-kc-coral/10 text-kc-magenta-deep"
+                          : "border-kc-border text-kc-muted hover:border-kc-coral/40"
                       )}
                     >
                       <Sparkles className="h-3 w-3" /> Surprise Me
@@ -663,11 +663,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               />
             </div>
 
-            <div className="rounded-xl border-2 border-kc-teal/20 bg-gradient-to-br from-kc-teal/5 to-kc-orange/5 p-5">
+            <div className="rounded-xl border-2 border-kc-coral/20 bg-gradient-to-br from-kc-coral/5 to-kc-yellow/5 p-5">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-kc-teal/15">
-                    <Sparkles className="h-4.5 w-4.5 text-kc-teal" />
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-kc-coral/15">
+                    <Sparkles className="h-4.5 w-4.5 text-kc-magenta-deep" />
                   </div>
                   <div>
                     <span className="block font-semibold text-kc-dark text-sm">AI Copy Generator</span>
@@ -675,7 +675,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                   </div>
                 </div>
                 <Button type="button" onClick={generateAI} disabled={aiLoading || !values.businessName}
-                  className="bg-kc-teal text-white hover:bg-kc-teal/90 disabled:bg-kc-teal/30 disabled:text-white disabled:opacity-100">
+                  className="bg-kc-coral text-white hover:bg-kc-coral/90 disabled:bg-kc-coral/30 disabled:text-white disabled:opacity-100">
                   {aiLoading ? (
                     <span className="flex items-center gap-2">Generating…</span>
                   ) : (
@@ -804,7 +804,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
                 )}
                 <div className="border-t border-kc-border pt-3 flex justify-between font-bold">
                   <span>Total</span>
-                  <span className="text-kc-teal text-lg">{price ? formatDollars(price.total) : "--"}</span>
+                  <span className="text-kc-magenta-deep text-lg">{price ? formatDollars(price.total) : "--"}</span>
                 </div>
               </CardContent>
             </Card>
@@ -842,7 +842,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           {price && (
             <div className="text-center">
               <div className="text-xs text-kc-muted">Estimated Total</div>
-              <div className="text-xl font-black text-kc-teal">{formatDollars(price.total)}</div>
+              <div className="text-xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
             </div>
           )}
 
@@ -851,7 +851,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
               key="next-button"
               type="button"
               onClick={goNext}
-              className="bg-kc-teal hover:bg-kc-teal/90 text-white"
+              className="bg-kc-coral hover:bg-kc-coral/90 text-white"
             >
               Next <ArrowRight className="ml-2 h-4 w-4" />
             </Button>

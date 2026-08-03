@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { CheckCircle2, ArrowRight, Sparkles } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, FileCheck, PenLine, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import type { ServiceDef } from "@/lib/service-data";
 import type { ProductThumbnail } from "@/lib/product-thumbnails";
 import { formatDollars } from "@/lib/utils";
@@ -13,172 +15,343 @@ interface ServicePageContentProps {
   heroImages?: ProductThumbnail[];
 }
 
-function FreeBadge() {
-  return (
-    <span className="absolute -top-2 -right-2 z-10 rounded-full bg-kc-yellow px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-kc-dark shadow-sm">
-      Free
-    </span>
-  );
-}
+/* Magenta is the only interactive accent; cyan and gold live in the photography and the
+   registration bar. Same button system as the homepage. */
+const BTN_PRIMARY =
+  "edge h-12 bg-kc-coral px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep";
+const BTN_SECONDARY =
+  "edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5";
 
-export function ServicePageContent({ service, designStudioHref, aiDesignHref, heroImages }: ServicePageContentProps) {
+/** Studio photography per product, shot for the redesign. Falls back to the card shot. */
+const HERO_PHOTO: Record<string, { src: string; alt: string }> = {
+  "business-cards": {
+    src: "/images/print/business-cards.webp",
+    alt: "Stacks of printed business cards with visible cut edges and finished branding",
+  },
+  postcards: {
+    src: "/images/print/postcards.webp",
+    alt: "A pile of printed promotional postcards on a concrete studio table",
+  },
+  banners: {
+    src: "/images/print/banners.webp",
+    alt: "A printed retractable roll-up banner stand beside its aluminium cassette",
+  },
+  "rigid-signs": {
+    src: "/images/print/rigid-signs.webp",
+    alt: "Four die-cut rigid signs leaning against a studio wall",
+  },
+};
+
+export function ServicePageContent({
+  service,
+  designStudioHref,
+  aiDesignHref,
+  heroImages,
+}: ServicePageContentProps) {
+  const photo = HERO_PHOTO[service.slug] ?? HERO_PHOTO["business-cards"];
+  const orderHref = `/services/${service.slug}/order`;
+  const lower = service.name.toLowerCase();
+
   return (
     <>
-      {/* Hero */}
-      <section className="section-pad-tight bg-kc-bg">
-        <div className="container-tight grid grid-cols-1 items-center gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-          <div>
-            <div className="mb-4 text-sm font-semibold uppercase tracking-wide text-kc-teal">{service.name}</div>
-            <h1 className="mb-4 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">{service.tagline}</h1>
-            <p className="mb-8 text-lg leading-relaxed text-kc-muted">{service.description}</p>
-            <div className="flex flex-wrap gap-3">
-              {designStudioHref ? (
-                <>
-                  <div className="relative">
-                    <FreeBadge />
-                    <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
+      {/* ── Hero: h1 carries the product name, tagline drops to subtext ── */}
+      <section className="relative bg-kc-bg">
+        <div className="reg-bar relative z-20" />
+
+        <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[540px] lg:px-8 lg:py-16">
+          <div className="lg:max-w-[52%]">
+            <Reveal y={16}>
+              <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl lg:text-[3.5rem]">
+                {service.name}
+              </h1>
+            </Reveal>
+            <Reveal y={16} delay={0.08}>
+              <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-kc-dark/65">
+                {service.tagline}
+              </p>
+            </Reveal>
+            <Reveal y={16} delay={0.16}>
+              <div className="mt-9 flex flex-wrap gap-3">
+                {designStudioHref ? (
+                  <>
+                    <Button asChild size="lg" className={BTN_PRIMARY}>
                       <Link href={designStudioHref}>
-                        Design It Yourself <ArrowRight className="ml-2 h-4 w-4" />
+                        Start designing <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
                       </Link>
                     </Button>
-                  </div>
-                  {aiDesignHref && (
-                    <div className="relative">
-                      <FreeBadge />
-                      <Button asChild size="lg" variant="outline" className="rounded-md border-kc-orange/50 text-kc-orange hover:bg-kc-orange/5">
-                        <Link href={aiDesignHref}>
-                          <Sparkles className="mr-2 h-4 w-4" /> Design with AI
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Button asChild size="lg" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
-                  <Link href={`/services/${service.slug}/order`}>
-                    Order Now <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              )}
-              <Button asChild size="lg" variant="outline" className="rounded-md border-kc-border text-kc-dark hover:bg-kc-surface">
-                <Link href={designStudioHref ? `/services/${service.slug}/order` : "/contact"}>
-                  {designStudioHref ? "Order Without Designing" : "Get a Free Quote"}
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {heroImages && heroImages.length > 0 && (
-            <div className="relative hidden aspect-[4/3] w-full lg:block">
-              {heroImages.slice(0, 3).map((img, i) => (
-                <div
-                  key={img.url}
-                  className="absolute overflow-hidden rounded-md border border-kc-border bg-white shadow-lg"
-                  style={{
-                    width: i === 0 ? "68%" : "46%",
-                    top: i === 0 ? "0" : i === 1 ? "40%" : "10%",
-                    left: i === 0 ? "0" : i === 1 ? "44%" : "50%",
-                    zIndex: i === 0 ? 1 : i === 1 ? 3 : 2,
-                    transform: i === 2 ? "rotate(3deg)" : undefined,
-                  }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt={img.title} className="aspect-square w-full object-cover" loading="eager" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Specs */}
-      <section className="section-pad bg-white">
-        <div className="container-tight">
-          <h2 className="mb-6 text-2xl font-bold text-kc-dark">Specifications and file info</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {service.specs.map((spec) => (
-              <div key={spec.label} className="rounded-md border border-kc-border bg-kc-bg p-4">
-                <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-kc-muted">{spec.label}</div>
-                <div className="text-sm font-medium text-kc-dark">{spec.value}</div>
+                    <Button asChild size="lg" variant="outline" className={BTN_SECONDARY}>
+                      <Link href={orderHref}>Order without designing</Link>
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button asChild size="lg" className={BTN_PRIMARY}>
+                      <Link href={orderHref}>
+                        Order <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                      </Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline" className={BTN_SECONDARY}>
+                      <Link href="/contact">Contact us</Link>
+                    </Button>
+                  </>
+                )}
               </div>
-            ))}
+            </Reveal>
+          </div>
+        </div>
+
+        <div className="px-4 pb-16 pt-10 sm:px-6 lg:absolute lg:bottom-0 lg:right-0 lg:top-[3px] lg:w-[44%] lg:p-0">
+          <div className="edge relative aspect-[4/3] w-full overflow-hidden lg:aspect-auto lg:h-full lg:rounded-none">
+            <Image
+              src={photo.src}
+              alt={photo.alt}
+              fill
+              priority
+              sizes="(min-width: 1024px) 44vw, 100vw"
+              className="object-cover"
+            />
           </div>
         </div>
       </section>
 
-      {/* Packages */}
-      <section className="section-pad bg-kc-bg">
-        <div className="container-tight">
-          <div className="mb-10 max-w-xl">
-            <h2 className="mb-3 text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Choose your package</h2>
-            <p className="text-kc-muted">All packages include print-ready file delivery and included revisions.</p>
-          </div>
-          <div className={`grid grid-cols-1 gap-4 ${service.packages.length <= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"}`}>
-            {service.packages.map((pkg) => (
-              <div
-                key={pkg.name}
-                className={`flex h-full flex-col rounded-md border p-5 ${pkg.popular ? "border-kc-teal bg-kc-violet-tint" : "border-kc-border bg-white"}`}
+      {/* ── What's included ── */}
+      <section className="border-y border-kc-dark/10 bg-kc-bg">
+        <div className="container-tight px-4 sm:px-6 lg:px-8">
+          <RevealGroup className="grid grid-cols-1 divide-y divide-kc-dark/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {[
+              {
+                icon: PenLine,
+                text: designStudioHref
+                  ? "Design it yourself in the browser, free, no software"
+                  : "A real designer builds the layout for you",
+              },
+              { icon: FileCheck, text: "Print-ready PDF, JPG, and PNG with every order" },
+              { icon: RefreshCw, text: "Revisions included on every package" },
+            ].map(({ icon: Icon, text }) => (
+              <RevealItem
+                key={text}
+                className="flex items-start gap-3 py-7 sm:px-7 sm:first:pl-0 sm:last:pr-0"
               >
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-kc-muted">{pkg.name}</span>
-                  {pkg.popular && <span className="text-[10px] font-bold uppercase tracking-wide text-kc-teal">Most popular</span>}
-                </div>
-                <div className="mb-4 text-3xl font-black text-kc-dark">{formatDollars(pkg.price)}</div>
-                <ul className="mb-5 flex-1 space-y-2">
-                  {pkg.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-kc-muted">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-kc-teal" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  asChild
-                  className={`mt-auto w-full rounded-md ${pkg.popular ? "bg-kc-teal text-white hover:bg-kc-teal/90" : "bg-kc-dark text-white hover:bg-kc-dark/90"}`}
-                >
-                  <Link href={`/services/${service.slug}/order?package=${pkg.name.toLowerCase()}`}>
-                    Select {pkg.name}
-                  </Link>
-                </Button>
-              </div>
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-kc-coral" strokeWidth={1.75} />
+                <span className="text-[14.5px] leading-snug text-kc-dark/75">{text}</span>
+              </RevealItem>
             ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ── Start from a design ── */}
+      {heroImages && heroImages.length > 0 && designStudioHref && (
+        <section className="band-tight bg-kc-paper">
+          <div className="container-tight">
+            <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div className="max-w-xl">
+                <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem]">
+                  Start from a design
+                </h2>
+                <p className="mt-3 text-[15.5px] leading-relaxed text-kc-dark/60">
+                  Open any of these in the editor and make it yours, or start from a blank file.
+                </p>
+              </div>
+              <Link
+                href="/portfolio"
+                className="text-[14px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+              >
+                See all examples
+              </Link>
+            </Reveal>
+
+            <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {heroImages.slice(0, 3).map((img) => (
+                <RevealItem key={img.slug} className="h-full">
+                  <Link
+                    href={`${designStudioHref}/t-${img.slug}`}
+                    className="edge group flex h-full flex-col overflow-hidden border border-kc-dark/12 bg-white transition-colors hover:border-kc-dark/30"
+                  >
+                    {/* Mounted at true proportions. These thumbnails are 7:4 (cards), 3:2
+                        (postcards), tall (banners) or square (signs) - a fixed square crop
+                        chopped the artwork off every one of them. */}
+                    <div className="relative aspect-[4/3] bg-kc-paper">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={img.url}
+                        alt={img.title}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-contain p-6 drop-shadow-[0_6px_14px_rgba(18,17,16,0.28)] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                      />
+                    </div>
+                    <div className="border-t border-kc-dark/10 px-4 py-3.5">
+                      <span className="text-[14px] font-semibold text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
+                        {img.title}
+                      </span>
+                    </div>
+                  </Link>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+
+            {aiDesignHref && (
+              <p className="mt-6 text-[14.5px] text-kc-dark/60">
+                Prefer to describe it?{" "}
+                <Link
+                  href={aiDesignHref}
+                  className="font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+                >
+                  Generate a starting design
+                </Link>{" "}
+                and edit it from there.
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ── Specifications ── */}
+      <section className="band bg-kc-bg">
+        <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+          <div>
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.5rem]">
+              Sizes, stock, and files
+            </h2>
+            <p className="mt-4 max-w-sm text-[16.5px] leading-relaxed text-kc-dark/60">
+              {service.description}
+            </p>
           </div>
 
-          {/* Add-ons */}
+          <dl className="divide-y divide-kc-dark/10 border-t border-kc-dark/10">
+            {service.specs.map((spec) => (
+              <div key={spec.label} className="grid grid-cols-1 gap-1 py-4 sm:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] sm:gap-6">
+                <dt className="text-[14px] font-medium text-kc-dark/55">{spec.label}</dt>
+                <dd className="text-[15px] leading-snug text-kc-dark">{spec.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* ── Packages ── */}
+      <section className="band bg-kc-paper">
+        <div className="container-tight">
+          <Reveal className="mb-10 max-w-xl">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+              Choose your package
+            </h2>
+            <p className="mt-4 text-[16.5px] leading-relaxed text-kc-dark/60">
+              Every package includes print-ready file delivery and revisions.
+            </p>
+          </Reveal>
+
+          <RevealGroup
+            className={`grid grid-cols-1 gap-4 ${
+              service.packages.length <= 3 ? "md:grid-cols-3" : "md:grid-cols-2 lg:grid-cols-3"
+            }`}
+          >
+            {service.packages.map((pkg) => (
+              <RevealItem key={pkg.name} className="h-full">
+                {/* The popular tier inverts to ink rather than being a third identical card. */}
+                <div
+                  className={`edge flex h-full flex-col border p-7 ${
+                    pkg.popular
+                      ? "border-kc-ink bg-kc-ink text-white"
+                      : "border-kc-dark/12 bg-white"
+                  }`}
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span
+                      className={`text-[15px] font-semibold ${
+                        pkg.popular ? "text-white" : "text-kc-dark"
+                      }`}
+                    >
+                      {pkg.name}
+                    </span>
+                    {pkg.popular && (
+                      <span className="font-mono text-[11px] text-white/60">Most popular</span>
+                    )}
+                  </div>
+
+                  <div
+                    className={`display-tight mt-4 text-[2.5rem] ${
+                      pkg.popular ? "text-white" : "text-kc-dark"
+                    }`}
+                  >
+                    {formatDollars(pkg.price)}
+                  </div>
+
+                  <ul
+                    className={`mt-6 flex-1 space-y-2.5 border-t pt-6 ${
+                      pkg.popular ? "border-kc-ink-line" : "border-kc-dark/10"
+                    }`}
+                  >
+                    {pkg.features.map((f) => (
+                      <li
+                        key={f}
+                        className={`text-[14px] leading-snug ${
+                          pkg.popular ? "text-white/70" : "text-kc-dark/65"
+                        }`}
+                      >
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    asChild
+                    className={
+                      pkg.popular
+                        ? "edge mt-7 h-11 w-full bg-kc-coral text-[14.5px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
+                        : "edge mt-7 h-11 w-full border border-kc-dark/20 bg-transparent text-[14.5px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+                    }
+                  >
+                    <Link href={`${orderHref}?package=${pkg.name.toLowerCase()}`}>
+                      Select {pkg.name}
+                    </Link>
+                  </Button>
+                </div>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+
           {service.addOns.length > 0 && (
-            <div className="mt-10">
-              <h3 className="mb-4 text-xl font-bold text-kc-dark">Available add-ons</h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-16">
+              <h3 className="display-tight mb-6 text-xl text-kc-dark sm:text-2xl">
+                Available add-ons
+              </h3>
+              <dl className="grid grid-cols-1 gap-x-12 sm:grid-cols-2">
                 {service.addOns.map((addon) => (
-                  <div key={addon.name} className="rounded-md border border-kc-border bg-white p-4">
-                    <div className="mb-1 flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold text-kc-dark">{addon.name}</span>
-                      <span className="shrink-0 text-xs font-semibold text-kc-teal">+{formatDollars(addon.price)}</span>
+                  <div
+                    key={addon.name}
+                    className="flex items-baseline justify-between gap-6 border-b border-kc-dark/10 py-4"
+                  >
+                    <div>
+                      <dt className="text-[15px] font-semibold text-kc-dark">{addon.name}</dt>
+                      <dd className="mt-0.5 text-[13.5px] leading-snug text-kc-dark/55">
+                        {addon.desc}
+                      </dd>
                     </div>
-                    <p className="text-xs text-kc-muted">{addon.desc}</p>
+                    <span className="shrink-0 font-mono text-[13px] text-kc-dark/60">
+                      +{formatDollars(addon.price)}
+                    </span>
                   </div>
                 ))}
-              </div>
+              </dl>
             </div>
           )}
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="section-pad bg-white">
-        <div className="container-tight max-w-3xl">
-          <h2 className="mb-8 text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">{service.name} FAQs</h2>
-          <Accordion className="space-y-3">
+      {/* ── FAQ ── */}
+      <section className="band bg-kc-bg">
+        <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
+          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+            {service.name} questions
+          </h2>
+          <Accordion className="border-t border-kc-dark/10">
             {service.faqs.map((faq, i) => (
-              <AccordionItem
-                key={i}
-                value={`faq-${i}`}
-                className="rounded-md border border-kc-border px-5"
-              >
-                <AccordionTrigger className="text-left font-semibold text-kc-dark hover:text-kc-teal hover:no-underline">
+              <AccordionItem key={i} value={`faq-${i}`} className="border-b border-kc-dark/10">
+                <AccordionTrigger className="py-5 text-left text-[16px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="pb-4 leading-relaxed text-kc-muted">
+                <AccordionContent className="max-w-[62ch] pb-5 text-[15px] leading-relaxed text-kc-dark/65">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
@@ -187,18 +360,36 @@ export function ServicePageContent({ service, designStudioHref, aiDesignHref, he
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-kc-teal">
-        <div className="container-tight px-4 py-16 text-center sm:px-6 lg:px-8 lg:py-20">
-          <h2 className="mb-4 text-3xl font-black text-white">Ready to order your {service.name.toLowerCase()}?</h2>
-          <p className="mx-auto mb-8 max-w-xl text-white/80">
-            Choose a package, share your brand info, and receive your design within 1-3 business days. Revisions included.
-          </p>
-          <Button asChild size="lg" className="rounded-md bg-kc-coral px-8 text-white hover:bg-kc-coral/90">
-            <Link href={`/services/${service.slug}/order`}>
-              Start Your Order <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+      {/* ── Closing ink block ── */}
+      <section className="bg-kc-ink">
+        <div className="reg-bar" />
+        <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+          <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="display-tight max-w-xl text-3xl text-white sm:text-[2.5rem]">
+                Ready to order your {lower}?
+              </h2>
+              <p className="mt-5 max-w-md text-[15.5px] leading-relaxed text-white/60">
+                Choose a package, share your brand details, and your first draft arrives in 1 to 3
+                business days.
+              </p>
+            </div>
+            <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
+              <Button asChild size="lg" className={`${BTN_PRIMARY} w-full sm:w-auto`}>
+                <Link href={orderHref}>
+                  Order <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[15px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
+              >
+                <Link href="/contact">Contact us</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 

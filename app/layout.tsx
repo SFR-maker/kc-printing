@@ -31,6 +31,10 @@ export const metadata: Metadata = {
   description:
     "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  // A relative canonical in the root layout resolves per-route, so every page gets a correct
+  // self-referencing canonical without repeating it in 20 files. This also collapses the
+  // ?package=silver/gold/platinum order-page variants onto one indexable URL.
+  alternates: { canonical: "./" },
   openGraph: {
     type: "website",
     siteName: "KC Printing",

@@ -16,6 +16,26 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/card-designs/export": ["./lib/business-card/fonts-ttf/*.ttf"],
   },
+  // Baseline security headers. Vercel already sends HSTS; everything below was absent.
+  // No CSP yet: Clerk, Stripe, and UploadThing all inject scripts and frames, and a wrong
+  // `script-src` would break checkout and sign-in. That needs its own pass with report-only first.
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // Editor and order pages must not be frameable - clickjacking on a checkout flow.
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "utfs.io" },

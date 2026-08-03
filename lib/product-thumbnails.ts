@@ -10,14 +10,23 @@ export const PRODUCT_BY_SLUG = {
 export interface ProductThumbnail {
   url: string;
   title: string;
+  /** Template slug, so a thumbnail can deep-link into the editor pre-loaded with that design. */
+  slug: string;
 }
 
 export async function getFeaturedThumbnails(slug: keyof typeof PRODUCT_BY_SLUG, take = 3): Promise<ProductThumbnail[]> {
   const templates = await db.cardTemplate.findMany({
     where: { featured: true, active: true, product: PRODUCT_BY_SLUG[slug] },
     orderBy: { sortOrder: "asc" },
-    select: { title: true, thumbnailFront: true },
+    select: { slug: true, title: true, thumbnailFront: true },
     take,
   });
-  return templates.filter((t) => t.thumbnailFront).map((t) => ({ url: t.thumbnailFront!, title: t.title }));
+  return templates
+    .filter((t) => t.thumbnailFront)
+    .map((t) => ({
+      url: t.thumbnailFront!,
+      // Titles are stored as "Real Estate: Bold Block"; the industry prefix repeats down a rail.
+      title: t.title.includes(": ") ? t.title.slice(t.title.indexOf(": ") + 2) : t.title,
+      slug: t.slug,
+    }));
 }

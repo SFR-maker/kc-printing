@@ -66,7 +66,7 @@ export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSp
       {/* Core selection, boxed and given visual priority: this is the decision that actually
           drives price, so it gets the price shown immediately below it rather than buried under
           the add-ons list. */}
-      <div className="rounded-xl border-2 border-kc-teal/30 bg-white p-5">
+      <div className="rounded-xl border-2 border-kc-coral/30 bg-white p-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
             <Label>Size</Label>
@@ -130,7 +130,7 @@ export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSp
                   <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Print Total</div>
                   <div className="text-xs text-kc-muted">{formatQuantity(spec.quantity)} cards</div>
                 </div>
-                <div className="text-3xl font-black text-kc-teal">{formatDollars(price.total)}</div>
+                <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
               </div>
               {hasAddOns && (
                 <div className="mt-3 space-y-1 border-t border-dashed border-kc-border pt-3 text-xs text-kc-muted">
@@ -159,7 +159,7 @@ export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSp
                 checked={spec.rush}
                 disabled={spec.quantity > RUSH_MAX_QUANTITY}
                 onChange={() => set("rush", !spec.rush)}
-                className="h-4 w-4 shrink-0 accent-kc-teal"
+                className="h-4 w-4 shrink-0 accent-kc-coral"
               />
               <span>
                 <span className="block text-sm text-kc-dark">Rush Turnaround</span>
@@ -173,7 +173,7 @@ export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSp
 
           <label className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
             <span className="flex items-center gap-2.5">
-              <input type="checkbox" checked={spec.roundCorners} onChange={() => set("roundCorners", !spec.roundCorners)} className="h-4 w-4 shrink-0 accent-kc-teal" />
+              <input type="checkbox" checked={spec.roundCorners} onChange={() => set("roundCorners", !spec.roundCorners)} className="h-4 w-4 shrink-0 accent-kc-coral" />
               <span>
                 <span className="block text-sm text-kc-dark">Round Corners</span>
                 <span className="block text-xs text-kc-muted">A softer, more premium edge.</span>
@@ -184,7 +184,7 @@ export function BusinessCardPrintSpec({ spec, onChange }: { spec: BusinessCardSp
 
           <label className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
             <span className="flex items-center gap-2.5">
-              <input type="checkbox" checked={spec.manualProof} onChange={() => set("manualProof", !spec.manualProof)} className="h-4 w-4 shrink-0 accent-kc-teal" />
+              <input type="checkbox" checked={spec.manualProof} onChange={() => set("manualProof", !spec.manualProof)} className="h-4 w-4 shrink-0 accent-kc-coral" />
               <span>
                 <span className="block text-sm text-kc-dark">Manual Proof Review</span>
                 <span className="block text-xs text-kc-muted">A person checks your file before print (24 hrs). Instant automated proofing is free and used by default.</span>

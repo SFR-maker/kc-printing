@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { ClosingCta } from "@/components/layout/ClosingCta";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { formatDollars } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -51,69 +54,103 @@ const ALL_SERVICES = [
 
 export default function PricingPage() {
   return (
-    <div>
-      <div className="section-pad-tight bg-kc-bg">
-        <div className="container-tight max-w-2xl">
-          <h1 className="mb-3 text-4xl font-black tracking-tight text-kc-dark sm:text-5xl">Clear, simple pricing</h1>
-          <p className="text-lg text-kc-muted">
-            No hidden fees, no contracts. Every package includes revisions and print-ready file delivery.
-          </p>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        title="Clear, simple pricing"
+        lead="No hidden fees, no contracts. Every package includes revisions and print-ready file delivery."
+      />
 
-      <div className="container-tight px-4 py-12 sm:px-6 lg:px-8">
-        <div className="space-y-14">
+      <section className="band-tight bg-kc-paper">
+        <div className="container-tight space-y-16">
           {ALL_SERVICES.map((service) => (
             <div key={service.name}>
-              <div className="mb-5 flex items-center justify-between border-b border-kc-border pb-3">
-                <h2 className="text-xl font-bold text-kc-dark">{service.name}</h2>
-                <Link href={service.href} className="flex items-center gap-1 text-sm font-medium text-kc-teal hover:underline">
-                  View details <ArrowRight className="h-3.5 w-3.5" />
+              <Reveal className="mb-6 flex flex-wrap items-baseline justify-between gap-3 border-b border-kc-dark/12 pb-4">
+                <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem]">
+                  {service.name}
+                </h2>
+                <Link
+                  href={service.href}
+                  className="flex items-center gap-1.5 text-[14px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+                >
+                  View details <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                 </Link>
-              </div>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              </Reveal>
+
+              <RevealGroup className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 {service.packages.map((pkg) => (
-                  <div
-                    key={pkg.name}
-                    className={`rounded-md border p-5 ${pkg.popular ? "border-kc-teal bg-kc-violet-tint" : "border-kc-border bg-white"}`}
-                  >
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wider text-kc-muted">{pkg.name}</span>
-                      {pkg.popular && <span className="text-[10px] font-bold uppercase tracking-wide text-kc-teal">Most popular</span>}
-                    </div>
-                    <div className="mb-3 text-3xl font-black text-kc-dark">{formatDollars(pkg.price)}</div>
-                    <ul className="space-y-1.5">
-                      {pkg.features.map((f) => (
-                        <li key={f} className="flex items-center gap-2 text-xs text-kc-muted">
-                          <Check className="h-3.5 w-3.5 shrink-0 text-kc-teal" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button
-                      asChild
-                      size="sm"
-                      className={`mt-4 w-full rounded-md ${pkg.popular ? "bg-kc-teal text-white hover:bg-kc-teal/90" : "bg-kc-dark text-white hover:bg-kc-dark/90"}`}
+                  <RevealItem key={pkg.name} className="h-full">
+                    {/* The popular tier inverts to ink rather than being a third identical card. */}
+                    <div
+                      className={`edge flex h-full flex-col border p-6 ${
+                        pkg.popular ? "border-kc-ink bg-kc-ink" : "border-kc-dark/12 bg-white"
+                      }`}
                     >
-                      <Link href={`${service.href}/order?package=${pkg.name.toLowerCase()}`}>Select {pkg.name}</Link>
-                    </Button>
-                  </div>
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span
+                          className={`text-[14.5px] font-semibold ${
+                            pkg.popular ? "text-white" : "text-kc-dark"
+                          }`}
+                        >
+                          {pkg.name}
+                        </span>
+                        {pkg.popular && (
+                          <span className="font-mono text-[11px] text-white/60">Most popular</span>
+                        )}
+                      </div>
+
+                      <div
+                        className={`display-tight mt-3 text-[2.25rem] ${
+                          pkg.popular ? "text-white" : "text-kc-dark"
+                        }`}
+                      >
+                        {formatDollars(pkg.price)}
+                      </div>
+
+                      <ul
+                        className={`mt-5 flex-1 space-y-2 border-t pt-5 ${
+                          pkg.popular ? "border-kc-ink-line" : "border-kc-dark/10"
+                        }`}
+                      >
+                        {pkg.features.map((f) => (
+                          <li
+                            key={f}
+                            className={`text-[13.5px] leading-snug ${
+                              pkg.popular ? "text-white/70" : "text-kc-dark/65"
+                            }`}
+                          >
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <Button
+                        asChild
+                        className={
+                          pkg.popular
+                            ? "edge mt-6 h-11 w-full bg-kc-coral text-[14px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
+                            : "edge mt-6 h-11 w-full border border-kc-dark/20 bg-transparent text-[14px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+                        }
+                      >
+                        <Link href={`${service.href}/order?package=${pkg.name.toLowerCase()}`}>
+                          Select {pkg.name}
+                        </Link>
+                      </Button>
+                    </div>
+                  </RevealItem>
                 ))}
-              </div>
+              </RevealGroup>
             </div>
           ))}
         </div>
+      </section>
 
-        <div className="mt-16 flex flex-col items-start justify-between gap-6 rounded-md border border-kc-border bg-kc-orange-tint p-8 sm:flex-row sm:items-center">
-          <div>
-            <h2 className="mb-1.5 text-xl font-bold text-kc-dark">Have a custom project?</h2>
-            <p className="text-sm text-kc-muted">Not sure which package fits? Contact us for a free quote.</p>
-          </div>
-          <Button asChild className="shrink-0 rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
-            <Link href="/contact">Request a Quote</Link>
-          </Button>
-        </div>
-      </div>
-    </div>
+      <ClosingCta
+        title="Have a custom project?"
+        body="Not sure which package fits, or need something outside these four products? Tell us what you're planning and we'll quote it."
+        primary={{ label: "Contact us", href: "/contact" }}
+        secondary={{ label: "Browse products", href: "/services" }}
+        showContactDetails
+      />
+    </>
   );
 }

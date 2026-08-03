@@ -1,5 +1,6 @@
 {
-  "buildCommand": "prisma generate && next build",
+  "_comment": "buildCommand must go through npm so the postbuild hook (next-sitemap) runs. Calling `next build` directly skips npm lifecycle scripts, which is why the site shipped with no sitemap.xml and no robots.txt.",
+  "buildCommand": "npm run build",
   "functions": {
     "app/api/stripe/webhook/route.ts": { "maxDuration": 30 },
     "app/api/webhooks/clerk/route.ts": { "maxDuration": 10 },

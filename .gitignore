@@ -48,3 +48,9 @@ next-env.d.ts
 .env*.local
 test-results/
 .claude/worktrees/
+
+# Generated at build time by next-sitemap (postbuild). Committing these would ship whatever
+# NEXT_PUBLIC_APP_URL the last local build happened to use.
+/public/robots.txt
+/public/sitemap.xml
+/public/sitemap-*.xml

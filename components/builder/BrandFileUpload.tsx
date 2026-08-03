@@ -57,7 +57,7 @@ export function BrandFileUpload({ value, onChange }: { value: BrandFile[]; onCha
         type="button"
         onClick={() => inputRef.current?.click()}
         disabled={status === "uploading"}
-        className="w-full border-2 border-dashed border-kc-border rounded-xl p-6 text-center transition-colors hover:border-kc-teal/40 disabled:opacity-60"
+        className="w-full border-2 border-dashed border-kc-border rounded-xl p-6 text-center transition-colors hover:border-kc-coral/40 disabled:opacity-60"
       >
         {status === "uploading" ? (
           <Loader2 className="h-8 w-8 text-kc-muted mx-auto mb-2 animate-spin" />

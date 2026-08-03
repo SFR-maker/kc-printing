@@ -94,6 +94,11 @@ test.describe("Business card design studio", () => {
 
   test("32 - business card service page links to the design studio", async ({ page }) => {
     await page.goto("/services/business-cards");
-    await expect(page.locator("a", { hasText: "Design It Yourself" })).toBeVisible();
+    // Assert the destination, not the label. CTA copy is deliberately standardised across the site
+    // (one label per intent) and has changed once already; the link target is what this test cares
+    // about.
+    await expect(
+      page.locator('a[href="/services/business-cards/design"]:visible').first()
+    ).toBeVisible();
   });
 });

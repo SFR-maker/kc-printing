@@ -30,3 +30,17 @@ export function sanitizeFileName(name: string): string {
 export function truncate(str: string, n: number): string {
   return str.length > n ? str.slice(0, n - 1) + "..." : str;
 }
+
+/**
+ * Turns a stored slug into a display label: "real-estate" -> "Real Estate".
+ *
+ * Industry and style values are persisted as slugs, so anywhere one is shown to a customer needs
+ * this. Used by the template gallery filter and the portfolio grid.
+ */
+export function titleCaseSlug(slug: string): string {
+  return slug
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}

@@ -150,7 +150,10 @@ export function Header() {
       </div>
 
       {open && (
-        <div className="border-t border-kc-dark/10 bg-kc-bg px-4 pb-4 pt-2 md:hidden">
+        <div
+          data-testid="mobile-menu"
+          className="border-t border-kc-dark/10 bg-kc-bg px-4 pb-4 pt-2 md:hidden"
+        >
           <nav className="flex flex-col">
             {NAV_LINKS.map((link) => (
               <Link

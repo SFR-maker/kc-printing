@@ -19,11 +19,22 @@ test.describe("Public pages", () => {
   });
 
   test("3 - mobile nav opens and closes", async ({ page }) => {
+    // The hamburger is `md:hidden`, so it only exists below 768px. This ran under the desktop
+    // project too, where it is correctly hidden and the assertion could never pass. Pinning the
+    // viewport keeps the test meaningful in both projects rather than skipping it in one.
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
     const hamburger = page.locator('[data-testid="mobile-nav"]');
     await expect(hamburger).toBeVisible();
+
+    // Scoped to the mobile panel: "Pricing" also exists in the desktop nav, which is present in the
+    // DOM but hidden, so an unscoped lookup is a strict-mode violation.
+    const menu = page.getByTestId("mobile-menu");
     await hamburger.click();
-    await page.waitForTimeout(300);
+    await expect(menu.getByRole("link", { name: "Pricing" })).toBeVisible();
+
+    await hamburger.click();
+    await expect(menu).toBeHidden();
   });
 
   test("4 - contact page renders form", async ({ page }) => {

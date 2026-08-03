@@ -43,7 +43,9 @@ const schema = z.object({
   selectedPackage: z.string().optional(),
   selectedAddOns: z.array(z.string()),
   notes: z.string().optional(),
-  businessName: z.string().min(1, "Business name is required"),
+  // Required only on the design path - see the superRefine below. Someone uploading finished
+  // artwork has no brief to write, and Stripe collects their name and address at checkout.
+  businessName: z.string(),
   phone: z.string().optional(),
   email: z.string().optional(),
   website: z.string().optional(),
@@ -69,6 +71,13 @@ const schema = z.object({
     inspection: z.any().nullable(),
     approved: z.boolean(),
   }),
+}).superRefine((v, ctx) => {
+  // Enforced here rather than on the field so it can depend on the chosen route. Without this the
+  // upload path could never submit: businessName is only collected on the Details step, which that
+  // path skips, so the form failed validation against a field the customer was never shown.
+  if (v.artwork?.path !== "UPLOAD" && !v.businessName?.trim()) {
+    ctx.addIssue({ code: "custom", path: ["businessName"], message: "Business name is required" });
+  }
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -98,6 +107,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [artworkError, setArtworkError] = useState<string | null>(null);
+  // Local rather than form.setError: this is set from goNext, outside a validation pass, and
+  // RHF drops errors that its resolver did not produce on the next render.
+  const [detailsError, setDetailsError] = useState<string | null>(null);
   const [designMetaLoaded, setDesignMetaLoaded] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(!cardDesignId);
 
@@ -108,7 +120,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
-            return { selectedAddOns: [], brandFiles: [], quantity: 1, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, artwork: EMPTY_ARTWORK, ...JSON.parse(saved) };
+            return { selectedAddOns: [], brandFiles: [], quantity: 1, businessName: "", bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, artwork: EMPTY_ARTWORK, ...JSON.parse(saved) };
           } catch {
             // fall through to plain defaults below
           }
@@ -122,6 +134,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         selectedAddOns: [],
         brandFiles: [],
         quantity: 1,
+        businessName: "",
         bcSpec: DEFAULT_BC_SPEC,
         colorPaletteId: AI_PALETTE_AUTO_ID,
         artwork: EMPTY_ARTWORK,
@@ -346,6 +359,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
       form.setError("selectedPackage", { message: "Please select a package" });
       return;
     }
+    // Checked here rather than left to the schema: businessName is required conditionally via
+    // superRefine, and zod only runs refinements once the base object parses. At this point
+    // guestEmail is still empty, so the refinement never fires and trigger() would wave it through.
+    if (currentStep === "details" && !values.businessName?.trim()) {
+      setDetailsError("Business name is required.");
+      return;
+    }
+    setDetailsError(null);
+
     const fields = STEP_FIELDS[currentStep];
     const valid = fields.length === 0 || (await trigger(fields));
     if (valid) setStep((s) => s + 1);
@@ -384,7 +406,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form
+        onSubmit={handleSubmit(onSubmit, (invalid) => {
+          // A submit button that does nothing is worse than one that explains itself. Validation can
+          // only fail here on a field rendered by another step, so name it rather than going quiet.
+          const first = Object.values(invalid)[0] as { message?: string } | undefined;
+          setSubmitError(
+            first?.message
+              ? `${first.message}. Please go back and check your details.`
+              : "Something in the order is incomplete. Please step back through and check each section."
+          );
+        })}
+      >
         {/* Step 0: Package (or, for business cards, real print specs priced off gotprint.com) */}
         {currentStep === "specs" && (
           <div className="space-y-8">
@@ -673,7 +706,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
             <div className="space-y-2">
               <Label htmlFor="businessName">Business Name *</Label>
               <Input id="businessName" placeholder="Your business name" {...register("businessName")} />
-              {errors.businessName && <p className="text-xs text-red-500">{errors.businessName.message}</p>}
+              {(errors.businessName || detailsError) && (
+                <p className="text-xs text-red-500">{errors.businessName?.message ?? detailsError}</p>
+              )}
             </div>
 
             {designMetaLoaded && !detailsExpanded ? (

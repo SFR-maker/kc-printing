@@ -21,7 +21,9 @@ const schema = z.object({
   // for every other service below, since those don't have a real print-pricing path yet.
   selectedPackage: z.string().optional(),
   selectedAddOns: z.array(z.string()).optional().default([]),
-  businessName: z.string().min(1),
+  // Optional overall: only the design path needs it (enforced below), since an upload-path
+  // order has no design brief to attach a business name to.
+  businessName: z.string().default(""),
   phone: z.string().optional(),
   email: z.string().optional(),
   website: z.string().optional(),
@@ -70,6 +72,13 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
+  }
+
+  if (parsed.data.artwork?.path !== "UPLOAD" && !parsed.data.businessName?.trim()) {
+    return NextResponse.json(
+      { error: "Business name is required", details: { fieldErrors: { businessName: ["Business name is required"] } } },
+      { status: 400 }
+    );
   }
 
   if (!user && !parsed.data.guestEmail) {

@@ -58,6 +58,9 @@ export async function POST(req: Request) {
         data: {
           status: "PAID",
           stripePaymentStatus: "paid",
+          // Stripe reports amounts in the smallest currency unit.
+          taxAmount: session.total_details?.amount_tax != null ? session.total_details.amount_tax / 100 : null,
+          amountPaid: session.amount_total != null ? session.amount_total / 100 : null,
           ...(shipping
             ? {
                 shippingName: shipping.name ?? null,

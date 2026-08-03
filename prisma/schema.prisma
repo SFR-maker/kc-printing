@@ -199,6 +199,11 @@ model Order {
   // Set when the customer ticks the approval box. Null means no approved proof exists yet.
   proofApprovedAt      DateTime?
 
+  // `total` above is the pre-tax figure we calculated and showed the customer. Sales tax is worked
+  // out by Stripe from the delivery address at checkout, so these record what was actually charged.
+  taxAmount            Float?
+  amountPaid           Float?
+
   // Populated from the Stripe Checkout session (shipping_address_collection), not collected by our
   // own form, so the address is the validated one the customer actually paid against.
   shippingName         String?

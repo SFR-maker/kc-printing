@@ -22,11 +22,26 @@ export interface OrderItemForBilling {
 export interface StripeLineItem {
   price_data: {
     currency: "usd";
-    product_data: { name: string; description: string };
+    product_data: { name: string; description: string; tax_code: string };
     unit_amount: number;
+    /**
+     * US sales tax is added on top of the listed price, so every amount here is pre-tax. Stripe
+     * requires this to be set explicitly whenever automatic tax is enabled - a price with no
+     * tax_behavior is rejected outright.
+     */
+    tax_behavior: "exclusive";
   };
   quantity: number;
 }
+
+/**
+ * Stripe tax code for general tangible goods.
+ *
+ * Printed cards, postcards, banners and signs are physical products shipped to the customer, which
+ * is what determines how they are taxed. Design work billed as part of the same line rides along
+ * with it rather than being split out as a separate service line.
+ */
+export const PRINTED_GOODS_TAX_CODE = "txcd_99999999";
 
 /**
  * Converts order items into Stripe Checkout line items.
@@ -46,15 +61,22 @@ export function buildStripeLineItems(items: OrderItemForBilling[]): StripeLineIt
         product_data: {
           name,
           description: `${quantityNote}${item.productDescription}`.substring(0, 200),
+          tax_code: PRINTED_GOODS_TAX_CODE,
         },
         unit_amount: Math.round(item.price * 100),
+        tax_behavior: "exclusive" as const,
       },
       quantity: 1,
     };
   });
 }
 
-/** Total in cents that Stripe will charge, for asserting against the stored order total. */
+/**
+ * Pre-tax total in cents, for asserting against the stored order total.
+ *
+ * Tax is calculated by Stripe from the shipping address at checkout, so it is deliberately not part
+ * of this figure - the assertion is about our own arithmetic, not the final charge.
+ */
 export function lineItemsTotalCents(lineItems: StripeLineItem[]): number {
   return lineItems.reduce((sum, li) => sum + li.price_data.unit_amount * li.quantity, 0);
 }

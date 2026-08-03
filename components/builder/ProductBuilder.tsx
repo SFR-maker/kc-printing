@@ -981,6 +981,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
 
             <p className="text-xs text-kc-muted">
               Your delivery address is collected securely on the next screen, along with payment.
+              Sales tax is worked out from that address and added at checkout, so the total above is
+              before tax.
             </p>
 
             <div className="space-y-2">
@@ -1015,7 +1017,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
 
           {price && (
             <div className="text-center">
-              <div className="text-xs text-kc-muted">Estimated Total</div>
+              <div className="text-xs text-kc-muted">Estimated Total (before tax)</div>
               <div className="text-xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
             </div>
           )}

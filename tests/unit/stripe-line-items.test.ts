@@ -59,3 +59,22 @@ describe("buildStripeLineItems", () => {
     expect(lineItemsTotalCents(items)).toBe(5000);
   });
 });
+
+describe("tax configuration", () => {
+  it("marks prices as tax-exclusive, which automatic tax requires", () => {
+    // Stripe rejects a price with no tax_behavior once automatic_tax is enabled, and US sales tax
+    // is added on top of the listed price rather than being baked into it.
+    const [li] = buildStripeLineItems([{ ...base, price: 21, quantity: 250 }]);
+    expect(li.price_data.tax_behavior).toBe("exclusive");
+  });
+
+  it("tags every line with the tangible-goods tax code", () => {
+    const [li] = buildStripeLineItems([{ ...base, price: 21, quantity: 250 }]);
+    expect(li.price_data.product_data.tax_code).toBe("txcd_99999999");
+  });
+
+  it("keeps the asserted total pre-tax so the guard checks our arithmetic, not Stripe's", () => {
+    const items = buildStripeLineItems([{ ...base, price: 21, quantity: 250 }]);
+    expect(lineItemsTotalCents(items)).toBe(2100);
+  });
+});

@@ -104,6 +104,10 @@ export async function POST(req: Request) {
       // webhook copies it onto the order once the session completes.
       shipping_address_collection: { allowed_countries: ["US"] },
       phone_number_collection: { enabled: true },
+      // Sales tax is worked out by Stripe from the address the customer enters above. It only
+      // charges tax where the account holds an active tax registration; with none configured it
+      // resolves to zero rather than failing, so this is safe to ship ahead of registering.
+      automatic_tax: { enabled: true },
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

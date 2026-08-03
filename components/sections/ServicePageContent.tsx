@@ -58,7 +58,7 @@ export function ServicePageContent({
       <section className="relative bg-kc-bg">
         <div className="reg-bar relative z-20" />
 
-        <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[540px] lg:px-8 lg:py-16">
+        <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[500px] lg:px-8 lg:py-16">
           <div className="lg:max-w-[52%]">
             <Reveal y={16}>
               <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl lg:text-[3.5rem]">
@@ -100,14 +100,15 @@ export function ServicePageContent({
           </div>
         </div>
 
-        <div className="px-4 pb-16 pt-10 sm:px-6 lg:absolute lg:bottom-0 lg:right-0 lg:top-[3px] lg:w-[44%] lg:p-0">
+        {/* Capped and kept short so the panel stays near the photograph's native 4:3 ratio. */}
+        <div className="px-4 pb-16 pt-10 sm:px-6 lg:absolute lg:bottom-0 lg:right-0 lg:top-[3px] lg:w-[44%] lg:max-w-[680px] lg:p-0">
           <div className="edge relative aspect-[4/3] w-full overflow-hidden lg:aspect-auto lg:h-full lg:rounded-none">
             <Image
               src={photo.src}
               alt={photo.alt}
               fill
               priority
-              sizes="(min-width: 1024px) 44vw, 100vw"
+              sizes="(min-width: 1600px) 680px, (min-width: 1024px) 44vw, 100vw"
               className="object-cover"
             />
           </div>

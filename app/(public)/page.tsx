@@ -114,7 +114,7 @@ export default async function HomePage() {
         {/* z-20 keeps the bar above the bleed photo, which is anchored to the section's top edge */}
         <div className="reg-bar relative z-20" />
 
-        <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[600px] lg:px-8 lg:py-16">
+        <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[520px] lg:px-8 lg:py-16">
           <div className="lg:max-w-[52%]">
             <Reveal y={16}>
               <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl lg:text-[3.5rem] xl:text-[4.25rem]">
@@ -145,14 +145,17 @@ export default async function HomePage() {
         </div>
 
         {/* One <Image>: an inline block on mobile, a full-height bleed panel from lg up. */}
-        <div className="px-4 pb-16 pt-10 sm:px-6 lg:absolute lg:bottom-0 lg:right-0 lg:top-[3px] lg:w-[46%] lg:p-0">
+        {/* The panel is capped and the hero kept short so this stays near the photograph's native 4:3.
+            A taller panel crops a landscape frame into a near-square, which reads as a zoom and
+            forces the browser to upscale a 1200px source. */}
+        <div className="px-4 pb-16 pt-10 sm:px-6 lg:absolute lg:bottom-0 lg:right-0 lg:top-[3px] lg:w-[46%] lg:max-w-[720px] lg:p-0">
           <div className="edge relative aspect-[4/3] w-full overflow-hidden lg:aspect-auto lg:h-full lg:rounded-none">
             <Image
               src="/images/print/hero-card-fan.webp"
               alt="A fanned spread of printed business cards in cyan, magenta, gold, and black showing their layered cut edges"
               fill
               priority
-              sizes="(min-width: 1024px) 46vw, 100vw"
+              sizes="(min-width: 1600px) 720px, (min-width: 1024px) 46vw, 100vw"
               className="object-cover"
             />
           </div>

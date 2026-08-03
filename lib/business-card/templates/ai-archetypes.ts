@@ -1,3 +1,5 @@
+import { rebleedSide } from "../rebleed";
+import { PRINT_SPEC } from "../print-spec";
 import type { CardSide, TextElement, ShapeElement, ImageElement } from "../schema";
 import type { CategoryContent } from "./categories";
 import { contrastRatio } from "../validate";
@@ -41,7 +43,12 @@ const W = 3.75;
 const H = 2.25;
 
 function side(background: CardSide["background"], elements: CardSide["elements"]): CardSide {
-  return { physicalWidthIn: W, physicalHeightIn: H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle", background, elements };
+  // Layouts below are authored against the historical 3.75 x 2.25 / 0.125in-bleed canvas.
+  // rebleedSide re-bases them onto the current house spec so the literals stay readable.
+  return rebleedSide(
+    { physicalWidthIn: W, physicalHeightIn: H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle", background, elements },
+    PRINT_SPEC.bleedIn
+  );
 }
 
 function solidSide(color: string, elements: CardSide["elements"]): CardSide {

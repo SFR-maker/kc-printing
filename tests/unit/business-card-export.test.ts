@@ -27,8 +27,8 @@ describe("exportCardPdf", () => {
     const back = emptyCardSide();
     const result = await exportCardPdf(front, back);
     expect(result.pageCount).toBe(2);
-    expect(result.widthPt).toBeCloseTo(270, 5); // 3.75in * 72
-    expect(result.heightPt).toBeCloseTo(162, 5); // 2.25in * 72
+    expect(result.widthPt).toBeCloseTo(259.2, 5); // 3.6in * 72
+    expect(result.heightPt).toBeCloseTo(151.2, 5); // 2.1in * 72
     expect(result.buffer.subarray(0, 5).toString("ascii")).toBe("%PDF-");
     // A two-page PDF must declare Count 2 in its page tree.
     expect(result.buffer.toString("latin1")).toMatch(/\/Count\s+2/);

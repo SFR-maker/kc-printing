@@ -1,3 +1,5 @@
+import { PRINT_SPEC } from "../print-spec";
+import { rebleedSide } from "../rebleed";
 import type { CardSide, TextElement, ShapeElement, ImageElement, QrElement } from "../schema";
 import { contrastRatio } from "../validate";
 import { buildQrValue } from "../qr";
@@ -117,7 +119,9 @@ export function buildCustomBusinessCard(info: CustomDesignInfo, imageSrc: string
       text({ x: 0.3, y: BC_H / 2 - 0.18, width: BC_W - 0.6, height: 0.35, text: info.businessName, fontFamily: info.headingFont, fontSizePt: 15, fontWeight: "700", color: "#FFFFFF", align: "center" }),
     ],
   };
-  return { front, back };
+  // Authored on the historical 3.75 x 2.25 / 0.125in-bleed canvas; re-based onto the house spec so
+  // the hand-tuned literals above stay readable. See lib/business-card/rebleed.ts.
+  return { front: rebleedSide(front, PRINT_SPEC.bleedIn), back: rebleedSide(back, PRINT_SPEC.bleedIn) };
 }
 
 const PC_W = 6;

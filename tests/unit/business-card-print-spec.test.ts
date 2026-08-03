@@ -12,14 +12,16 @@ import {
 } from "@/lib/business-card/print-spec";
 
 describe("print spec constants", () => {
+  // House spec is a 0.05in bleed, so the full-bleed business-card document is 3.6 x 2.1 and trims
+  // to 3.5 x 2. Customer uploads are validated against these same numbers.
   it("computes bleed size as trim plus bleed on both sides", () => {
-    expect(BLEED_WIDTH_IN).toBeCloseTo(3.75, 5);
-    expect(BLEED_HEIGHT_IN).toBeCloseTo(2.25, 5);
+    expect(BLEED_WIDTH_IN).toBeCloseTo(3.6, 5);
+    expect(BLEED_HEIGHT_IN).toBeCloseTo(2.1, 5);
   });
 
   it("computes full-bleed raster dimensions at 300 DPI", () => {
-    expect(BLEED_PX_WIDTH).toBe(1125);
-    expect(BLEED_PX_HEIGHT).toBe(675);
+    expect(BLEED_PX_WIDTH).toBe(1080);
+    expect(BLEED_PX_HEIGHT).toBe(630);
   });
 
   it("computes trim raster dimensions at 300 DPI", () => {

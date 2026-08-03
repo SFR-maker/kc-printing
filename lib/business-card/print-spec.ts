@@ -1,9 +1,17 @@
 export const DPI = 300;
 
+/**
+ * Business-card house spec. Bleed is 0.05in per side, so the full-bleed document is 3.6 x 2.1 and
+ * trims to 3.5 x 2. Customer-supplied artwork is validated against, and auto-fitted to, these same
+ * numbers - the shop prints one document size, not two.
+ *
+ * Postcards, banners and rigid signs keep their own 0.125in bleed (see the *_SIZES presets below);
+ * only business cards run on the tighter spec.
+ */
 export const PRINT_SPEC = {
   trimWidthIn: 3.5,
   trimHeightIn: 2,
-  bleedIn: 0.125,
+  bleedIn: 0.05,
   safeZoneInsetIn: 0.125,
   dpi: DPI,
 } as const;
@@ -34,7 +42,7 @@ export interface SizePreset {
 }
 
 export const BUSINESS_CARD_SIZES: SizePreset[] = [
-  { key: "standard", label: "Standard (3.5 x 2 in)", trimWidthIn: 3.5, trimHeightIn: 2, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
+  { key: "standard", label: "Standard (3.5 x 2 in)", trimWidthIn: 3.5, trimHeightIn: 2, bleedIn: 0.05, safeZoneInsetIn: 0.125 },
 ];
 
 // Real sizes from lib/service-data.ts's Postcards spec ("Popular Sizes").

@@ -1,3 +1,5 @@
+import { rebleedSide } from "../rebleed";
+import { PRINT_SPEC } from "../print-spec";
 import type { CardSide, TextElement, ShapeElement, QrElement } from "../schema";
 import type { CategoryContent } from "./categories";
 import { contrastRatio } from "../validate";
@@ -83,17 +85,39 @@ const W = 3.75;
 const H = 2.25;
 
 function side(background: CardSide["background"], elements: CardSide["elements"]): CardSide {
-  return { physicalWidthIn: W, physicalHeightIn: H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle", background, elements };
+  // Layouts below are authored against the historical 3.75 x 2.25 / 0.125in-bleed canvas.
+  // rebleedSide re-bases them onto the current house spec so the literals stay readable.
+  return rebleedSide(
+    { physicalWidthIn: W, physicalHeightIn: H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle", background, elements },
+    PRINT_SPEC.bleedIn
+  );
 }
 
 function solidSide(color: string, elements: CardSide["elements"]): CardSide {
   return side({ type: "solid", color, gradient: null }, elements);
 }
 
+const CONTACT_LINE_STEP = 0.19;
+const CONTACT_LINE_HEIGHT = 0.18;
+
+/**
+ * Three stacked contact lines (phone, email, website).
+ *
+ * The start y is clamped so the block always finishes inside the safe zone. Several archetypes were
+ * authored with it low enough that the last line or two fell past the trim line and were physically
+ * cut off the printed card - an audit found 5 such lines across 3 templates. Clamping here fixes
+ * every call site at once and stops it recurring when new archetypes are added.
+ */
 function contactBlock(ctx: CategoryContent, x: number, y: number, width: number, color: string, align: "left" | "center" | "right" = "left"): TextElement[] {
   const lines = [ctx.phone, ctx.email, ctx.website];
+  const blockHeight = CONTACT_LINE_STEP * (lines.length - 1) + CONTACT_LINE_HEIGHT;
+  // These layouts are authored on the historical canvas, so use its own bleed, not the house spec.
+  const AUTHORED_BLEED = 0.125;
+  const AUTHORED_SAFE_INSET = 0.125;
+  const maxY = H - AUTHORED_BLEED - AUTHORED_SAFE_INSET - blockHeight;
+  const startY = Math.min(y, maxY);
   return lines.map((line, i) =>
-    text({ x, y: y + i * 0.19, width, height: 0.18, text: line, fontFamily: ctx.bodyFont, fontSizePt: 7, color, align })
+    text({ x, y: startY + i * CONTACT_LINE_STEP, width, height: CONTACT_LINE_HEIGHT, text: line, fontFamily: ctx.bodyFont, fontSizePt: 7, color, align })
   );
 }
 
@@ -152,7 +176,7 @@ export const topBanner: Archetype = (ctx) => {
     text({ x: 0.3, y: 0.22, width: 3.15, height: 0.32, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 14, fontWeight: "700", color: "#FFFFFF" }),
     text({ x: 0.3, y: 0.95, width: 3.15, height: 0.26, text: ctx.name, fontFamily: ctx.bodyFont, fontSizePt: 11, fontWeight: "600", color: ink }),
     text({ x: 0.3, y: 1.18, width: 3.15, height: 0.2, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: 8, color: p }),
-    ...contactBlock(ctx, 0.3, 1.62, 3.15, "#333333"),
+    ...contactBlock(ctx, 0.3, 1.4, 3.15, "#333333"),
   ]);
   const back = solidSide(p, [
     shape({ x: 0, y: H - 0.4, width: W, height: 0.4, shape: "rect", fill: "#FFFFFF", opacity: 0.12 }),
@@ -188,8 +212,8 @@ export const minimalCorner: Archetype = (ctx) => {
     shape({ x: W - 0.9, y: H - 0.9, width: 1.4, height: 1.4, shape: "ellipse", fill: p, opacity: 0.12 }),
     text({ x: 0.32, y: 0.4, width: 2.6, height: 0.3, text: ctx.name, fontFamily: ctx.headingFont, fontSizePt: 15, fontWeight: "600", color: ink }),
     text({ x: 0.32, y: 0.68, width: 2.6, height: 0.2, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: 8.5, color: "#666666" }),
-    text({ x: 0.32, y: 1.55, width: 2.6, height: 0.2, text: ctx.company, fontFamily: ctx.bodyFont, fontSizePt: 8, fontWeight: "600", color: p }),
-    ...contactBlock(ctx, 0.32, 1.78, 2.6, "#333333"),
+    text({ x: 0.32, y: 1.16, width: 2.6, height: 0.2, text: ctx.company, fontFamily: ctx.bodyFont, fontSizePt: 8, fontWeight: "600", color: p }),
+    ...contactBlock(ctx, 0.32, 1.4, 2.6, "#333333"),
   ]);
   const back = solidSide("#FFFFFF", [
     shape({ x: -0.3, y: -0.3, width: 1.4, height: 1.4, shape: "ellipse", fill: p, opacity: 0.12 }),
@@ -204,8 +228,8 @@ export const boldBlock: Archetype = (ctx) => {
   const front = solidSide(p, [
     text({ x: 0.32, y: 0.5, width: 3.1, height: 0.32, text: ctx.name.toUpperCase(), fontFamily: ctx.headingFont, fontSizePt: 15, fontWeight: "800", color: "#FFFFFF", letterSpacing: 1 }),
     text({ x: 0.32, y: 0.82, width: 3.1, height: 0.2, text: ctx.title, fontFamily: ctx.bodyFont, fontSizePt: 8.5, color: s }),
-    shape({ x: 0, y: H - 0.55, width: W, height: 0.55, shape: "rect", fill: "#000000", opacity: 0.18 }),
-    ...contactBlock(ctx, 0.32, H - 0.48, 3.1, "#FFFFFF"),
+    shape({ x: 0, y: H - 0.87, width: W, height: 0.87, shape: "rect", fill: "#000000", opacity: 0.18 }),
+    ...contactBlock(ctx, 0.32, 1.44, 3.1, "#FFFFFF"),
   ]);
   const back = solidSide("#FFFFFF", [
     text({ x: 0.3, y: 0.9, width: W - 0.6, height: 0.35, text: ctx.company, fontFamily: ctx.headingFont, fontSizePt: 16, fontWeight: "800", color: p, align: "center" }),

@@ -6,7 +6,7 @@ import { stripe } from "@/lib/stripe";
 import { db } from "@/lib/prisma";
 import { absoluteUrl } from "@/lib/app-url";
 import { buildStripeLineItems, lineItemsTotalCents } from "@/lib/pricing/line-items";
-import { buildShippingOptions } from "@/lib/shipping/rates";
+import { buildShippingOptions, FREE_TEST_SHIPPING } from "@/lib/shipping/rates";
 
 const schema = z.object({
   orderId: z.string().min(1),
@@ -112,7 +112,9 @@ export async function POST(req: Request) {
       // Flat tiers rather than live carrier quotes. Stripe renders each one with a delivery date
       // range worked out against the customer's own calendar, and taxes the shipping line according
       // to the destination - some states tax carriage, some do not.
-      shipping_options: buildShippingOptions(),
+      // A zero-value order is a gated test order (see lib/pricing/test-order.ts) - nothing else in
+      // the shop totals zero. Charging carriage on it would defeat the point, so it ships free.
+      shipping_options: buildShippingOptions(order.total === 0 ? [FREE_TEST_SHIPPING] : undefined),
     });
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);

@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth/requireAdmin";
 import { safeClerkUserId } from "@/lib/safe-auth";
 import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
+import { isTestOrderCode } from "@/lib/pricing/test-order";
 import { TERMS_VERSION } from "@/lib/legal/terms";
 
 const bcSpecSchema = z.object({
@@ -62,7 +63,9 @@ const schema = z.object({
       // from exactly the placement they approved, not re-fitted at output time.
       placement: z
         .object({
-          scale: z.number().positive(),
+          // Per axis, so a customer who stretched the artwork gets printed what they approved.
+          scaleX: z.number().positive(),
+          scaleY: z.number().positive(),
           offsetXIn: z.number(),
           offsetYIn: z.number(),
           rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]),
@@ -72,6 +75,8 @@ const schema = z.object({
       approved: z.boolean(),
     })
     .optional(),
+  /** Secret that makes this a free test order. Validated here; never trusted from the client. */
+  testCode: z.string().optional(),
 });
 
 export async function POST(req: Request) {
@@ -98,13 +103,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, acceptedTerms, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
 
   if (!acceptedTerms) {
     return NextResponse.json(
       { error: "Please accept the Terms of Sale to place your order", details: { fieldErrors: { acceptedTerms: ["Required"] } } },
       { status: 400 }
     );
+  }
+
+  // Checked before anything is priced. A wrong code is refused outright rather than quietly falling
+  // back to the real price, so a mistyped test link cannot bill someone for a live print run.
+  const freeTestOrder = isTestOrderCode(testCode);
+  if (testCode && !freeTestOrder) {
+    return NextResponse.json({ error: "That test link is not valid." }, { status: 403 });
   }
 
   const product = await db.product.findUnique({ where: { slug: service }, include: { packages: true, addOns: true } });
@@ -132,7 +144,7 @@ export async function POST(req: Request) {
     if (!packageTier) return NextResponse.json({ error: "Package not found" }, { status: 404 });
   }
 
-  const total = round2(printPrice + (packageTier?.price ?? 0) + addOnsTotal);
+  const total = freeTestOrder ? 0 : round2(printPrice + (packageTier?.price ?? 0) + addOnsTotal);
 
   const order = await db.order.create({
     data: {
@@ -161,7 +173,7 @@ export async function POST(req: Request) {
           addOnIds: selectedAddOns,
           quantity: orderQuantity,
           price: total,
-          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null },
+          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, testOrder: freeTestOrder },
         },
       },
     },

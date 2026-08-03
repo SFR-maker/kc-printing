@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
 import {
-  type ArtworkPlacement, centred, coverScale, fitPlacement, guideLines,
-  hasUncoveredEdge, originalPlacement, placedDpi, placedSize, snapPlacement,
+  type ArtworkPlacement, baseSize, centred, coverScale, fitPlacement, guideLines,
+  hasUncoveredEdge, originalPlacement, placedDpi, placedSize, placementFromBox, snapPlacement,
 } from "@/lib/business-card/placement";
 import { MIN_PRINT_DPI, RECOMMENDED_DPI } from "@/lib/business-card/print-spec";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,20 @@ interface ArtworkProofProps {
   onApprovedChange: (approved: boolean) => void;
   onReplace: () => void;
 }
+
+type Handle = "n" | "s" | "e" | "w" | "nw" | "ne" | "sw" | "se";
+
+/** Corners resize both axes; sides resize one. Sides are what make non-proportional scaling usable. */
+const HANDLES: { id: Handle; cls: string }[] = [
+  { id: "nw", cls: "h-3 w-3 -top-1.5 -left-1.5 cursor-nwse-resize" },
+  { id: "ne", cls: "h-3 w-3 -top-1.5 -right-1.5 cursor-nesw-resize" },
+  { id: "sw", cls: "h-3 w-3 -bottom-1.5 -left-1.5 cursor-nesw-resize" },
+  { id: "se", cls: "h-3 w-3 -bottom-1.5 -right-1.5 cursor-nwse-resize" },
+  { id: "n", cls: "h-2.5 w-6 -top-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize" },
+  { id: "s", cls: "h-2.5 w-6 -bottom-1.5 left-1/2 -translate-x-1/2 cursor-ns-resize" },
+  { id: "w", cls: "h-6 w-2.5 -left-1.5 top-1/2 -translate-y-1/2 cursor-ew-resize" },
+  { id: "e", cls: "h-6 w-2.5 -right-1.5 top-1/2 -translate-y-1/2 cursor-ew-resize" },
+];
 
 const MIN_SCALE = 0.05;
 const MAX_SCALE = 20;
@@ -49,6 +63,9 @@ export function ArtworkProof({
   const size = placedSize(inspection, placement);
   const dpi = placedDpi(inspection, placement);
   const uncovered = hasUncoveredEdge(inspection, placement);
+  // Non-proportional resizing distorts the artwork. Legitimate sometimes, a mistake often, so say so.
+  const stretch = placement.scaleX / placement.scaleY;
+  const distorted = Math.abs(stretch - 1) > 0.005;
 
   // Any change invalidates a previous approval: the customer approves a specific placement.
   const apply = useCallback(
@@ -91,39 +108,59 @@ export function ArtworkProof({
     window.addEventListener("pointerup", up);
   }
 
-  /** Corner handle: scales about the opposite corner so that corner stays put. */
-  function startResize(e: React.PointerEvent, corner: "nw" | "ne" | "sw" | "se") {
+  /**
+   * Resize from any of the eight handles.
+   *
+   * Edges that the handle does not touch stay exactly where they are, so dragging the right side
+   * never moves the left one. With "scale proportionally" on, the axis you dragged furthest sets a
+   * ratio applied to both, and the untouched axis grows about its own centre so the artwork does
+   * not drift sideways while you resize it vertically.
+   */
+  function startResize(e: React.PointerEvent, handle: Handle) {
     e.preventDefault();
     e.stopPropagation();
     const startX = e.clientX;
     const startY = e.clientY;
     const origin = { ...placement };
-    const originSize = placedSize(inspection, origin);
-    const anchorX = corner === "nw" || corner === "sw" ? origin.offsetXIn + originSize.widthIn : origin.offsetXIn;
-    const anchorY = corner === "nw" || corner === "ne" ? origin.offsetYIn + originSize.heightIn : origin.offsetYIn;
-    const dirX = corner === "ne" || corner === "se" ? 1 : -1;
-    const dirY = corner === "sw" || corner === "se" ? 1 : -1;
+    const o = placedSize(inspection, origin);
+    const box0 = { x: origin.offsetXIn, y: origin.offsetYIn, width: o.widthIn, height: o.heightIn };
+    const base = baseSize(inspection, origin.rotation);
+
+    const movesLeft = handle.includes("w");
+    const movesRight = handle.includes("e");
+    const movesTop = handle.includes("n");
+    const movesBottom = handle.includes("s");
 
     const move = (ev: PointerEvent) => {
       const ppi = pxPerInch();
-      const dW = ((ev.clientX - startX) / ppi) * dirX;
-      const dH = ((ev.clientY - startY) / ppi) * dirY;
-      // Proportional uses whichever axis the pointer moved furthest on, so dragging feels direct
-      // rather than snapping to one axis.
-      const ratio = proportional
-        ? Math.abs(dW) > Math.abs(dH)
-          ? (originSize.widthIn + dW) / originSize.widthIn
-          : (originSize.heightIn + dH) / originSize.heightIn
-        : (originSize.widthIn + dW) / originSize.widthIn;
+      const dx = (ev.clientX - startX) / ppi;
+      const dy = (ev.clientY - startY) / ppi;
 
-      const scale = clamp(origin.scale * ratio, MIN_SCALE, MAX_SCALE);
-      const nextSize = placedSize(inspection, { ...origin, scale });
-      const next: ArtworkPlacement = {
-        ...origin,
-        scale,
-        offsetXIn: dirX === 1 ? anchorX : anchorX - nextSize.widthIn,
-        offsetYIn: dirY === 1 ? anchorY : anchorY - nextSize.heightIn,
-      };
+      let width = box0.width + (movesRight ? dx : 0) - (movesLeft ? dx : 0);
+      let height = box0.height + (movesBottom ? dy : 0) - (movesTop ? dy : 0);
+
+      if (proportional) {
+        // Use whichever axis this handle actually drives; for a corner, whichever moved more.
+        const drivesX = movesLeft || movesRight;
+        const drivesY = movesTop || movesBottom;
+        const ratioX = width / box0.width;
+        const ratioY = height / box0.height;
+        const ratio =
+          drivesX && drivesY ? (Math.abs(dx) > Math.abs(dy) ? ratioX : ratioY) : drivesX ? ratioX : ratioY;
+        width = box0.width * ratio;
+        height = box0.height * ratio;
+      }
+
+      const minW = base.widthIn * MIN_SCALE;
+      const minH = base.heightIn * MIN_SCALE;
+      width = clamp(width, minW, base.widthIn * MAX_SCALE);
+      height = clamp(height, minH, base.heightIn * MAX_SCALE);
+
+      // Anchor the edges the handle isn't dragging.
+      const x = movesLeft ? box0.x + box0.width - width : proportional && !movesRight ? box0.x + (box0.width - width) / 2 : box0.x;
+      const y = movesTop ? box0.y + box0.height - height : proportional && !movesBottom ? box0.y + (box0.height - height) / 2 : box0.y;
+
+      const next = placementFromBox(inspection, origin.rotation, { x, y, width, height });
       apply(snapToGuides ? snapPlacement(inspection, next) : next);
     };
     const up = () => {
@@ -137,7 +174,8 @@ export function ArtworkProof({
   function rotate(dir: -1 | 1) {
     const next = (((placement.rotation + dir * 90) % 360) + 360) % 360 as ArtworkPlacement["rotation"];
     // Re-cover after turning, otherwise a quarter turn usually leaves the sheet partly bare.
-    apply(centred(inspection, { ...placement, rotation: next, scale: coverScale(inspection, next) }));
+    const scale = coverScale(inspection, next);
+    apply(centred(inspection, { ...placement, rotation: next, scaleX: scale, scaleY: scale }));
   }
 
   const blocking = inspection.warnings.find((w) => w.level === "block");
@@ -199,16 +237,13 @@ export function ArtworkProof({
                   )}
                 </div>
 
-                {[["nw", "-top-1.5 -left-1.5 cursor-nwse-resize"], ["ne", "-top-1.5 -right-1.5 cursor-nesw-resize"],
-                  ["sw", "-bottom-1.5 -left-1.5 cursor-nesw-resize"], ["se", "-bottom-1.5 -right-1.5 cursor-nwse-resize"]].map(
-                  ([corner, cls]) => (
-                    <span
-                      key={corner}
-                      onPointerDown={(e) => startResize(e, corner as "nw" | "ne" | "sw" | "se")}
-                      className={cn("absolute h-3 w-3 border border-white bg-kc-dark shadow-sm", cls)}
-                    />
-                  )
-                )}
+                {HANDLES.map(({ id, cls }) => (
+                  <span
+                    key={id}
+                    onPointerDown={(e) => startResize(e, id)}
+                    className={cn("absolute border border-white bg-kc-dark shadow-sm", cls)}
+                  />
+                ))}
               </div>
 
               {/* Guides sit above the artwork so they stay readable while dragging */}
@@ -245,10 +280,9 @@ export function ArtworkProof({
         <Tool icon={<Move className="h-4 w-4" strokeWidth={1.75} />} label="Centre" onClick={() => apply(centred(inspection, placement))} />
         <Tool icon={<Maximize2 className="h-4 w-4" strokeWidth={1.75} />} label="Fill sheet" onClick={() => apply(fitPlacement(inspection, placement.rotation))} />
         <Tool icon={<Minimize2 className="h-4 w-4" strokeWidth={1.75} />} label="Fit inside" onClick={() => {
-          const turned = placement.rotation === 90 || placement.rotation === 270;
-          const w = turned ? inspection.heightIn : inspection.widthIn;
-          const h = turned ? inspection.widthIn : inspection.heightIn;
-          apply(centred(inspection, { ...placement, scale: Math.min(docW / w, docH / h) }));
+          const base = baseSize(inspection, placement.rotation);
+          const scale = Math.min(docW / base.widthIn, docH / base.heightIn);
+          apply(centred(inspection, { ...placement, scaleX: scale, scaleY: scale }));
         }} />
         <Tool icon={<RotateCcw className="h-4 w-4" strokeWidth={1.75} />} label="Rotate left" onClick={() => rotate(-1)} />
         <Tool icon={<RotateCw className="h-4 w-4" strokeWidth={1.75} />} label="Rotate right" onClick={() => rotate(1)} />
@@ -261,12 +295,15 @@ export function ArtworkProof({
 
       <dl className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
         <Fact label="Your file">{inspection.widthIn} × {inspection.heightIn} in</Fact>
-        <Fact label="Placed at">{round2(size.widthIn)} × {round2(size.heightIn)} in</Fact>
+        <Fact label="Placed at">
+          {round2(size.widthIn)} × {round2(size.heightIn)} in
+          {distorted && <span className="ml-1.5 text-kc-magenta-deep">stretched</span>}
+        </Fact>
         <Fact label="Resolution">{dpi ? `${dpi} DPI` : "Vector"}</Fact>
         <Fact label="Finished size">3.5 × 2 in</Fact>
       </dl>
 
-      <Warnings inspection={inspection} dpi={dpi} uncovered={uncovered} />
+      <Warnings inspection={inspection} dpi={dpi} uncovered={uncovered} distorted={distorted} />
 
       <div className="edge border border-kc-dark/12 bg-white p-5">
         {blocking ? (
@@ -303,8 +340,8 @@ export function ArtworkProof({
 }
 
 function Warnings({
-  inspection, dpi, uncovered,
-}: { inspection: ArtworkInspection; dpi: number | null; uncovered: boolean }) {
+  inspection, dpi, uncovered, distorted,
+}: { inspection: ArtworkInspection; dpi: number | null; uncovered: boolean; distorted: boolean }) {
   const items: { level: "info" | "warn" | "block"; code: string; message: string }[] = [];
 
   if (uncovered) {
@@ -312,6 +349,13 @@ function Warnings({
       level: "warn",
       code: "uncovered",
       message: "Part of the sheet isn't covered by your artwork. Those edges will print white. Drag a corner out to the solid edge, or use Fill sheet.",
+    });
+  }
+  if (distorted) {
+    items.push({
+      level: "warn",
+      code: "distorted",
+      message: "Your artwork is no longer in its original proportions, so circles, logos and type will print squashed or stretched. Turn on Scale proportionally and use Reset if that wasn't deliberate.",
     });
   }
   // Recomputed live rather than taken from the upload: scaling changes the effective resolution.

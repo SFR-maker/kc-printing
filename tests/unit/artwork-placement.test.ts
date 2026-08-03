@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  centred, coverScale, fitPlacement, hasUncoveredEdge, originalPlacement,
-  placedDpi, placedSize, snapPlacement, type ArtworkPlacement,
+  baseSize, centred, coverScale, fitPlacement, hasUncoveredEdge, originalPlacement,
+  placedDpi, placedSize, placementFromBox, snapPlacement, type ArtworkPlacement,
 } from "@/lib/business-card/placement";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
 
@@ -19,7 +19,8 @@ const noBleed: ArtworkInspection = { ...exact, widthIn: 3.5, heightIn: 2, matche
 describe("placement geometry", () => {
   it("fills the sheet exactly when the file is already the right size", () => {
     const p = fitPlacement(exact);
-    expect(p.scale).toBeCloseTo(1, 5);
+    expect(p.scaleX).toBeCloseTo(1, 5);
+    expect(p.scaleY).toBeCloseTo(1, 5);
     expect(p.offsetXIn).toBeCloseTo(0, 5);
     expect(p.offsetYIn).toBeCloseTo(0, 5);
     expect(hasUncoveredEdge(exact, p)).toBe(false);
@@ -27,7 +28,8 @@ describe("placement geometry", () => {
 
   it("scales a no-bleed file up to cover, losing a sliver off the sides", () => {
     const p = fitPlacement(noBleed);
-    expect(p.scale).toBeCloseTo(1.05, 4);
+    expect(p.scaleX).toBeCloseTo(1.05, 4);
+    expect(p.scaleY).toBeCloseTo(1.05, 4);
     expect(hasUncoveredEdge(noBleed, p)).toBe(false);
     // 3.5 * 1.05 = 3.675 across a 3.6 document, so it hangs 0.0375in off each side.
     expect(p.offsetXIn).toBeCloseTo(-0.0375, 4);
@@ -35,12 +37,37 @@ describe("placement geometry", () => {
 
   it("reports an uncovered edge when the artwork is smaller than the sheet", () => {
     const p = originalPlacement(noBleed);
-    expect(p.scale).toBe(1);
+    expect(p.scaleX).toBe(1);
+    expect(p.scaleY).toBe(1);
     expect(hasUncoveredEdge(noBleed, p)).toBe(true);
   });
 
+  it("stretches each axis independently, which is what non-proportional resizing needs", () => {
+    const size = placedSize(exact, { scaleX: 2, scaleY: 0.5, offsetXIn: 0, offsetYIn: 0, rotation: 0 });
+    expect(size.widthIn).toBeCloseTo(7.2, 5);
+    expect(size.heightIn).toBeCloseTo(1.05, 5);
+  });
+
+  it("maps a dragged box back onto scales that reproduce it", () => {
+    const box = { x: 0.2, y: -0.3, width: 5, height: 1.4 };
+    const p = placementFromBox(exact, 0, box);
+    const size = placedSize(exact, p);
+    expect(size.widthIn).toBeCloseTo(box.width, 3);
+    expect(size.heightIn).toBeCloseTo(box.height, 3);
+    expect(p.offsetXIn).toBeCloseTo(box.x, 4);
+    expect(p.offsetYIn).toBeCloseTo(box.y, 4);
+  });
+
+  it("measures a dragged box against the turned dimensions when rotated", () => {
+    // scaleX must stay the on-screen width even though the artwork's own long edge is now vertical.
+    const p = placementFromBox(exact, 90, { x: 0, y: 0, width: 2.1, height: 3.6 });
+    expect(p.scaleX).toBeCloseTo(1, 4);
+    expect(p.scaleY).toBeCloseTo(1, 4);
+    expect(baseSize(exact, 90)).toEqual({ widthIn: 2.1, heightIn: 3.6 });
+  });
+
   it("swaps width and height on a quarter turn", () => {
-    const size = placedSize(exact, { scale: 1, offsetXIn: 0, offsetYIn: 0, rotation: 90 });
+    const size = placedSize(exact, { scaleX: 1, scaleY: 1, offsetXIn: 0, offsetYIn: 0, rotation: 90 });
     expect(size.widthIn).toBeCloseTo(2.1, 5);
     expect(size.heightIn).toBeCloseTo(3.6, 5);
   });
@@ -51,9 +78,10 @@ describe("placement geometry", () => {
   });
 
   it("centres without changing scale or rotation", () => {
-    const start: ArtworkPlacement = { scale: 0.5, offsetXIn: 9, offsetYIn: -4, rotation: 180 };
+    const start: ArtworkPlacement = { scaleX: 0.5, scaleY: 0.5, offsetXIn: 9, offsetYIn: -4, rotation: 180 };
     const p = centred(exact, start);
-    expect(p.scale).toBe(0.5);
+    expect(p.scaleX).toBe(0.5);
+    expect(p.scaleY).toBe(0.5);
     expect(p.rotation).toBe(180);
     const size = placedSize(exact, p);
     expect(p.offsetXIn + size.widthIn / 2).toBeCloseTo(3.6 / 2, 4);
@@ -63,43 +91,49 @@ describe("placement geometry", () => {
 
 describe("snapping", () => {
   it("pulls a near-miss onto the document edge so no white sliver prints", () => {
-    const p = snapPlacement(exact, { scale: 1, offsetXIn: 0.012, offsetYIn: -0.009, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 1, scaleY: 1, offsetXIn: 0.012, offsetYIn: -0.009, rotation: 0 });
     expect(p.offsetXIn).toBe(0);
     expect(p.offsetYIn).toBe(0);
   });
 
   it("snaps the trailing edge as well as the leading one", () => {
     // Artwork half the sheet wide, dragged so its right edge is just shy of the document edge.
-    const p = snapPlacement(exact, { scale: 0.5, offsetXIn: 1.79, offsetYIn: 0.5, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 1.79, offsetYIn: 0.5, rotation: 0 });
     const size = placedSize(exact, p);
     expect(p.offsetXIn + size.widthIn).toBeCloseTo(3.6, 4);
   });
 
   it("leaves a placement alone when nothing is within reach", () => {
-    const p = snapPlacement(exact, { scale: 0.5, offsetXIn: 0.9, offsetYIn: 0.7, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 0.9, offsetYIn: 0.7, rotation: 0 });
     expect(p.offsetXIn).toBeCloseTo(0.9, 4);
     expect(p.offsetYIn).toBeCloseTo(0.7, 4);
   });
 
   it("snaps to the trim line, not only the document edge", () => {
     // 0.05 is the square-corner bleed, so the trim line sits there.
-    const p = snapPlacement(exact, { scale: 0.5, offsetXIn: 0.06, offsetYIn: 0.5, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 0.06, offsetYIn: 0.5, rotation: 0 });
     expect(p.offsetXIn).toBeCloseTo(0.05, 4);
   });
 });
 
 describe("resolution follows the placement", () => {
   it("drops as the artwork is scaled up", () => {
-    expect(placedDpi(exact, { scale: 1, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(300);
-    expect(placedDpi(exact, { scale: 2, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(150);
+    expect(placedDpi(exact, { scaleX: 1, scaleY: 1, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(300);
+    expect(placedDpi(exact, { scaleX: 2, scaleY: 2, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(150);
   });
 
   it("rises as it is scaled down", () => {
-    expect(placedDpi(exact, { scale: 0.5, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(600);
+    expect(placedDpi(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(600);
+  });
+
+  it("takes the softer axis when the artwork has been stretched unevenly", () => {
+    // Stretched to double width, the horizontal pixels are spread thinnest and set the quality.
+    expect(placedDpi(exact, { scaleX: 2, scaleY: 1, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(150);
+    expect(placedDpi(exact, { scaleX: 1, scaleY: 2, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBe(150);
   });
 
   it("is null for vector artwork, which has no pixel ceiling", () => {
     const pdf = { ...exact, kind: "pdf" as const, pixelWidth: null, pixelHeight: null };
-    expect(placedDpi(pdf, { scale: 4, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBeNull();
+    expect(placedDpi(pdf, { scaleX: 4, scaleY: 4, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBeNull();
   });
 });

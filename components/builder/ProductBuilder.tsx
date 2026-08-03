@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
-import { SHIPPING_TIERS, transitLabel } from "@/lib/shipping/rates";
+import { SHIPPING_TIERS, FREE_TEST_SHIPPING, transitLabel } from "@/lib/shipping/rates";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
@@ -94,6 +94,12 @@ interface ProductBuilderProps {
   service: ServiceDef;
   defaultPackage?: string;
   cardDesignId?: string;
+  /**
+   * Present only when the page was opened with a valid test link. Turns the order into a free
+   * end-to-end run of the upload -> proof -> checkout path against live Stripe. Sent back to
+   * /api/orders, which re-validates it before zeroing anything.
+   */
+  testCode?: string;
 }
 
 function draftKey(serviceSlug: string): string {
@@ -104,7 +110,7 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-export function ProductBuilder({ service, defaultPackage, cardDesignId }: ProductBuilderProps) {
+export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode }: ProductBuilderProps) {
   const isBusinessCards = service.slug === "business-cards";
 
   const [step, setStep] = useState(0);
@@ -236,7 +242,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
 
   const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec) : null;
 
-  const price = isBusinessCards
+  const rawPrice = isBusinessCards
     ? (bcPrice?.valid
         ? (() => {
             const total = round2(bcPrice.total + (selectedPkg?.price ?? 0) + selectedAddOnPrices.reduce((s, p) => s + p, 0));
@@ -254,6 +260,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
           addOnPrices: selectedAddOnPrices,
         })
       : null;
+
+  // The server is the authority on this; zeroing here only keeps the summary honest about what the
+  // customer will actually be asked for at checkout.
+  const price = testCode && rawPrice ? { ...rawPrice, discount: rawPrice.subtotal, total: 0 } : rawPrice;
 
   const selectedPaletteLabel = values.colorPaletteId && values.colorPaletteId !== AI_PALETTE_AUTO_ID
     ? AI_PALETTES.find((p) => p.id === values.colorPaletteId)?.label
@@ -309,7 +319,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ service: service.slug, cardDesignId, ...typed }),
+        body: JSON.stringify({ service: service.slug, cardDesignId, testCode, ...typed }),
       });
 
       const result = await res.json() as { orderId?: string; error?: string };
@@ -384,6 +394,17 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
     <div className="section-pad container-tight max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-kc-dark mb-2">Order {service.name}</h1>
+        {testCode && (
+          // Deliberately loud. This mode reaches live Stripe and creates a real order row, so it
+          // must never be mistaken for the normal flow by whoever is holding the link.
+          <div className="mb-4 border-2 border-dashed border-kc-dark bg-kc-yellow/40 px-4 py-3 text-sm">
+            <span className="font-black uppercase tracking-wide text-kc-dark">Test order</span>
+            <span className="ml-2 text-kc-dark/80">
+              Print, add-ons and shipping are all $0. This still creates a real order and a real
+              Stripe session, so cancel or archive it when you&apos;re done.
+            </span>
+          </div>
+        )}
         {cardDesignId && (
           <div className="mb-4 flex items-center justify-between rounded-lg border border-kc-coral/30 bg-kc-coral/5 px-4 py-2.5 text-sm">
             <span className="text-kc-dark">Using your custom design from the Design Studio.</span>
@@ -989,7 +1010,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId }: Produc
             <div className="rounded-lg border border-kc-border p-4">
               <p className="mb-3 text-xs font-medium uppercase tracking-wide text-kc-muted">Shipping</p>
               <ul className="divide-y divide-kc-border">
-                {SHIPPING_TIERS.map((tier) => (
+                {(testCode ? [FREE_TEST_SHIPPING] : SHIPPING_TIERS).map((tier) => (
                   <li key={tier.id} className="flex items-baseline justify-between gap-3 py-2 text-sm">
                     <span className="text-kc-dark">
                       {tier.label}

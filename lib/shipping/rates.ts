@@ -28,6 +28,16 @@ export const SHIPPING_TIERS: ShippingTier[] = [
 ];
 
 /**
+ * The only option offered on a zero-value test order.
+ *
+ * Without it a $0 order still collects $6.95 carriage, which means a real card charge and a real
+ * refund every time the upload path is exercised against production.
+ */
+export const FREE_TEST_SHIPPING: ShippingTier = {
+  id: "test-free", label: "Test shipping", price: 0, minBusinessDays: 3, maxBusinessDays: 6,
+};
+
+/**
  * Stripe's tax code for shipping and handling.
  *
  * Shipping is taxable in some states and not others. Tagging it correctly lets Stripe Tax decide

@@ -9,22 +9,56 @@ import type { ArtworkInspection } from "./inspect-artwork";
  * cover the document.
  */
 export interface ArtworkPlacement {
-  scale: number;
+  /**
+   * Independent scale per document axis, so the artwork can be stretched as well as resized.
+   *
+   * A single uniform `scale` made "scale proportionally" meaningless: with one number there is no
+   * way to express a different width and height. These are measured against the document's own
+   * axes after any rotation, so scaleX always affects the on-screen width.
+   */
+  scaleX: number;
+  scaleY: number;
   offsetXIn: number;
   offsetYIn: number;
   /** Quarter turns only. Free rotation would leave uncoverable corners on a rectangular sheet. */
   rotation: 0 | 90 | 180 | 270;
 }
 
-/** Artwork dimensions after rotation, since a quarter turn swaps width and height. */
+/** Natural artwork dimensions mapped onto the document's axes, accounting for rotation. */
+export function baseSize(
+  inspection: Pick<ArtworkInspection, "widthIn" | "heightIn">,
+  rotation: ArtworkPlacement["rotation"]
+): { widthIn: number; heightIn: number } {
+  const turned = rotation === 90 || rotation === 270;
+  return {
+    widthIn: turned ? inspection.heightIn : inspection.widthIn,
+    heightIn: turned ? inspection.widthIn : inspection.heightIn,
+  };
+}
+
+/** The artwork's size on the document, after rotation and per-axis scaling. */
 export function placedSize(
   inspection: Pick<ArtworkInspection, "widthIn" | "heightIn">,
   placement: ArtworkPlacement
 ): { widthIn: number; heightIn: number } {
-  const w = inspection.widthIn * placement.scale;
-  const h = inspection.heightIn * placement.scale;
-  const turned = placement.rotation === 90 || placement.rotation === 270;
-  return { widthIn: turned ? h : w, heightIn: turned ? w : h };
+  const base = baseSize(inspection, placement.rotation);
+  return { widthIn: base.widthIn * placement.scaleX, heightIn: base.heightIn * placement.scaleY };
+}
+
+/** Converts a placed box in document inches back into a placement. */
+export function placementFromBox(
+  inspection: Pick<ArtworkInspection, "widthIn" | "heightIn">,
+  rotation: ArtworkPlacement["rotation"],
+  box: { x: number; y: number; width: number; height: number }
+): ArtworkPlacement {
+  const base = baseSize(inspection, rotation);
+  return {
+    rotation,
+    scaleX: round4(box.width / base.widthIn),
+    scaleY: round4(box.height / base.heightIn),
+    offsetXIn: round4(box.x),
+    offsetYIn: round4(box.y),
+  };
 }
 
 /** Scale needed to cover the document completely at the current rotation. */
@@ -32,10 +66,8 @@ export function coverScale(
   inspection: Pick<ArtworkInspection, "widthIn" | "heightIn" | "requiredWidthIn" | "requiredHeightIn">,
   rotation: ArtworkPlacement["rotation"]
 ): number {
-  const turned = rotation === 90 || rotation === 270;
-  const w = turned ? inspection.heightIn : inspection.widthIn;
-  const h = turned ? inspection.widthIn : inspection.heightIn;
-  return Math.max(inspection.requiredWidthIn / w, inspection.requiredHeightIn / h);
+  const base = baseSize(inspection, rotation);
+  return Math.max(inspection.requiredWidthIn / base.widthIn, inspection.requiredHeightIn / base.heightIn);
 }
 
 /** Centres the artwork at its current scale and rotation. */
@@ -56,7 +88,8 @@ export function fitPlacement(
   inspection: ArtworkInspection,
   rotation: ArtworkPlacement["rotation"] = 0
 ): ArtworkPlacement {
-  return centred(inspection, { scale: coverScale(inspection, rotation), offsetXIn: 0, offsetYIn: 0, rotation });
+  const scale = coverScale(inspection, rotation);
+  return centred(inspection, { scaleX: scale, scaleY: scale, offsetXIn: 0, offsetYIn: 0, rotation });
 }
 
 /** The artwork at its own measured size, centred. What "Orig" restores. */
@@ -64,7 +97,7 @@ export function originalPlacement(
   inspection: ArtworkInspection,
   rotation: ArtworkPlacement["rotation"] = 0
 ): ArtworkPlacement {
-  return centred(inspection, { scale: 1, offsetXIn: 0, offsetYIn: 0, rotation });
+  return centred(inspection, { scaleX: 1, scaleY: 1, offsetXIn: 0, offsetYIn: 0, rotation });
 }
 
 /**
@@ -141,9 +174,11 @@ export function placedDpi(
   if (!inspection.pixelWidth || !inspection.pixelHeight) return null;
   const { widthIn, heightIn } = placedSize(inspection, placement);
   const turned = placement.rotation === 90 || placement.rotation === 270;
-  const pxW = turned ? inspection.pixelHeight : inspection.pixelWidth;
-  const pxH = turned ? inspection.pixelWidth : inspection.pixelHeight;
-  return Math.floor(Math.min(pxW / widthIn, pxH / heightIn));
+  // Pixels available along each document axis, which the rotation may have swapped.
+  const pxAlongX = turned ? inspection.pixelHeight : inspection.pixelWidth;
+  const pxAlongY = turned ? inspection.pixelWidth : inspection.pixelHeight;
+  // Stretching one axis further than the other means the softer axis sets the effective quality.
+  return Math.floor(Math.min(pxAlongX / widthIn, pxAlongY / heightIn));
 }
 
 function round4(n: number): number {

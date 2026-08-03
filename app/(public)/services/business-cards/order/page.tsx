@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SERVICES } from "@/lib/service-data";
 import { ProductBuilder } from "@/components/builder/ProductBuilder";
+import { TEST_ORDER_PARAM, isTestOrderCode } from "@/lib/pricing/test-order";
 
 export const metadata: Metadata = {
   title: "Order Business Cards",
@@ -10,8 +11,23 @@ export const metadata: Metadata = {
 };
 const service = SERVICES["business-cards"];
 
-export default async function OrderPage({ searchParams }: { searchParams: Promise<{ package?: string; designId?: string }> }) {
+export default async function OrderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ package?: string; designId?: string; test?: string }>;
+}) {
   if (!service) notFound();
-  const { package: pkg, designId } = await searchParams;
-  return <ProductBuilder service={service} defaultPackage={pkg} cardDesignId={designId} />;
+  const params = await searchParams;
+  // Validated here, during server rendering, so TEST_ORDER_CODE never enters the client bundle -
+  // only the code the operator already typed into their own address bar is handed back to the
+  // builder, and /api/orders checks it again before pricing anything at zero.
+  const testCode = isTestOrderCode(params[TEST_ORDER_PARAM]) ? params[TEST_ORDER_PARAM] : undefined;
+  return (
+    <ProductBuilder
+      service={service}
+      defaultPackage={params.package}
+      cardDesignId={params.designId}
+      testCode={testCode}
+    />
+  );
 }

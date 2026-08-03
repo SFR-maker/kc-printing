@@ -57,7 +57,11 @@ export async function POST(req: Request) {
         where: { id: orderId },
         data: {
           status: "PAID",
-          stripePaymentStatus: "paid",
+          // Record what Stripe actually reports rather than assuming "paid". A zero-total order -
+          // a fully discounted one, or a free product - completes with "no_payment_required" and no
+          // card is collected at all. The order is still PAID in our sense: nothing is owed and it
+          // should go to fulfilment.
+          stripePaymentStatus: session.payment_status ?? "paid",
           // Stripe reports amounts in the smallest currency unit.
           taxAmount: session.total_details?.amount_tax != null ? session.total_details.amount_tax / 100 : null,
           amountPaid: session.amount_total != null ? session.amount_total / 100 : null,

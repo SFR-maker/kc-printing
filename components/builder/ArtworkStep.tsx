@@ -5,6 +5,7 @@ import { Loader2, Upload, PenLine, FileCheck2 } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing-client";
 import { businessCardDocSpec } from "@/lib/business-card/print-spec";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
+import { fitPlacement, type ArtworkPlacement } from "@/lib/business-card/placement";
 import { ArtworkProof } from "@/components/builder/ArtworkProof";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,8 @@ export interface ArtworkState {
   fileUrl: string | null;
   fileName: string | null;
   inspection: ArtworkInspection | null;
+  /** Where the customer positioned the artwork. Null until a file has been inspected. */
+  placement: ArtworkPlacement | null;
   approved: boolean;
 }
 
@@ -23,6 +26,7 @@ export const EMPTY_ARTWORK: ArtworkState = {
   fileUrl: null,
   fileName: null,
   inspection: null,
+  placement: null,
   approved: false,
 };
 
@@ -32,7 +36,7 @@ export const EMPTY_ARTWORK: ArtworkState = {
  */
 export function artworkComplete(a: ArtworkState): boolean {
   if (a.path === "DESIGN_SERVICE") return true;
-  return a.path === "UPLOAD" && !!a.fileUrl && !!a.inspection && a.approved;
+  return a.path === "UPLOAD" && !!a.fileUrl && !!a.inspection && !!a.placement && a.approved;
 }
 
 export function ArtworkStep({
@@ -80,11 +84,14 @@ export function ArtworkStep({
         return;
       }
 
+      const inspection = payload as ArtworkInspection;
       onChange({
         path: "UPLOAD",
         fileUrl: first.url,
         fileName: first.name,
-        inspection: payload as ArtworkInspection,
+        inspection,
+        // Opens on the auto-fit, which covers the sheet. The customer can move it from there.
+        placement: fitPlacement(inspection),
         approved: false,
       });
     } catch {
@@ -96,7 +103,7 @@ export function ArtworkStep({
   }
 
   // Once a proof exists, it is the whole step.
-  if (value.path === "UPLOAD" && value.inspection && value.fileUrl && value.fileName) {
+  if (value.path === "UPLOAD" && value.inspection && value.fileUrl && value.fileName && value.placement) {
     return (
       <div className="space-y-5">
         <div className="flex items-center gap-2 text-[14px] text-kc-dark/70">
@@ -107,6 +114,8 @@ export function ArtworkStep({
           fileUrl={value.fileUrl}
           fileName={value.fileName}
           inspection={value.inspection}
+          placement={value.placement}
+          onPlacementChange={(placement) => onChange({ ...value, placement })}
           approved={value.approved}
           onApprovedChange={(approved) => onChange({ ...value, approved })}
           onReplace={() => {

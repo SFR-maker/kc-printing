@@ -56,6 +56,17 @@ const schema = z.object({
         })
         .passthrough()
         .nullable(),
+      // How the customer positioned the artwork on the sheet. Stored so the print file is produced
+      // from exactly the placement they approved, not re-fitted at output time.
+      placement: z
+        .object({
+          scale: z.number().positive(),
+          offsetXIn: z.number(),
+          offsetYIn: z.number(),
+          rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]),
+        })
+        .nullable()
+        .optional(),
       approved: z.boolean(),
     })
     .optional(),
@@ -129,6 +140,7 @@ export async function POST(req: Request) {
       artworkHeightIn: artwork?.inspection?.heightIn ?? null,
       artworkDpi: artwork?.inspection?.effectiveDpi ? Math.round(artwork.inspection.effectiveDpi) : null,
       artworkFitApplied: artwork?.inspection ? artwork.inspection.matchesRequiredSize === false : false,
+      artworkPlacement: artwork?.path === "UPLOAD" && artwork.placement ? artwork.placement : undefined,
       proofApprovedAt: artwork?.path === "UPLOAD" && artwork.approved ? new Date() : null,
       items: {
         create: {

@@ -196,6 +196,9 @@ model Order {
   artworkDpi           Int?
   // True when the file did not match the required document size and we scaled/centred it to fit.
   artworkFitApplied    Boolean     @default(false)
+  // { scale, offsetXIn, offsetYIn, rotation } - the placement the customer approved on the proof.
+  // The print file is produced from this, so it must survive exactly as they left it.
+  artworkPlacement     Json?
   // Set when the customer ticks the approval box. Null means no approved proof exists yet.
   proofApprovedAt      DateTime?
 

@@ -69,6 +69,7 @@ const schema = z.object({
     fileUrl: z.string().nullable(),
     fileName: z.string().nullable(),
     inspection: z.any().nullable(),
+    placement: z.any().nullable(),
     approved: z.boolean(),
   }),
 }).superRefine((v, ctx) => {

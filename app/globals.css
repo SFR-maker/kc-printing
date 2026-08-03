@@ -21,6 +21,18 @@
   --color-kc-violet-tint: #EFF6FF;   /* very light blue — alt section bg */
   --color-kc-orange-tint: #FDF2F8;   /* very light pink — warm section bg */
 
+  /* ── 2026 marketing-page additions ───────────────────────────────────────
+     ACCENT LOCK: magenta is the only interactive accent on marketing pages.
+     Cyan and gold are brand marks (registration bar, photography) and are never
+     used for links, buttons, or hover states. This keeps one accent per page.  */
+  --color-kc-magenta-deep: #C4006B;  /* link/text magenta — 5.4:1 on paper, WCAG AA */
+  --color-kc-ink:          #121110;  /* off-black section + footer background     */
+  --color-kc-ink-soft:     #1D1B19;  /* raised surface inside an ink section      */
+  --color-kc-ink-line:     #34302D;  /* hairline on ink                            */
+  --color-kc-paper:        #F4F2ED;  /* recessed band on the paper canvas          */
+
+  --font-display: var(--font-archivo);
+
   /* shadcn semantic tokens */
   --color-background:          var(--background);
   --color-foreground:          var(--foreground);
@@ -259,5 +271,41 @@
   /* Ink swatch dot, for finish/paper/color legends */
   .ink-swatch {
     @apply inline-block h-3 w-3 shrink-0 rounded-full border border-black/10;
+  }
+
+  /* ── Marketing-page system ─────────────────────────────────────────────────
+     SHAPE LOCK: every marketing surface (button, tile, image frame, input) uses
+     `.edge`, a 2px trim. Nothing on these pages is pill-shaped or 12px-soft —
+     the whole page reads like guillotine-cut card stock.                        */
+  .edge {
+    border-radius: 2px;
+  }
+
+  /* Process-ink registration bar. The one brand device that uses cyan and gold;
+     appears at most twice per page (top of hero, top of the closing ink block). */
+  .reg-bar {
+    height: 3px;
+    background: linear-gradient(
+      to right,
+      #0099d8 0 25%,
+      #e6007e 25% 50%,
+      #fbc800 50% 75%,
+      #0c0a09 75% 100%
+    );
+  }
+
+  .display-tight {
+    font-family: var(--font-display), var(--font-geist-sans), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    line-height: 0.98;
+  }
+
+  /* Section rhythm for the redesigned marketing pages */
+  .band {
+    @apply px-4 py-20 sm:px-6 lg:px-8 lg:py-28;
+  }
+  .band-tight {
+    @apply px-4 py-14 sm:px-6 lg:px-8 lg:py-16;
   }
 }

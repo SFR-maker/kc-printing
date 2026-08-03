@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Archivo } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -12,6 +12,15 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Display face for marketing headlines. Archivo is a signage/grotesk design — it holds up at
+// large sizes with tight tracking, which Geist (a UI face) does not.
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -43,7 +52,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const htmlContent = (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col bg-kc-bg text-kc-dark">
         <TooltipProvider>{children}</TooltipProvider>
       </body>

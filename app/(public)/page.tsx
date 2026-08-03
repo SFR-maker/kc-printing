@@ -4,7 +4,7 @@ import Image from "next/image";
 import { ArrowRight, Star, Phone, Mail, FileCheck, Users2, Clock3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { PrintStack } from "@/components/sections/PrintStack";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { db } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -22,41 +22,62 @@ const SERVICES = [
     name: "Business Cards",
     href: "/services/business-cards",
     orderHref: "/services/business-cards/order",
-    image: "/images/homepage/business-cards.jpg",
+    image: "/images/print/business-cards.webp",
+    alt: "Three stacks of printed business cards in cyan, magenta, and gold with visible cut edges",
     price: "from $39",
     sizes: "Standard, square, slim, circle, or leaf shapes",
     bestFor: "Networking, trade shows, front-desk stacks",
-    accent: "bg-kc-teal",
   },
   {
     name: "Postcards",
     href: "/services/postcards",
     orderHref: "/services/postcards/order",
-    image: "/images/homepage/postcards.jpg",
+    image: "/images/print/postcards.webp",
+    alt: "A loose pile of printed postcards on a concrete surface",
     price: "from $49",
     sizes: "3×5 up to 6×11, EDDM-ready",
     bestFor: "Mailers, promotions, seasonal campaigns",
-    accent: "bg-kc-coral",
   },
   {
     name: "Banners",
     href: "/services/banners",
     orderHref: "/services/banners/order",
-    image: "/images/homepage/banners.jpg",
+    image: "/images/print/banners.webp",
+    alt: "A retractable roll-up banner stand printed with cyan, magenta, and gold bands",
     price: "from $79",
     sizes: "Roll-up stands or vinyl, 24″ up to 10 ft",
     bestFor: "Storefronts, trade shows, events",
-    accent: "bg-kc-yellow",
   },
   {
     name: "Rigid Signs",
     href: "/services/rigid-signs",
     orderHref: "/services/rigid-signs/order",
-    image: "/images/homepage/rigid-signs.jpg",
+    image: "/images/print/rigid-signs.webp",
+    alt: "Four die-cut rigid signs leaning against a studio wall",
     price: "from $59",
     sizes: "Circle, star, arrow, house, or rounded square",
     bestFor: "Offices, storefronts, yard and event signage",
-    accent: "bg-kc-sage",
+  },
+];
+
+const GUARANTEES = [
+  { icon: FileCheck, text: "Print-ready PDF, JPG, and PNG with every order" },
+  { icon: Users2, text: "A real designer on every file, never a template swap" },
+  { icon: Clock3, text: "First draft back in 1 to 3 business days" },
+];
+
+const PROCESS = [
+  {
+    title: "Choose a format and a package",
+    desc: "Pick the product and tier you need, then add any extras. The price updates as you go, so there is no guessing.",
+  },
+  {
+    title: "Send your artwork, or just the idea",
+    desc: "Have a finished file? Upload it. Starting from scratch? Our brief tool and design team help you get there.",
+  },
+  {
+    title: "Review, revise, and download",
+    desc: "Your first draft arrives in 1 to 3 business days. Request changes, approve the final version, and download your print-ready files.",
   },
 ];
 
@@ -68,6 +89,13 @@ const FAQS = [
   { q: "Do you serve businesses outside Kansas City?", a: "We do. KC Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide. All ordering and file delivery happens online." },
 ];
 
+/* Shared button treatments. Magenta is the page's only interactive accent; cyan and gold appear
+   solely in the photography and the registration bar. */
+const BTN_PRIMARY =
+  "edge h-12 bg-kc-coral px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep";
+const BTN_SECONDARY =
+  "edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5";
+
 export default async function HomePage() {
   // Real customer testimonials only, moderated via /admin/testimonials. No fallback fake
   // quotes — the section below renders nothing until real reviews exist and are approved.
@@ -77,232 +105,277 @@ export default async function HomePage() {
     take: 3,
   });
 
+  const [lead, ...rest] = testimonials;
+
   return (
     <>
-      {/* ── Hero ── */}
-      <section className="bg-kc-bg">
-        <div className="container-tight grid grid-cols-1 items-center gap-12 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-2 lg:px-8 lg:pb-24 lg:pt-20">
-          <div>
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-kc-border bg-kc-surface px-3.5 py-1 text-xs font-semibold uppercase tracking-wide text-kc-muted">
-              Kansas City, MO · Serving clients nationwide online
-            </div>
+      {/* ── Hero: asymmetric split, photograph bleeding off the right edge ── */}
+      <section className="relative bg-kc-bg">
+        {/* z-20 keeps the bar above the bleed photo, which is anchored to the section's top edge */}
+        <div className="reg-bar relative z-20" />
 
-            <h1 className="mb-6 max-w-lg text-4xl font-black leading-[1.08] tracking-tight text-kc-dark sm:text-5xl lg:text-[3.4rem]">
-              Business cards, postcards, banners, and rigid signs, designed and printed right.
-            </h1>
+        <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[600px] lg:px-8 lg:py-16">
+          <div className="lg:max-w-[52%]">
+            <Reveal y={16}>
+              <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl lg:text-[3.5rem] xl:text-[4.25rem]">
+                Print, done properly.
+              </h1>
+            </Reveal>
 
-            <p className="mb-8 max-w-md text-lg leading-relaxed text-kc-muted">
-              Pick a product, tell us what you&apos;re going for, and a real designer builds your print-ready file. No design software required.
-            </p>
+            <Reveal y={16} delay={0.08}>
+              <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-kc-dark/65">
+                Business cards, postcards, banners, and rigid signs, built into print-ready files
+                by a real designer.
+              </p>
+            </Reveal>
 
-            <div className="mb-10 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="h-13 rounded-md bg-kc-coral px-8 text-base font-semibold text-white hover:bg-kc-coral/90">
-                <Link href="/services">
-                  Browse Products <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="h-13 rounded-md border-kc-border px-7 text-base text-kc-dark hover:bg-kc-surface">
-                <Link href="/services/business-cards/design">Start Designing</Link>
-              </Button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-kc-muted">
-              <span className="flex items-center gap-1.5"><FileCheck className="h-4 w-4 text-kc-teal" /> Print-ready files included</span>
-              <span className="flex items-center gap-1.5"><Users2 className="h-4 w-4 text-kc-teal" /> Real designers, not templates</span>
-              <span className="flex items-center gap-1.5"><Clock3 className="h-4 w-4 text-kc-teal" /> No contracts or minimums</span>
-            </div>
-          </div>
-
-          <PrintStack />
-        </div>
-      </section>
-
-      {/* ── Products ── */}
-      <section className="section-pad bg-kc-surface">
-        <div className="container-tight">
-          <div className="mb-10 max-w-xl">
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Four products. Done well.</h2>
-            <p className="mt-3 text-kc-muted">We keep the catalog focused so every order gets real attention from a designer who knows the format.</p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {SERVICES.map((service) => (
-              <div key={service.href} className="group flex h-full flex-col overflow-hidden rounded-md border border-kc-border bg-white transition-colors hover:border-kc-teal/40">
-                <Link href={service.href} className="block">
-                  <div className="relative aspect-[4/3] overflow-hidden bg-kc-bg">
-                    <Image
-                      src={service.image}
-                      alt=""
-                      fill
-                      sizes="(min-width: 1024px) 33vw, 100vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                    />
-                  </div>
-                  <div className={`h-1.5 w-full ${service.accent}`} />
-                </Link>
-                <div className="flex flex-1 flex-col p-6">
-                  <div className="mb-3 flex items-baseline justify-between gap-2">
-                    <Link href={service.href}>
-                      <h3 className="text-lg font-bold text-kc-dark hover:text-kc-teal">{service.name}</h3>
-                    </Link>
-                    <span className="shrink-0 text-sm font-semibold text-kc-teal">{service.price}</span>
-                  </div>
-                  <dl className="space-y-1.5 text-sm text-kc-muted">
-                    <div className="flex gap-1.5">
-                      <dt className="shrink-0 font-medium text-kc-dark/70">Sizes:</dt>
-                      <dd>{service.sizes}</dd>
-                    </div>
-                    <div className="flex gap-1.5">
-                      <dt className="shrink-0 font-medium text-kc-dark/70">Best for:</dt>
-                      <dd>{service.bestFor}</dd>
-                    </div>
-                  </dl>
-                  <div className="mt-auto flex items-center gap-3 pt-5">
-                    <Button asChild size="sm" className="rounded-md bg-kc-coral text-white hover:bg-kc-coral/90">
-                      <Link href={service.orderHref}>
-                        Order Now <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
-                    <Link href={service.href} className="text-sm font-semibold text-kc-teal hover:underline">
-                      View details
-                    </Link>
-                  </div>
-                </div>
+            <Reveal y={16} delay={0.16}>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Button asChild size="lg" className={BTN_PRIMARY}>
+                  <Link href="/services">
+                    Browse products <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className={BTN_SECONDARY}>
+                  <Link href="/services/business-cards/design">Start designing</Link>
+                </Button>
               </div>
-            ))}
+            </Reveal>
+          </div>
+        </div>
+
+        {/* One <Image>: an inline block on mobile, a full-height bleed panel from lg up. */}
+        <div className="px-4 pb-16 pt-10 sm:px-6 lg:absolute lg:bottom-0 lg:right-0 lg:top-[3px] lg:w-[46%] lg:p-0">
+          <div className="edge relative aspect-[4/3] w-full overflow-hidden lg:aspect-auto lg:h-full lg:rounded-none">
+            <Image
+              src="/images/print/hero-card-fan.webp"
+              alt="A fanned spread of printed business cards in cyan, magenta, gold, and black showing their layered cut edges"
+              fill
+              priority
+              sizes="(min-width: 1024px) 46vw, 100vw"
+              className="object-cover"
+            />
           </div>
         </div>
       </section>
 
-      {/* ── How It Works ── */}
-      <section className="section-pad bg-kc-bg">
+      {/* ── What every order includes ── */}
+      <section className="border-y border-kc-dark/10 bg-kc-bg">
+        <div className="container-tight px-4 sm:px-6 lg:px-8">
+          <RevealGroup className="grid grid-cols-1 divide-y divide-kc-dark/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {GUARANTEES.map(({ icon: Icon, text }) => (
+              <RevealItem
+                key={text}
+                className="flex items-start gap-3 py-7 sm:px-7 sm:first:pl-0 sm:last:pr-0"
+              >
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-kc-coral" strokeWidth={1.75} />
+                <span className="text-[14.5px] leading-snug text-kc-dark/75">{text}</span>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ── Products: four items, four cells, no filler tiles ── */}
+      <section className="band bg-kc-paper">
         <div className="container-tight">
-          <div className="mb-12 max-w-xl">
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">How it works</h2>
-            <p className="mt-3 text-kc-muted">From idea to print-ready file in three steps.</p>
-          </div>
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
-            {[
-              { step: "01", title: "Choose your product and package", desc: "Pick the product and tier you need, and add any extras. The price updates as you go, so there's no guessing." },
-              { step: "02", title: "Upload your artwork or ask for help", desc: "Have a finished file? Upload it. Starting from scratch? Our AI brief tool and design team help you get there." },
-              { step: "03", title: "Review, revise, and download", desc: "Your first draft arrives in 1-3 business days. Request changes, approve the final version, and download your print-ready files." },
-            ].map((item) => (
-              <div key={item.step} className="border-t-2 border-kc-dark/10 pt-5">
-                <div className="mb-2 text-sm font-black tracking-widest text-kc-coral">{item.step}</div>
-                <h3 className="mb-2 text-lg font-bold text-kc-dark">{item.title}</h3>
-                <p className="text-sm leading-relaxed text-kc-muted">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Design help ── */}
-      <section className="section-pad-tight bg-kc-violet-tint">
-        <div className="container-tight grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.2fr_1fr]">
-          <div>
-            <h2 className="mb-3 text-2xl font-black tracking-tight text-kc-dark sm:text-3xl">
-              Have the idea but not the finished file?
+          <Reveal className="mb-12 max-w-xl">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+              Four products. Done well.
             </h2>
-            <p className="max-w-xl text-kc-muted">
-              You don&apos;t need to be a designer to order from us. Tell us what you&apos;re picturing, upload a logo or a few reference images, and a real person will build the layout. The AI brief tool just helps you get your thoughts down first.
+            <p className="mt-4 text-[16.5px] leading-relaxed text-kc-dark/60">
+              We keep the catalog focused so every order gets real attention from a designer who
+              knows the format.
+            </p>
+          </Reveal>
+
+          {/* 4 products, 4 cells, exact fill. Column spans alternate 3/2 then 2/3 so the grid has a
+              diagonal rhythm instead of four equal cards. */}
+          <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <RevealItem className="h-full sm:col-span-2 lg:col-span-3">
+              <ProductTile service={SERVICES[0]} wide />
+            </RevealItem>
+
+            <RevealItem className="h-full lg:col-span-2">
+              <ProductTile service={SERVICES[1]} />
+            </RevealItem>
+
+            <RevealItem className="h-full lg:col-span-2">
+              <ProductTile service={SERVICES[2]} />
+            </RevealItem>
+
+            <RevealItem className="h-full sm:col-span-2 lg:col-span-3">
+              <ProductTile service={SERVICES[3]} wide />
+            </RevealItem>
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ── Full-bleed press sheet. No copy: the craft is the message. ── */}
+      <section aria-hidden className="relative h-[220px] w-full overflow-hidden md:h-[340px]">
+        <Image
+          src="/images/print/press-sheet.webp"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+      </section>
+
+      {/* ── Process: sticky headline, scrolling entries ── */}
+      <section className="band bg-kc-bg">
+        <div className="container-tight grid grid-cols-1 gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">How it works</h2>
+            <p className="mt-4 max-w-sm text-[16.5px] leading-relaxed text-kc-dark/60">
+              From a rough idea to files you can send to any press, in three steps.
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-            <Button asChild size="lg" className="rounded-md bg-kc-teal text-white hover:bg-kc-teal/90">
-              <Link href="/services/business-cards/design">Start Designing</Link>
+
+          <RevealGroup className="divide-y divide-kc-dark/10 border-t border-kc-dark/10">
+            {PROCESS.map((item) => (
+              <RevealItem key={item.title} className="py-9 first:pt-9">
+                <h3 className="display-tight text-[1.6rem] text-kc-dark sm:text-[1.85rem]">
+                  {item.title}
+                </h3>
+                <p className="mt-3 max-w-[58ch] text-[15.5px] leading-relaxed text-kc-dark/60">
+                  {item.desc}
+                </p>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ── Design help: copy set into the empty side of the photograph ── */}
+      <section className="relative isolate overflow-hidden">
+        <Image
+          src="/images/print/proof-desk.webp"
+          alt="Printed proof cards, paper stock samples, a steel ruler and a printer's loupe on a concrete studio table"
+          fill
+          sizes="100vw"
+          className="-z-10 object-cover object-right"
+        />
+        {/* Scrim guarantees text contrast regardless of where the photo crops */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-kc-bg via-kc-bg/92 to-kc-bg/0 md:via-kc-bg/80 md:to-transparent" />
+
+        <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-32">
+          <Reveal className="max-w-lg">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.5rem]">
+              Have the idea, not the file?
+            </h2>
+            <p className="mt-4 text-[16.5px] leading-relaxed text-kc-dark/70">
+              You don&apos;t need to be a designer to order from us. Tell us what you&apos;re
+              picturing, upload a logo or a few references, and a real person builds the layout.
+            </p>
+            <Button asChild size="lg" className={`${BTN_PRIMARY} mt-8`}>
+              <Link href="/services/business-cards/design">Start designing</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="rounded-md border-kc-teal/30 bg-white text-kc-dark hover:bg-white/80">
-              <Link href="/contact">Get Design Help</Link>
-            </Button>
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* ── Testimonials (real, admin-moderated — hidden until at least one exists) ── */}
-      {testimonials.length > 0 && (
-        <section className="section-pad bg-kc-surface">
-          <div className="container-tight">
-            <div className="mb-10 grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-start">
-              <div>
-                <div className="mb-3 flex gap-0.5">
-                  {Array.from({ length: testimonials[0].rating }).map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-kc-yellow text-kc-yellow" />
-                  ))}
-                </div>
-                <blockquote className="text-2xl font-medium leading-snug text-kc-dark">
-                  &ldquo;{testimonials[0].text}&rdquo;
-                </blockquote>
-                <div className="mt-4 text-sm text-kc-muted">
-                  <span className="font-semibold text-kc-dark">{testimonials[0].name}</span>
-                  {testimonials[0].company ? ` · ${testimonials[0].company}` : ""}
-                </div>
+      {lead && (
+        <section className="band bg-kc-paper">
+          <div className="container-tight max-w-4xl">
+            <Reveal>
+              <div className="mb-5 flex gap-1">
+                {Array.from({ length: lead.rating }).map((_, i) => (
+                  <Star key={i} className="h-4 w-4 fill-kc-yellow text-kc-yellow" />
+                ))}
               </div>
+              <blockquote className="display-tight text-[1.75rem] leading-[1.25] text-kc-dark sm:text-[2.25rem]">
+                &ldquo;{lead.text}&rdquo;
+              </blockquote>
+              <div className="mt-6 text-sm text-kc-dark/55">
+                <span className="font-semibold text-kc-dark">{lead.name}</span>
+                {lead.company ? `, ${lead.company}` : ""}
+              </div>
+            </Reveal>
 
-              {testimonials.length > 1 && (
-                <div className="space-y-4 divide-y divide-kc-border lg:border-l lg:border-kc-border lg:pl-8">
-                  {testimonials.slice(1).map((t) => (
-                    <div key={t.id} className="pt-4 first:pt-0">
-                      <p className="text-sm leading-relaxed text-kc-dark">&ldquo;{t.text}&rdquo;</p>
-                      <div className="mt-2 text-xs text-kc-muted">{t.name}{t.company ? ` · ${t.company}` : ""}</div>
+            {rest.length > 0 && (
+              <RevealGroup className="mt-14 grid grid-cols-1 gap-8 border-t border-kc-dark/10 pt-10 sm:grid-cols-2">
+                {rest.map((t) => (
+                  <RevealItem key={t.id}>
+                    <p className="line-clamp-3 text-[15px] leading-relaxed text-kc-dark/80">
+                      &ldquo;{t.text}&rdquo;
+                    </p>
+                    <div className="mt-3 text-xs text-kc-dark/50">
+                      {t.name}
+                      {t.company ? `, ${t.company}` : ""}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            )}
           </div>
         </section>
       )}
 
       {/* ── FAQ ── */}
-      <section className="section-pad bg-kc-bg">
-        <div className="container-tight max-w-3xl">
-          <div className="mb-10">
-            <h2 className="text-3xl font-black tracking-tight text-kc-dark sm:text-4xl">Frequently asked questions</h2>
-          </div>
-          <Accordion className="space-y-3">
-            {FAQS.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="rounded-md border border-kc-border px-5">
-                <AccordionTrigger className="text-left font-semibold text-kc-dark hover:text-kc-teal hover:no-underline">
-                  {faq.q}
-                </AccordionTrigger>
-                <AccordionContent className="pb-4 leading-relaxed text-kc-muted">
-                  {faq.a}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-          <div className="mt-8">
-            <Button asChild variant="outline" className="border-kc-border text-kc-dark hover:bg-kc-surface hover:border-kc-teal/30">
-              <Link href="/faq">View All FAQs</Link>
+      <section className="band bg-kc-bg">
+        <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
+          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+            Frequently asked questions
+          </h2>
+
+          <div>
+            <Accordion className="border-t border-kc-dark/10">
+              {FAQS.map((faq, i) => (
+                <AccordionItem key={i} value={`faq-${i}`} className="border-b border-kc-dark/10">
+                  <AccordionTrigger className="py-5 text-left text-[16px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
+                    {faq.q}
+                  </AccordionTrigger>
+                  <AccordionContent className="max-w-[62ch] pb-5 text-[15px] leading-relaxed text-kc-dark/65">
+                    {faq.a}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            <Button asChild variant="outline" className={`${BTN_SECONDARY} mt-8`}>
+              <Link href="/faq">View all FAQs</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="bg-kc-teal">
-        <div className="container-tight px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
-          <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
+      {/* ── Closing block. The page ends in ink and runs straight into the footer. ── */}
+      <section className="bg-kc-ink">
+        <div className="reg-bar" />
+        <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+          <div className="flex flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="max-w-xl text-3xl font-black leading-tight tracking-tight text-white sm:text-4xl">
+              <h2 className="display-tight max-w-2xl text-3xl text-white sm:text-[2.75rem]">
                 Ready to order? Pick a product and let&apos;s get started.
               </h2>
-              <div className="mt-6 flex flex-wrap items-center gap-5 text-sm text-white/80">
-                <a href="tel:+18165210462" className="flex items-center gap-2 hover:text-white transition-colors">
-                  <Phone className="h-4 w-4" /> (816) 521-0462
+              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3">
+                <a
+                  href="tel:+18165210462"
+                  className="flex items-center gap-2.5 font-mono text-[13.5px] text-white/70 transition-colors hover:text-white"
+                >
+                  <Phone className="h-4 w-4" strokeWidth={1.75} /> (816) 521-0462
                 </a>
-                <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 hover:text-white transition-colors">
-                  <Mail className="h-4 w-4" /> kansasdesigners@gmail.com
+                <a
+                  href="mailto:kansasdesigners@gmail.com"
+                  className="flex items-center gap-2.5 text-[13.5px] text-white/70 transition-colors hover:text-white"
+                >
+                  <Mail className="h-4 w-4" strokeWidth={1.75} /> kansasdesigners@gmail.com
                 </a>
               </div>
             </div>
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-              <Button asChild size="lg" className="h-13 w-full rounded-md bg-kc-coral px-8 text-base font-semibold text-white hover:bg-kc-coral/90 sm:w-auto">
-                <Link href="/services">Browse All Products</Link>
+
+            <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
+              <Button asChild size="lg" className={`${BTN_PRIMARY} w-full sm:w-auto`}>
+                <Link href="/services">Browse products</Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="h-13 w-full rounded-md border-white/30 bg-transparent px-7 text-base text-white hover:bg-white/10 sm:w-auto">
-                <Link href="/contact">Request a Quote</Link>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[15px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
+              >
+                <Link href="/contact">Contact us</Link>
               </Button>
             </div>
           </div>
@@ -329,5 +402,76 @@ export default async function HomePage() {
         }}
       />
     </>
+  );
+}
+
+type Service = (typeof SERVICES)[number];
+
+/**
+ * Product tile. `wide` is set on the two tiles that span 3 of 5 columns: they get a letterbox crop
+ * and a larger heading, which is what keeps the grid from reading as four equal cards.
+ */
+function ProductTile({ service, wide = false }: { service: Service; wide?: boolean }) {
+  return (
+    <div className="edge group flex h-full flex-col overflow-hidden border border-kc-dark/12 bg-white transition-colors hover:border-kc-dark/30">
+      <Link
+        href={service.href}
+        aria-label={service.name}
+        className={`relative block overflow-hidden bg-kc-paper ${
+          wide ? "aspect-[4/3] lg:aspect-[16/9]" : "aspect-[4/3]"
+        }`}
+      >
+        <Image
+          src={service.image}
+          alt={service.alt}
+          fill
+          sizes={wide ? "(min-width: 1024px) 58vw, 100vw" : "(min-width: 1024px) 39vw, 50vw"}
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+        />
+      </Link>
+
+      <div className={`flex flex-1 flex-col ${wide ? "p-7 lg:p-8" : "p-6"}`}>
+        <div className="mb-3 flex items-baseline justify-between gap-3">
+          <Link href={service.href}>
+            <h3
+              className={`display-tight text-kc-dark transition-colors group-hover:text-kc-magenta-deep ${
+                wide ? "text-2xl lg:text-[1.9rem]" : "text-xl"
+              }`}
+            >
+              {service.name}
+            </h3>
+          </Link>
+          <span className="shrink-0 font-mono text-[12.5px] text-kc-dark/50">{service.price}</span>
+        </div>
+
+        <dl
+          className={`space-y-1.5 leading-snug text-kc-dark/60 ${
+            wide ? "text-[14.5px]" : "text-[13.5px]"
+          }`}
+        >
+          <div className="flex gap-1.5">
+            <dt className="shrink-0 font-medium text-kc-dark/80">Sizes:</dt>
+            <dd>{service.sizes}</dd>
+          </div>
+          <div className="flex gap-1.5">
+            <dt className="shrink-0 font-medium text-kc-dark/80">Best for:</dt>
+            <dd>{service.bestFor}</dd>
+          </div>
+        </dl>
+
+        <div className="mt-auto pt-6">
+          <Link
+            href={service.orderHref}
+            className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+          >
+            Order
+            <ArrowRight
+              className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
+              strokeWidth={2}
+            />
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }

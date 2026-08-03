@@ -22,87 +22,101 @@ const LEGAL = [
   { label: "Refund Policy", href: "/refund-policy" },
 ];
 
+const AREAS = [
+  "Kansas City, MO",
+  "Overland Park, KS",
+  "Dallas, TX",
+  "Plano, TX",
+  "Addison, TX",
+  "Nationwide Online",
+];
+
+/**
+ * The page ends in ink. On the homepage the closing CTA band is the same near-black surface, so
+ * the two read as one continuous block rather than a theme flip at the bottom of the page.
+ */
 export function Footer() {
   return (
-    <footer className="border-t border-kc-border bg-kc-bg">
-      <div className="container-tight px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+    <footer className="bg-kc-ink text-white">
+      <div className="container-tight px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           {/* Brand */}
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <div className="mb-5 flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-kc-teal">
-                <span className="text-base font-black text-white leading-none">KC</span>
-              </div>
-              <div className="flex flex-col leading-tight">
-                <span className="text-sm font-bold tracking-widest text-kc-dark uppercase">Printing</span>
-                <span className="text-[9px] font-medium tracking-wider text-kc-muted uppercase">Design Studio</span>
-              </div>
+              <span className="edge flex h-8 w-8 items-center justify-center bg-white text-[13px] font-bold leading-none tracking-tight text-kc-ink">
+                KC
+              </span>
+              <span className="display-tight text-[17px] text-white">KC Printing</span>
             </div>
-            <p className="mb-5 text-sm leading-relaxed text-kc-muted">
-              Business cards, postcards, banners, and rigid signs, designed by a real person and delivered print-ready. Ordered entirely online.
+            <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/55">
+              Business cards, postcards, banners, and rigid signs, designed by a real person and
+              delivered print-ready. Ordered entirely online.
             </p>
             <div className="space-y-2.5">
-              <a href="tel:+18165210462" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">
-                <Phone className="h-3.5 w-3.5 shrink-0" />
+              <a
+                href="tel:+18165210462"
+                className="flex items-center gap-2.5 font-mono text-[13px] text-white/70 transition-colors hover:text-white"
+              >
+                <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                 (816) 521-0462
               </a>
-              <a href="mailto:kansasdesigners@gmail.com" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">
-                <Mail className="h-3.5 w-3.5 shrink-0" />
+              <a
+                href="mailto:kansasdesigners@gmail.com"
+                className="flex items-center gap-2.5 text-[13px] text-white/70 transition-colors hover:text-white"
+              >
+                <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                 kansasdesigners@gmail.com
               </a>
-              <a href="https://kcprinting.com" className="flex items-center gap-2 text-sm text-kc-muted hover:text-kc-teal transition-colors">
-                <Globe className="h-3.5 w-3.5 shrink-0" />
+              <a
+                href="https://kcprinting.com"
+                className="flex items-center gap-2.5 text-[13px] text-white/70 transition-colors hover:text-white"
+              >
+                <Globe className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                 kcprinting.com
               </a>
             </div>
           </div>
 
-          {/* Services */}
-          <div>
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-kc-muted/60">Services</h3>
-            <ul className="space-y-2.5">
-              {SERVICES.map((s) => (
-                <li key={s.href}>
-                  <Link href={s.href} className="text-sm text-kc-muted hover:text-kc-teal transition-colors">
-                    {s.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FooterColumn title="Services">
+            {SERVICES.map((s) => (
+              <li key={s.href}>
+                <Link href={s.href} className="text-[13px] text-white/60 transition-colors hover:text-white">
+                  {s.label}
+                </Link>
+              </li>
+            ))}
+          </FooterColumn>
 
-          {/* Company */}
-          <div>
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-kc-muted/60">Company</h3>
-            <ul className="space-y-2.5">
-              {COMPANY.map((c) => (
-                <li key={c.href}>
-                  <Link href={c.href} className="text-sm text-kc-muted hover:text-kc-teal transition-colors">
-                    {c.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <FooterColumn title="Company">
+            {COMPANY.map((c) => (
+              <li key={c.href}>
+                <Link href={c.href} className="text-[13px] text-white/60 transition-colors hover:text-white">
+                  {c.label}
+                </Link>
+              </li>
+            ))}
+          </FooterColumn>
 
-          {/* Service Areas */}
-          <div>
-            <h3 className="mb-4 text-xs font-semibold uppercase tracking-widest text-kc-muted/60">Service Areas</h3>
-            <ul className="space-y-2 text-sm text-kc-muted">
-              {["Kansas City, MO", "Overland Park, KS", "Dallas, TX", "Plano, TX", "Addison, TX", "Nationwide Online"].map((city) => (
-                <li key={city}>{city}</li>
-              ))}
-            </ul>
-          </div>
+          <FooterColumn title="Service Areas">
+            {AREAS.map((city) => (
+              <li key={city} className="text-[13px] text-white/60">
+                {city}
+              </li>
+            ))}
+          </FooterColumn>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-kc-border pt-6 sm:flex-row">
-          <p className="text-xs text-kc-muted">
+        <div className="mt-16 flex flex-col items-start justify-between gap-5 border-t border-kc-ink-line pt-7 sm:flex-row sm:items-center">
+          <p className="text-xs text-white/50">
             {new Date().getFullYear()} KC Printing. All rights reserved. Fully online design studio.
           </p>
-          <nav className="flex gap-5">
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
             {LEGAL.map((l) => (
-              <Link key={l.href} href={l.href} className="text-xs text-kc-muted hover:text-kc-dark transition-colors">
+              <Link
+                key={l.href}
+                href={l.href}
+                className="text-xs text-white/50 transition-colors hover:text-white"
+              >
                 {l.label}
               </Link>
             ))}
@@ -110,5 +124,14 @@ export function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="mb-4 text-[13px] font-semibold text-white">{title}</h3>
+      <ul className="space-y-2.5">{children}</ul>
+    </div>
   );
 }

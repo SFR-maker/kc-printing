@@ -10,7 +10,9 @@ test.describe("Public pages", () => {
 
   test("2 - homepage has service links for all 3 products", async ({ page }) => {
     await page.goto("/");
-    const links = page.locator('a[href*="/services/"]');
+    // Scoped to visible links: the header carries a desktop-only CTA into /services/..., so the
+    // first match in DOM order is intentionally hidden at mobile widths.
+    const links = page.locator('a[href*="/services/"]:visible');
     await expect(links.first()).toBeVisible();
     const count = await links.count();
     expect(count).toBeGreaterThanOrEqual(6);

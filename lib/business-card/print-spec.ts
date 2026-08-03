@@ -19,6 +19,49 @@ export const PRINT_SPEC = {
 export const BLEED_WIDTH_IN = PRINT_SPEC.trimWidthIn + PRINT_SPEC.bleedIn * 2;
 export const BLEED_HEIGHT_IN = PRINT_SPEC.trimHeightIn + PRINT_SPEC.bleedIn * 2;
 
+/**
+ * Business cards trim to 3.5 x 2 either way, but the required bleed depends on the corner finish.
+ * A rounded-corner card is die-cut rather than guillotined, and the die has more positional play,
+ * so the press needs a wider bleed margin to cut into.
+ *
+ *   Square corners   3.6   x 2.1    (0.05in per edge)
+ *   Rounded corners  3.825 x 2.325  (0.1625in per edge)
+ *
+ * Both figures come from the printer's published templates. Designs are stored on the square-corner
+ * spec; rebleedSide converts to the rounded document at export time when that finish is selected,
+ * so a single stored geometry produces a correct file either way.
+ */
+export const BUSINESS_CARD_BLEED = {
+  square: 0.05,
+  rounded: 0.1625,
+} as const;
+
+export interface BusinessCardDocSpec {
+  trimWidthIn: number;
+  trimHeightIn: number;
+  bleedIn: number;
+  safeZoneInsetIn: number;
+  docWidthIn: number;
+  docHeightIn: number;
+}
+
+/** The document a customer must supply (and that we export) for a given corner finish. */
+export function businessCardDocSpec(roundCorners: boolean): BusinessCardDocSpec {
+  const bleedIn = roundCorners ? BUSINESS_CARD_BLEED.rounded : BUSINESS_CARD_BLEED.square;
+  return {
+    trimWidthIn: PRINT_SPEC.trimWidthIn,
+    trimHeightIn: PRINT_SPEC.trimHeightIn,
+    bleedIn,
+    safeZoneInsetIn: PRINT_SPEC.safeZoneInsetIn,
+    docWidthIn: round4(PRINT_SPEC.trimWidthIn + bleedIn * 2),
+    docHeightIn: round4(PRINT_SPEC.trimHeightIn + bleedIn * 2),
+  };
+}
+
+function round4(n: number): number {
+  return Math.round(n * 10000) / 10000;
+}
+
 export const BLEED_PX_WIDTH = Math.round(BLEED_WIDTH_IN * DPI);
 export const BLEED_PX_HEIGHT = Math.round(BLEED_HEIGHT_IN * DPI);
 export const TRIM_PX_WIDTH = Math.round(PRINT_SPEC.trimWidthIn * DPI);

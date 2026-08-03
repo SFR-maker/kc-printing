@@ -180,6 +180,35 @@ model Order {
   couponId             String?
   notes                String?
   internalNotes        String?
+
+  // How the artwork for this order is being produced. UPLOAD means the customer supplied a
+  // print-ready file and approved a proof of it; DESIGN_SERVICE means our designers build it.
+  artworkPath          ArtworkPath @default(DESIGN_SERVICE)
+
+  // Customer-supplied artwork and the proof they approved. Kept on the order rather than the item
+  // because approval is a per-order consent record, and we need to be able to show exactly what was
+  // agreed if a print is disputed.
+  artworkFileUrl       String?
+  artworkFileName      String?
+  // Detected physical size of the supplied file. Null when the format could not be measured.
+  artworkWidthIn       Float?
+  artworkHeightIn      Float?
+  artworkDpi           Int?
+  // True when the file did not match the required document size and we scaled/centred it to fit.
+  artworkFitApplied    Boolean     @default(false)
+  // Set when the customer ticks the approval box. Null means no approved proof exists yet.
+  proofApprovedAt      DateTime?
+
+  // Populated from the Stripe Checkout session (shipping_address_collection), not collected by our
+  // own form, so the address is the validated one the customer actually paid against.
+  shippingName         String?
+  shippingLine1        String?
+  shippingLine2        String?
+  shippingCity         String?
+  shippingState        String?
+  shippingPostalCode   String?
+  shippingCountry      String?
+
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
@@ -470,4 +499,10 @@ model BrandProfile {
   updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id])
+}
+
+/** Which route produced the artwork for an order. */
+enum ArtworkPath {
+  UPLOAD
+  DESIGN_SERVICE
 }

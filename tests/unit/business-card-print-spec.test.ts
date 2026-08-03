@@ -9,6 +9,7 @@ import {
   inchesToPx,
   pxToInches,
   effectiveImageDpi,
+  businessCardDocSpec,
 } from "@/lib/business-card/print-spec";
 
 describe("print spec constants", () => {
@@ -37,5 +38,29 @@ describe("print spec constants", () => {
   it("computes effective image DPI from natural width and rendered inches", () => {
     expect(effectiveImageDpi(900, 3)).toBe(300);
     expect(effectiveImageDpi(300, 3)).toBe(100);
+  });
+});
+
+describe("business card document spec by corner finish", () => {
+  it("uses 3.6 x 2.1 for square corners", () => {
+    const s = businessCardDocSpec(false);
+    expect(s.docWidthIn).toBeCloseTo(3.6, 5);
+    expect(s.docHeightIn).toBeCloseTo(2.1, 5);
+    expect(s.bleedIn).toBeCloseTo(0.05, 5);
+  });
+
+  it("uses 3.825 x 2.325 for rounded corners", () => {
+    const s = businessCardDocSpec(true);
+    expect(s.docWidthIn).toBeCloseTo(3.825, 5);
+    expect(s.docHeightIn).toBeCloseTo(2.325, 5);
+    expect(s.bleedIn).toBeCloseTo(0.1625, 5);
+  });
+
+  it("trims to 3.5 x 2 regardless of corner finish", () => {
+    for (const rounded of [false, true]) {
+      const s = businessCardDocSpec(rounded);
+      expect(s.docWidthIn - s.bleedIn * 2).toBeCloseTo(3.5, 5);
+      expect(s.docHeightIn - s.bleedIn * 2).toBeCloseTo(2, 5);
+    }
   });
 });

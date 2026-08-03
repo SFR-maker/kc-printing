@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import sharp from "sharp";
+import { BLEED_WIDTH_IN, BLEED_HEIGHT_IN } from "@/lib/business-card/print-spec";
 import { db } from "@/lib/prisma";
 import { safeClerkUserId } from "@/lib/safe-auth";
 import { generateImageWithOpenRouter } from "@/lib/openrouter";
@@ -46,10 +47,26 @@ const bodySchema = z.object({
   includeQrCode: z.boolean().default(false),
 });
 
-const NON_BANNER_TARGET: Record<"business-card" | "postcard", { w: number; h: number }> = {
-  "business-card": { w: 1500, h: 900 },
-  postcard: { w: 1500, h: 1000 },
+/**
+ * Full-bleed AI backgrounds have to match the document's aspect ratio, or the image is distorted
+ * (or letterboxed) once it is placed edge to edge on the card.
+ *
+ * Height is derived from the real document size rather than hardcoded, so a change to the bleed
+ * spec cannot silently desync this. Business cards were pinned at 1500x900 (5:3), which matched the
+ * old 3.75 x 2.25 document; the current 3.6 x 2.1 document is 12:7.
+ */
+const NON_BANNER_DOC_IN: Record<"business-card" | "postcard", { w: number; h: number }> = {
+  "business-card": { w: BLEED_WIDTH_IN, h: BLEED_HEIGHT_IN },
+  // Postcard sides in ai-custom.ts are authored at 6 x 4; keeping that ratio here.
+  postcard: { w: 6, h: 4 },
 };
+
+const NON_BANNER_TARGET_WIDTH_PX = 1500;
+
+function nonBannerTarget(product: "business-card" | "postcard"): { w: number; h: number } {
+  const doc = NON_BANNER_DOC_IN[product];
+  return { w: NON_BANNER_TARGET_WIDTH_PX, h: Math.round((NON_BANNER_TARGET_WIDTH_PX * doc.h) / doc.w) };
+}
 
 function buildPrompt(product: DesignProduct, description: string): string {
   const orientation = product === "banner" ? "the aspect ratio given" : "landscape orientation";
@@ -85,8 +102,9 @@ export async function POST(req: Request) {
   // Business cards/postcards are small enough that the model's native output already clears the
   // print-DPI floor; banners are physically huge (up to 96in wide) so the smooth gradient is
   // deliberately upscaled — see the equivalent step in scripts/generate-template-backgrounds.ts.
-  const targetW = product === "banner" ? (isRollup ? 6000 : 16000) : NON_BANNER_TARGET[product].w;
-  const targetH = product === "banner" ? (isRollup ? 12000 : 8000) : NON_BANNER_TARGET[product].h;
+  const nonBanner = product === "banner" ? null : nonBannerTarget(product);
+  const targetW = product === "banner" ? (isRollup ? 6000 : 16000) : nonBanner!.w;
+  const targetH = product === "banner" ? (isRollup ? 12000 : 8000) : nonBanner!.h;
   const resized = await sharp(raw).resize(targetW, targetH, { fit: "cover", kernel: "lanczos3" }).jpeg({ quality: 82 }).toBuffer();
   const imageSrc = `data:image/jpeg;base64,${resized.toString("base64")}`;
 

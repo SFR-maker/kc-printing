@@ -33,7 +33,7 @@ export default function AboutPage() {
     <>
       <PageHeader
         title="A studio built for the modern business owner"
-        lead="KC Printing is a fully online print and design studio based in Kansas City, MO. We help small and mid-size businesses get professional design work done fast, at a fair price, without the overhead of a traditional agency."
+        lead="KC Printing is a fully online print and design studio based in the Kansas City metro. We help small and mid-size businesses get professional design work done fast, at a fair price, without the overhead of a traditional agency."
       />
 
       {/* Facts rail */}

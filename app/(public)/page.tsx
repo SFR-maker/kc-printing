@@ -403,8 +403,13 @@ export default async function HomePage() {
                 url: APP_URL,
                 address: {
                   "@type": "PostalAddress",
-                  addressLocality: "Kansas City",
-                  addressRegion: "MO",
+                  // The business is in Shawnee, Kansas - a Kansas City metro suburb. The brand
+                  // markets as "Kansas City", which is normal, but the PostalAddress has to be the
+                  // real one: Google cross-checks it against the Google Business Profile, and a
+                  // mismatch weakens local ranking rather than broadening it.
+                  addressLocality: "Shawnee",
+                  addressRegion: "KS",
+                  postalCode: "66203",
                   addressCountry: "US",
                 },
                 priceRange: "$$",
@@ -420,7 +425,7 @@ export default async function HomePage() {
                 // Was claiming Dallas, Plano and Addison TX for a Kansas City print shop - inherited from
                 // another project. Inflated service areas read as untrustworthy in local search, and
                 // the Terms already say Kansas City plus nationwide shipping.
-                areaServed: ["Kansas City, MO", "Overland Park, KS", "Independence, MO", "Lee's Summit, MO", "United States"],
+                areaServed: ["Shawnee, KS", "Overland Park, KS", "Lenexa, KS", "Kansas City, KS", "Kansas City, MO", "United States"],
               },
             ],
           }),

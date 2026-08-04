@@ -120,7 +120,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     heading: "Contact",
     body: [
       "Questions about these terms: kansasdesigners@gmail.com or (816) 521-0462.",
-      "KC Printing is based in Kansas City, Missouri and serves customers across the United States.",
+      "KC Printing operates from Shawnee, Kansas, in the Kansas City metro, and serves customers across the United States.",
     ],
   },
 ];

@@ -119,6 +119,10 @@ export default async function PortfolioPage() {
 
       <section className="band-tight bg-kc-paper">
         <div className="container-tight">
+          {/* The grid's card titles are h3, and the only other heading on the page sits below it,
+              so the outline jumped h1 -> h3. This labels the grid for screen-reader navigation
+              without adding a heading the design does not call for. */}
+          <h2 className="sr-only">Template library</h2>
           <PortfolioGrid samples={samples} />
         </div>
       </section>

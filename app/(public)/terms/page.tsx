@@ -4,7 +4,7 @@ import { TERMS_SECTIONS, TERMS_UPDATED_LABEL } from "@/lib/legal/terms";
 
 export const metadata: Metadata = {
   title: "Terms of Sale",
-  description: "KC Printing Terms of Sale covering proof approval, artwork requirements, colour, quantities, shipping and refunds.",
+  description: "611 Printing Terms of Sale covering proof approval, artwork requirements, colour, quantities, shipping and refunds.",
 };
 
 export default function TermsPage() {

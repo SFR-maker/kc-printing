@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calculateBusinessCardPrice, availableQuantities, isComboAvailable, BC_SIZES, BC_PAPERS, BC_COLORS, BC_ALL_QUANTITIES } from "@/lib/pricing/business-cards";
 
-// Reference numbers below are gotprint.com's own scraped prices (before KC Printing's 1.25x markup),
+// Reference numbers below are gotprint.com's own scraped prices (before 611 Printing's 1.25x markup),
 // captured 2026-07-25 from their pricing REST API for the standard 2x3.5 card (size=101), 14pt Gloss
 // (paper=1), full color front only (color=1), regular turnaround.
 describe("calculateBusinessCardPrice", () => {

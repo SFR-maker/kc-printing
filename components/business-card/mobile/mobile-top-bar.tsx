@@ -82,7 +82,7 @@ export function MobileTopBar({ onSave, saving, onExport, exporting, onContinue }
           <MenuRow label={showGrid ? "Hide Grid" : "Show Grid"} icon={<Grid3x3 className="h-4 w-4" />} onClick={toggleGrid} />
           <div className="my-1.5 h-px bg-kc-border" />
           <Link href="/" className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-sm text-kc-dark hover:bg-kc-bg">
-            <Home className="h-4 w-4" /> Back to KC Printing
+            <Home className="h-4 w-4" /> Back to 611 Printing
           </Link>
         </div>
       )}

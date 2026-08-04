@@ -6,7 +6,7 @@ import { ClosingCta } from "@/components/layout/ClosingCta";
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
   description:
-    "Answers to common questions about KC Printing design services, file formats, turnaround times, revisions, and ordering.",
+    "Answers to common questions about 611 Printing design services, file formats, turnaround times, revisions, and ordering.",
 };
 
 const FAQS = [

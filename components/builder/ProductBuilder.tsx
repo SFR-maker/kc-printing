@@ -881,7 +881,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                     <span className="font-medium text-kc-dark text-right">
                       {artwork.path === "UPLOAD"
                         ? `${artwork.fileName ?? "Uploaded file"} · proof approved`
-                        : "Designed by KC Printing"}
+                        : "Designed by 611 Printing"}
                     </span>
                   </div>
                 )}

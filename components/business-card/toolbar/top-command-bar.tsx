@@ -35,7 +35,7 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
       <div className="flex items-center gap-1">
         <Link
           href="/"
-          title="Back to KC Printing"
+          title="Back to 611 Printing"
           className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-kc-teal text-xs font-black text-white"
         >
           KC

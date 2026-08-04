@@ -46,7 +46,7 @@ export function Footer() {
               <span className="edge flex h-8 w-8 items-center justify-center bg-white text-[13px] font-bold leading-none tracking-tight text-kc-ink">
                 KC
               </span>
-              <span className="display-tight text-[17px] text-white">KC Printing</span>
+              <span className="display-tight text-[17px] text-white">611 Printing</span>
             </div>
             <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/55">
               Business cards, postcards, banners, and rigid signs, designed by a real person and
@@ -68,11 +68,11 @@ export function Footer() {
                 kansasdesigners@gmail.com
               </a>
               <a
-                href="https://kcprinting.com"
+                href="https://611printing.com"
                 className="flex items-center gap-2.5 text-[13px] text-white/70 transition-colors hover:text-white"
               >
                 <Globe className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                kcprinting.com
+                611printing.com
               </a>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function Footer() {
 
         <div className="mt-16 flex flex-col items-start justify-between gap-5 border-t border-kc-ink-line pt-7 sm:flex-row sm:items-center">
           <p className="text-xs text-white/50">
-            {new Date().getFullYear()} KC Printing. All rights reserved. Fully online design studio.
+            {new Date().getFullYear()} 611 Printing. All rights reserved. Fully online design studio.
           </p>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             {LEGAL.map((l) => (

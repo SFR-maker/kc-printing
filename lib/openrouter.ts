@@ -33,7 +33,7 @@ export async function generateWithOpenRouter(opts: GenerateOptions): Promise<Gen
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
       "HTTP-Referer": APP_URL,
-      "X-Title": "KC Printing",
+      "X-Title": "611 Printing",
     },
     body: JSON.stringify({
       model,
@@ -93,7 +93,7 @@ export async function generateImageWithOpenRouter(opts: GenerateImageOptions): P
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
       "HTTP-Referer": APP_URL,
-      "X-Title": "KC Printing",
+      "X-Title": "611 Printing",
     },
     body: JSON.stringify({
       model,

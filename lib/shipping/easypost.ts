@@ -69,7 +69,7 @@ export function shipFromAddress(): ShipFromAddress | null {
   const zip = process.env.SHIP_FROM_ZIP;
   if (!street1 || !city || !state || !zip) return null;
   return {
-    name: process.env.SHIP_FROM_NAME ?? "KC Printing",
+    name: process.env.SHIP_FROM_NAME ?? "611 Printing",
     street1,
     street2: process.env.SHIP_FROM_STREET2 || undefined,
     city,

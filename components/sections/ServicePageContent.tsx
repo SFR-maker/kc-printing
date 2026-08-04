@@ -403,7 +403,7 @@ export function ServicePageContent({
               {
                 "@type": "Service",
                 name: service.name,
-                provider: { "@type": "Organization", name: "KC Printing" },
+                provider: { "@type": "Organization", name: "611 Printing" },
                 description: service.description,
                 offers: service.packages.map((p) => ({
                   "@type": "Offer",

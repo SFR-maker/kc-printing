@@ -7,7 +7,7 @@ import { getPricingSettings } from "@/lib/pricing/settings-server";
 export const metadata: Metadata = {
   title: "Order Rigid Signs",
   description:
-    "Order custom rigid sign design from KC Printing. Die-cut shapes and materials, delivered print-ready with a die line.",
+    "Order custom rigid sign design from 611 Printing. Die-cut shapes and materials, delivered print-ready with a die line.",
 };
 const service = SERVICES["rigid-signs"];
 

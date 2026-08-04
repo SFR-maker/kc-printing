@@ -41,7 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between border-b border-kc-border bg-white px-4 sm:px-6">
-          <span className="text-sm font-bold text-kc-dark">KC Printing Admin</span>
+          <span className="text-sm font-bold text-kc-dark">611 Printing Admin</span>
           <div className="flex items-center gap-4">
             <Link
               href="/"

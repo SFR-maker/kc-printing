@@ -9,7 +9,7 @@ import { db } from "@/lib/prisma";
 import { APP_URL } from "@/lib/app-url";
 
 export const metadata: Metadata = {
-  title: "KC Printing - Business Cards, Postcards, Banners & Rigid Signs | Kansas City",
+  title: "611 Printing - Business Cards, Postcards, Banners & Rigid Signs | Kansas City",
   description:
     "Custom business cards, postcards, banners, and rigid signs. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
 };
@@ -87,7 +87,7 @@ const FAQS = [
   { q: "What file formats do you deliver?", a: "Business cards, postcards, banners, and rigid signs all come as a print-ready PDF with proper bleed (and a die line for rigid signs), plus a high-resolution JPG and PNG, ready to send to any print shop, including ours." },
   { q: "I don't have a finished design. Can you still help?", a: "Yes. Upload a logo, some brand colors, or just tell us what you're going for, and our AI-assisted brief tool helps capture the direction before a real designer starts the layout." },
   { q: "Can I request revisions?", a: "Yes. Every package includes 4 to 8 revisions depending on the tier. Need more than that? Additional revisions are available at a flat rate." },
-  { q: "Do you serve businesses outside Kansas City?", a: "We do. KC Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide. All ordering and file delivery happens online." },
+  { q: "Do you serve businesses outside Kansas City?", a: "We do. 611 Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide. All ordering and file delivery happens online." },
 ];
 
 /* Shared button treatments. Magenta is the page's only interactive accent; cyan and gold appear
@@ -397,7 +397,7 @@ export default async function HomePage() {
                 // and opening hours, and that is what local search results are built from.
                 "@type": "LocalBusiness",
                 "@id": `${APP_URL}/#business`,
-                name: "KC Printing",
+                name: "611 Printing",
                 // Was hardcoded to https://kcprinting.com, a domain the site is not served from,
                 // which pointed every structured-data consumer at the wrong host.
                 url: APP_URL,

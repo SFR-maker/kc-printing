@@ -10,7 +10,7 @@ export const TERMS_VERSION = "2026-08-03";
 export const TERMS_UPDATED_LABEL = "3 August 2026";
 
 /**
- * KC Printing's Terms of Sale.
+ * 611 Printing's Terms of Sale.
  *
  * Written against how this shop actually works: a browser design tool, an upload-and-approve proof,
  * banded print pricing, and flat-rate shipping. Clauses that only make sense for a much larger
@@ -24,7 +24,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: "Agreeing to these terms",
     body: [
-      "By creating an account or placing an order with KC Printing, you agree to these Terms of Sale. If you do not agree to them, please do not place an order.",
+      "By creating an account or placing an order with 611 Printing, you agree to these Terms of Sale. If you do not agree to them, please do not place an order.",
       "We may change these terms from time to time. The version in force is the one shown on this page when you place your order, and we record which version you agreed to. If the terms change materially, we will ask you to accept the new version before your next order.",
       "You must be at least 18 years old to order from us.",
     ],
@@ -120,7 +120,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     heading: "Contact",
     body: [
       "Questions about these terms: kansasdesigners@gmail.com or (816) 521-0462.",
-      "KC Printing operates from Shawnee, Kansas, in the Kansas City metro, and serves customers across the United States.",
+      "611 Printing operates from Shawnee, Kansas, in the Kansas City metro, and serves customers across the United States.",
     ],
   },
 ];

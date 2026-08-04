@@ -39,8 +39,8 @@ async function generateImage(prompt: string): Promise<Buffer> {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": "https://kc-printing.vercel.app",
-      "X-Title": "KC Printing",
+      "HTTP-Referer": "https://611printing.com",
+      "X-Title": "611 Printing",
     },
     body: JSON.stringify({
       model: MODEL,

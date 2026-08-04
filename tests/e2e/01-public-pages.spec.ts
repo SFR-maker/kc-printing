@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Public pages", () => {
   test("1 - homepage loads with hero and brand colors", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/KC Printing/i);
+    await expect(page).toHaveTitle(/611 Printing/i);
     const hero = page.locator("h1").first();
     await expect(hero).toBeVisible();
   });

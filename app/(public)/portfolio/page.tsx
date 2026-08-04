@@ -8,7 +8,7 @@ import { PortfolioGrid, type PortfolioSample } from "@/components/portfolio/port
 export const metadata: Metadata = {
   title: "Design Portfolio",
   description:
-    "Real business card, postcard, banner, and rigid sign designs from KC Printing's template library, serving Kansas City and nationwide.",
+    "Real business card, postcard, banner, and rigid sign designs from 611 Printing's template library, serving Kansas City and nationwide.",
 };
 
 const ROUTE_SEGMENT: Record<string, string> = {

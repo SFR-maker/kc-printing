@@ -42,7 +42,7 @@ function rateLimited(key: string): boolean {
 /**
  * The submitted fields are interpolated into an HTML email that a human reads and trusts. Without
  * escaping, anyone can inject markup into it - working links to a phishing page, hidden text, a
- * spoofed "message from KC Printing" block. Escape before it reaches the template.
+ * spoofed "message from 611 Printing" block. Escape before it reaches the template.
  */
 function escapeHtml(value: string): string {
   return value
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: process.env.RESEND_FROM_EMAIL ?? "hello@kcprinting.com",
+          from: process.env.RESEND_FROM_EMAIL ?? "hello@611printing.com",
           to: [process.env.ADMIN_EMAIL ?? "kansasdesigners@gmail.com"],
           reply_to: email,
           subject: `New Contact Form: ${service} from ${name}`,

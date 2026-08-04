@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/prisma";
 
 const DEFAULTS = {
-  title: "KC Printing - Business Cards, Postcards & Banners | Kansas City",
+  title: "611 Printing - Business Cards, Postcards & Banners | Kansas City",
   description: "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Serving Kansas City and nationwide online.",
   ogImage: "/og-default.png",
 };

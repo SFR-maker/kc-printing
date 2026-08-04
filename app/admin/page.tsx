@@ -44,7 +44,7 @@ export default async function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-kc-dark">Today at KC Printing</h1>
+        <h1 className="text-2xl font-black text-kc-dark">Today at 611 Printing</h1>
         <p className="text-sm text-kc-muted">What needs doing, and what the shop has taken.</p>
       </div>
 

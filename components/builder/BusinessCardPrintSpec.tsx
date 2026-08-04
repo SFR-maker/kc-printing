@@ -26,7 +26,7 @@ export interface BusinessCardSpec {
 
 const RUSH_MAX_QUANTITY = 2500;
 
-// European Standard sizes (339/340) are excluded from the picker — KC Printing only sells to a
+// European Standard sizes (339/340) are excluded from the picker — 611 Printing only sells to a
 // U.S. customer base and the extra options were just adding noise to the size dropdown.
 const DISPLAYED_BC_SIZES = BC_SIZES.filter((s) => s.id !== 339 && s.id !== 340);
 

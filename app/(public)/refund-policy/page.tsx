@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "@/components/layout/LegalPage";
 
 export const metadata: Metadata = {
   title: "Refund Policy",
-  description: "KC Printing Refund Policy for design services.",
+  description: "611 Printing Refund Policy for design services.",
 };
 
 const SECTIONS: LegalSection[] = [

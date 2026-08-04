@@ -26,8 +26,8 @@ const archivo = Archivo({
 
 export const metadata: Metadata = {
   title: {
-    default: "KC Printing - Business Cards, Postcards & Banners, Designed Online",
-    template: "%s | KC Printing",
+    default: "611 Printing - Business Cards, Postcards & Banners, Designed Online",
+    template: "%s | 611 Printing",
   },
   description:
     "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide.",
@@ -38,14 +38,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "./" },
   openGraph: {
     type: "website",
-    siteName: "KC Printing",
+    siteName: "611 Printing",
     images: [{ url: "/og-default.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
   },
   icons: {
-    icon: "/favicon.svg",
+    // SVG first for crisp rendering, PNG fallback for the handful of clients that ignore SVG,
+    // and the 180px apple-touch icon so a home-screen bookmark is not a blurry screenshot.
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-180.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

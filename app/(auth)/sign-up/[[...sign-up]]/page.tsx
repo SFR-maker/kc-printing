@@ -3,7 +3,7 @@ import { SignUp } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: "Create an account",
-  description: "Create a KC Printing account to track orders, download print-ready files and reorder in one click.",
+  description: "Create a 611 Printing account to track orders, download print-ready files and reorder in one click.",
   // An auth screen has nothing to rank for and competes with the pages that do.
   robots: { index: false, follow: true },
 };
@@ -17,7 +17,7 @@ export default function SignUpPage() {
             <span className="text-xl font-black text-kc-coral">KC</span>
           </div>
           <p className="text-2xl font-black text-kc-dark">Create your account</p>
-          <p className="text-kc-muted text-sm mt-1">Start ordering from KC Printing today</p>
+          <p className="text-kc-muted text-sm mt-1">Start ordering from 611 Printing today</p>
         </div>
         <SignUp />
       </div>

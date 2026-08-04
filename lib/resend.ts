@@ -9,7 +9,7 @@ import { APP_URL } from "@/lib/app-url";
  *    markup rendered as markup in the recipient's inbox - both an injection vector and a way to
  *    forge convincing content inside an email carrying our branding. Everything dynamic now goes
  *    through `esc()`.
- * 2. Links pointed at https://kcprinting.com, a domain the site is not served from, so every
+ * 2. Links pointed at https://611printing.com, a domain the site is not served from, so every
  *    "view your order" button in every email led nowhere.
  * 3. Failures were silent. A wrong key, an unverified sender or a quota trip produced no log line,
  *    so nobody found out until a customer said they never got a receipt.
@@ -49,7 +49,7 @@ function money(n: number): string {
 function layout(heading: string, bodyHtml: string, footerNote?: string): string {
   return `<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:16px">
   <div style="background:${BRAND.teal};padding:24px;border-radius:8px 8px 0 0">
-    <span style="color:${BRAND.coral};font-weight:900;font-size:22px;letter-spacing:0.5px">KC PRINTING</span>
+    <span style="color:${BRAND.coral};font-weight:900;font-size:22px;letter-spacing:0.5px">611 PRINTING</span>
   </div>
   <div style="background:#fff;padding:24px;border:1px solid ${BRAND.line};border-top:none;border-radius:0 0 8px 8px">
     <h2 style="color:${BRAND.ink};margin:0 0 12px;font-size:20px">${esc(heading)}</h2>
@@ -83,7 +83,7 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
     console.warn(`RESEND_API_KEY not set - skipped "${subject}" to ${to}`);
     return false;
   }
-  const from = process.env.RESEND_FROM_EMAIL ?? "hello@kcprinting.com";
+  const from = process.env.RESEND_FROM_EMAIL ?? "hello@611printing.com";
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -113,7 +113,7 @@ export interface OrderEmailData {
 export async function sendOrderConfirmation(data: OrderEmailData): Promise<boolean> {
   return sendEmail(
     data.customerEmail,
-    `Order confirmed: ${data.serviceName} - KC Printing`,
+    `Order confirmed: ${data.serviceName} - 611 Printing`,
     layout(
       "Order confirmed",
       `<p style="color:${BRAND.muted};line-height:1.6">Hi ${esc(data.customerName)}, we have your order and your payment went through. Here is what we are making.</p>
@@ -174,7 +174,7 @@ export async function sendShippingConfirmation(data: ShippingEmailData): Promise
   const tracking = data.carrier ? `${data.carrier} - ${data.trackingNumber}` : data.trackingNumber;
   return sendEmail(
     data.customerEmail,
-    `Your ${data.serviceName} order has shipped - KC Printing`,
+    `Your ${data.serviceName} order has shipped - 611 Printing`,
     layout(
       "It's on its way",
       `<p style="color:${BRAND.muted};line-height:1.6">Hi ${esc(data.customerName)}, your ${esc(data.serviceName)} order left us today.</p>
@@ -197,7 +197,7 @@ export interface RefundEmailData {
 export async function sendRefundConfirmation(data: RefundEmailData): Promise<boolean> {
   return sendEmail(
     data.customerEmail,
-    `Refund issued: ${money(data.amount)} - KC Printing`,
+    `Refund issued: ${money(data.amount)} - 611 Printing`,
     layout(
       data.full ? "Your refund is on its way" : "A partial refund is on its way",
       `<p style="color:${BRAND.muted};line-height:1.6">Hi ${esc(data.customerName)}, we have refunded ${esc(money(data.amount))} to the card you paid with.</p>

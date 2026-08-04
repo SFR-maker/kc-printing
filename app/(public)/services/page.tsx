@@ -8,7 +8,7 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 export const metadata: Metadata = {
   title: "Design Services - Business Cards, Postcards, Banners, Rigid Signs",
   description:
-    "Browse all KC Printing services: business cards, postcards, banners (roll-up stands and vinyl), and die-cut rigid signs.",
+    "Browse all 611 Printing services: business cards, postcards, banners (roll-up stands and vinyl), and die-cut rigid signs.",
 };
 
 const SERVICES = [

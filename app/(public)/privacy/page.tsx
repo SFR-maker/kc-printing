@@ -3,7 +3,7 @@ import { LegalPage, type LegalSection } from "@/components/layout/LegalPage";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "KC Printing Privacy Policy explaining how we collect, use, and protect your personal information.",
+  description: "611 Printing Privacy Policy explaining how we collect, use, and protect your personal information.",
 };
 
 const SECTIONS: LegalSection[] = [

@@ -1,8 +1,9 @@
-<svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="611 Printing">
+<svg viewBox="0 0 220 40" width="220" height="40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="611 Printing">
   <rect width="40" height="40" fill="#121110"/>
   <text x="20" y="24.5" text-anchor="middle" fill="#FFFFFF" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="800" letter-spacing="-0.9">611</text>
   <rect x="0" y="31" width="10" height="3.5" fill="#0099d8"/>
   <rect x="10" y="31" width="10" height="3.5" fill="#e6007e"/>
   <rect x="20" y="31" width="10" height="3.5" fill="#fbc800"/>
   <rect x="30" y="31" width="10" height="3.5" fill="#6B6461"/>
+  <text x="52" y="27" fill="#121110" font-family="Archivo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="21" font-weight="700" letter-spacing="-0.8">611 Printing</text>
 </svg>

@@ -7,7 +7,7 @@ import { DEFAULT_PRICING, type PricingSettings } from "./settings";
  * 2026-07-25. Covers every size x paper x color/sides combination gotprint actually sells (270 of
  * 360 possible combos — the other 90 are "grayscale back" paired with a premium paper, which
  * gotprint itself doesn't offer). Quantity break points and prices are gotprint's real numbers;
- * KC Printing applies its own markup on top in the calculator below rather than reselling at cost.
+ * 611 Printing applies its own markup on top in the calculator below rather than reselling at cost.
  */
 
 export interface BcSize {

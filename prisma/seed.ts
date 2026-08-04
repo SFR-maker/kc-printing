@@ -6,11 +6,11 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" 
 const db = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Seeding KC Printing database...");
+  console.log("Seeding 611 Printing database...");
 
   // Site settings
   const settings = [
-    { key: "site_name", value: "KC Printing", type: "STRING" as const },
+    { key: "site_name", value: "611 Printing", type: "STRING" as const },
     { key: "phone", value: "(816) 521-0462", type: "STRING" as const },
     { key: "email", value: "kansasdesigners@gmail.com", type: "STRING" as const },
     { key: "domain", value: "kcprinting.com", type: "STRING" as const },
@@ -168,16 +168,16 @@ async function main() {
 
   // Page SEO
   const pages = [
-    { path: "/", title: "KC Printing - Business Cards, Postcards & Banners | Kansas City", description: "Custom business cards, postcards, and banners. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide." },
-    { path: "/services", title: "Design Services - Business Cards, Postcards, Banners | KC Printing", description: "Browse all KC Printing services: business cards, postcards, and banners (roll-up stands and vinyl)." },
-    { path: "/services/business-cards", title: "Custom Business Card Design | KC Printing", description: "Professional business card design starting at $39. Standard, square, slim, circle, and leaf shapes. 300-350 DPI print-ready files. Revisions included." },
-    { path: "/services/postcards", title: "Postcard Design for Marketing and EDDM | KC Printing", description: "Custom postcard design starting at $49. Multiple sizes, front and back, EDDM-ready. Fast turnaround for Kansas City and nationwide marketing campaigns." },
-    { path: "/services/banners", title: "Banner Design - Roll-Up Stands and Vinyl Banners | KC Printing", description: "Banner design starting at $79. Roll-up retractable stands and large format vinyl banners. Print-ready with proper bleed, safe zones, and grommet specs." },
-    { path: "/pricing", title: "Transparent Pricing for All Design Services | KC Printing", description: "Clear, upfront pricing for business cards, postcards, and banners. No hidden fees. Multiple packages to fit any budget." },
-    { path: "/portfolio", title: "Design Portfolio | KC Printing", description: "See samples of our business card, postcard, and banner design work for clients in Kansas City, Dallas, and nationwide." },
-    { path: "/about", title: "About KC Printing - Online Design Studio | Kansas City", description: "KC Printing is a fully online design studio serving Kansas City, Dallas, Plano, Addison, Overland Park, and businesses nationwide. Fast, professional, print-ready." },
-    { path: "/contact", title: "Contact KC Printing | Call or Text (816) 521-0462", description: "Get in touch with KC Printing for custom design quotes. Call or text (816) 521-0462, email kansasdesigners@gmail.com, or submit a request online." },
-    { path: "/faq", title: "Frequently Asked Questions | KC Printing", description: "Answers to common questions about KC Printing design services, file formats, turnaround times, revisions, and ordering." },
+    { path: "/", title: "611 Printing - Business Cards, Postcards & Banners | Kansas City", description: "Custom business cards, postcards, and banners. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide." },
+    { path: "/services", title: "Design Services - Business Cards, Postcards, Banners | 611 Printing", description: "Browse all 611 Printing services: business cards, postcards, and banners (roll-up stands and vinyl)." },
+    { path: "/services/business-cards", title: "Custom Business Card Design | 611 Printing", description: "Professional business card design starting at $39. Standard, square, slim, circle, and leaf shapes. 300-350 DPI print-ready files. Revisions included." },
+    { path: "/services/postcards", title: "Postcard Design for Marketing and EDDM | 611 Printing", description: "Custom postcard design starting at $49. Multiple sizes, front and back, EDDM-ready. Fast turnaround for Kansas City and nationwide marketing campaigns." },
+    { path: "/services/banners", title: "Banner Design - Roll-Up Stands and Vinyl Banners | 611 Printing", description: "Banner design starting at $79. Roll-up retractable stands and large format vinyl banners. Print-ready with proper bleed, safe zones, and grommet specs." },
+    { path: "/pricing", title: "Transparent Pricing for All Design Services | 611 Printing", description: "Clear, upfront pricing for business cards, postcards, and banners. No hidden fees. Multiple packages to fit any budget." },
+    { path: "/portfolio", title: "Design Portfolio | 611 Printing", description: "See samples of our business card, postcard, and banner design work for clients in Kansas City, Dallas, and nationwide." },
+    { path: "/about", title: "About 611 Printing - Online Design Studio | Kansas City", description: "611 Printing is a fully online design studio serving Kansas City, Dallas, Plano, Addison, Overland Park, and businesses nationwide. Fast, professional, print-ready." },
+    { path: "/contact", title: "Contact 611 Printing | Call or Text (816) 521-0462", description: "Get in touch with 611 Printing for custom design quotes. Call or text (816) 521-0462, email kansasdesigners@gmail.com, or submit a request online." },
+    { path: "/faq", title: "Frequently Asked Questions | 611 Printing", description: "Answers to common questions about 611 Printing design services, file formats, turnaround times, revisions, and ordering." },
   ];
 
   for (const p of pages) {

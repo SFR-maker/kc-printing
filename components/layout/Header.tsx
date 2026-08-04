@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { Menu, X, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/layout/Wordmark";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
@@ -69,17 +70,6 @@ function ClerkAuthMobile({ onClose }: { onClose: () => void }) {
 }
 
 /** Trimmed square mark with the wordmark set in the display face. */
-function Wordmark() {
-  return (
-    <>
-      <span className="edge flex h-8 w-8 items-center justify-center bg-kc-dark text-[13px] font-bold leading-none tracking-tight text-white">
-        KC
-      </span>
-      <span className="display-tight text-[17px] text-kc-dark">KC Printing</span>
-    </>
-  );
-}
-
 export function Header() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();

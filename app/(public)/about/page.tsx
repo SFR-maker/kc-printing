@@ -5,9 +5,9 @@ import { ClosingCta } from "@/components/layout/ClosingCta";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 
 export const metadata: Metadata = {
-  title: "About KC Printing - Online Design Studio",
+  title: "About 611 Printing - Online Design Studio",
   description:
-    "KC Printing is a fully online design studio serving Kansas City, Dallas, Plano, Addison, Overland Park, and businesses nationwide. Fast, professional, print-ready.",
+    "611 Printing is a fully online design studio serving Kansas City, Dallas, Plano, Addison, Overland Park, and businesses nationwide. Fast, professional, print-ready.",
 };
 
 // Real, verifiable facts only — no client counts, ratings, or years-in-business claims until
@@ -33,7 +33,7 @@ export default function AboutPage() {
     <>
       <PageHeader
         title="A studio built for the modern business owner"
-        lead="KC Printing is a fully online print and design studio based in the Kansas City metro. We help small and mid-size businesses get professional design work done fast, at a fair price, without the overhead of a traditional agency."
+        lead="611 Printing is a fully online print and design studio based in the Kansas City metro. We help small and mid-size businesses get professional design work done fast, at a fair price, without the overhead of a traditional agency."
       />
 
       {/* Facts rail */}

@@ -13,7 +13,7 @@
 // so metadataBase/canonical/og were unaffected, but next-sitemap interpolates the raw string - which
 // split every <loc> across two lines and made the whole sitemap invalid. Trim defensively here so a
 // stray newline or slash in the env value can never break it again.
-const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://kcprinting.com").trim().replace(/\/+$/, "");
+const siteUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://611printing.com").trim().replace(/\/+$/, "");
 
 module.exports = {
   siteUrl,

@@ -8,7 +8,7 @@ import { getPricingSettings } from "@/lib/pricing/settings-server";
 export const metadata: Metadata = {
   title: "Order Business Cards",
   description:
-    "Order custom business card design from KC Printing. Choose a package, share your brand details, and receive print-ready files.",
+    "Order custom business card design from 611 Printing. Choose a package, share your brand details, and receive print-ready files.",
 };
 const service = SERVICES["business-cards"];
 

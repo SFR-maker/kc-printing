@@ -24,7 +24,7 @@ async function getClerkHandler() {
     // the request. Skipping it on the pass-through path (the previous behavior) meant every other
     // route — including every /api/* handler — never got that context, so requireAuth() treated
     // every request as signed-out regardless of actual session state. See lib/safe-auth.ts.
-    const { userId, sessionClaims } = await auth();
+    const { userId } = await auth();
 
     if (!isAccountRoute(request) && !isAdminRoute(request)) return;
 
@@ -32,12 +32,18 @@ async function getClerkHandler() {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
-    if (isAdminRoute(request)) {
-      const role = (sessionClaims?.metadata as { role?: string } | undefined)?.role;
-      if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
-        return NextResponse.redirect(new URL("/account", request.url));
-      }
-    }
+    // Deliberately no role check here.
+    //
+    // Roles live in our own database, and middleware runs on the edge with no database access, so
+    // the only thing available at this layer is `sessionClaims.metadata.role` - a Clerk session
+    // claim that is empty unless someone has both set publicMetadata on the user AND customised
+    // the session token template. Neither was ever done, so this branch bounced every single
+    // request to /admin back to /account, including the shop owner's, before the page that grants
+    // the role could run.
+    //
+    // Authentication is what middleware can answer cheaply and correctly; authorisation is not.
+    // The admin layout and requireAdmin() both resolve the real role against the database, so
+    // letting a signed-in non-admin reach them costs one redirect and denies nothing.
   }) as (req: NextRequest, evt: unknown) => Response | Promise<Response>;
 
   return _handler;

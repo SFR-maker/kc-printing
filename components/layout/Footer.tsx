@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Phone, Mail, Globe } from "lucide-react";
+import { Wordmark } from "@/components/layout/Wordmark";
 
 const SERVICES = [
   { label: "Business Cards", href: "/services/business-cards" },
@@ -42,12 +43,8 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
-            <div className="mb-5 flex items-center gap-2.5">
-              <span className="edge flex h-8 w-8 items-center justify-center bg-white text-[13px] font-bold leading-none tracking-tight text-kc-ink">
-                KC
-              </span>
-              <span className="display-tight text-[17px] text-white">611 Printing</span>
-            </div>
+            {/* Was still showing a "KC" tile after the rebrand. */}
+            <Wordmark variant="inverse" className="mb-5" />
             <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/55">
               Business cards, postcards, banners, and rigid signs, designed by a real person and
               delivered print-ready. Ordered entirely online.

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, CheckCircle2, Sparkles, ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles, ArrowRight, ArrowLeft, Check, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -263,6 +263,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
           addOnPrices: selectedAddOnPrices,
         })
       : null;
+
+  const cheapestShipping = testCode
+    ? 0
+    : Math.min(...pricing.shippingTiers.map((t) => t.price));
 
   // The server is the authority on this; zeroing here only keeps the summary honest about what the
   // customer will actually be asked for at checkout.
@@ -973,9 +977,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                     </span>
                   </div>
                 )}
-                <div className="border-t border-kc-border pt-3 flex justify-between font-bold">
-                  <span>Total</span>
-                  <span className="text-kc-magenta-deep text-lg">{price ? formatDollars(price.total) : "--"}</span>
+                <div className="border-t border-kc-border pt-3">
+                  <div className="flex justify-between font-bold">
+                    {/* Was labelled "Total" while excluding shipping and tax, so the figure jumped
+                        the moment Stripe added them. Say what it is. */}
+                    <span>Subtotal</span>
+                    <span className="text-kc-magenta-deep text-lg">{price ? formatDollars(price.total) : "--"}</span>
+                  </div>
+                  <p className="mt-1.5 text-xs text-kc-muted">
+                    {testCode
+                      ? "Free test order — nothing to pay."
+                      : `Shipping from ${formatDollars(cheapestShipping)} and sales tax are added at checkout, once you enter your delivery address.`}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -1011,29 +1024,29 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               </div>
             )}
 
-            <div className="rounded-lg border border-kc-border p-4">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-kc-muted">Shipping</p>
-              <ul className="divide-y divide-kc-border">
-                {(testCode ? [FREE_TEST_SHIPPING] : pricing.shippingTiers).map((tier) => (
-                  <li key={tier.id} className="flex items-baseline justify-between gap-3 py-2 text-sm">
-                    <span className="text-kc-dark">
-                      {tier.label}
-                      {tier.recommended && (
-                        <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-kc-magenta-deep">
-                          Most popular
-                        </span>
-                      )}
-                      <span className="block text-xs text-kc-muted">{transitLabel(tier)} after despatch</span>
-                    </span>
-                    <span className="shrink-0 font-mono text-[13px] text-kc-dark">{formatDollars(tier.price)}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-3 text-xs leading-relaxed text-kc-muted">
-                You pick a speed on the next screen, where your delivery address and payment are
-                collected securely. Sales tax is worked out from that address, so the total above is
-                before shipping and tax.
+            {/* Reference only. This deliberately does not look like the selectable add-on rows
+                above it: the speed is chosen on Stripe's checkout page, because that is where the
+                delivery address is collected and there is nothing to rate against before then. */}
+            <div className="rounded-lg border border-dashed border-kc-border bg-kc-bg p-4">
+              <div className="mb-1 flex items-baseline gap-2">
+                <Truck className="h-4 w-4 shrink-0 text-kc-muted" strokeWidth={1.75} />
+                <p className="text-sm font-semibold text-kc-dark">You choose your shipping speed at checkout</p>
+              </div>
+              <p className="mb-3 text-xs leading-relaxed text-kc-muted">
+                The next screen collects your delivery address, then shows these speeds with real
+                delivery dates. Nothing here is selectable yet.
               </p>
+              <dl className="space-y-1">
+                {(testCode ? [FREE_TEST_SHIPPING] : pricing.shippingTiers).map((tier) => (
+                  <div key={tier.id} className="flex items-baseline justify-between gap-3 text-xs">
+                    <dt className="text-kc-muted">
+                      {tier.label}
+                      <span className="text-kc-muted/70"> — {transitLabel(tier)}</span>
+                    </dt>
+                    <dd className="shrink-0 font-mono text-kc-dark">{formatDollars(tier.price)}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
 
             <div className="space-y-2">

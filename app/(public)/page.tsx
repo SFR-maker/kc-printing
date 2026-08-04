@@ -9,7 +9,11 @@ import { db } from "@/lib/prisma";
 import { APP_URL } from "@/lib/app-url";
 
 export const metadata: Metadata = {
-  title: "611 Printing - Business Cards, Postcards, Banners & Rigid Signs | Kansas City",
+  // `absolute` bypasses the root layout's "%s | 611 Printing" template. Without it the brand
+  // appeared twice: "611 Printing - ... | Kansas City | 611 Printing".
+  title: {
+    absolute: "611 Printing - Business Cards, Postcards, Banners & Rigid Signs in Kansas City",
+  },
   description:
     "Custom business cards, postcards, banners, and rigid signs. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
 };

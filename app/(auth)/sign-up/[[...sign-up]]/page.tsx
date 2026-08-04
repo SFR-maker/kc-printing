@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SignUp } from "@clerk/nextjs";
+import { LogoTile } from "@/components/layout/Wordmark";
 
 export const metadata: Metadata = {
   title: "Create an account",
@@ -13,9 +14,7 @@ export default function SignUpPage() {
     <main className="min-h-screen bg-kc-bg flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-kc-teal mb-4">
-            <span className="text-xl font-black text-kc-coral">KC</span>
-          </div>
+          <LogoTile className="mx-auto mb-4 h-12 w-12" />
           <p className="text-2xl font-black text-kc-dark">Create your account</p>
           <p className="text-kc-muted text-sm mt-1">Start ordering from 611 Printing today</p>
         </div>

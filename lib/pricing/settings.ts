@@ -18,8 +18,16 @@ export interface PricingSettings {
   roundCornersMarkup: number;
   /** Flat fee for a human-checked proof. The instant proof is free. */
   manualProofPrice: number;
-  /** Flat-rate delivery speeds offered at checkout. */
+  /** Flat-rate delivery speeds, used when live carrier rating is unavailable. */
   shippingTiers: ShippingTier[];
+  /**
+   * Dollars added to every live carrier rate.
+   *
+   * The carrier prices the parcel; it does not price the box, the tape, the label or the time
+   * someone spends packing it. Passing the raw rate through means the shop absorbs all of that on
+   * every order.
+   */
+  shippingMarkup: number;
 }
 
 export const DEFAULT_PRICING: PricingSettings = {
@@ -27,6 +35,7 @@ export const DEFAULT_PRICING: PricingSettings = {
   roundCornersMarkup: 1.25,
   manualProofPrice: 3,
   shippingTiers: SHIPPING_TIERS,
+  shippingMarkup: 2,
 };
 
 /** SiteSetting keys. Namespaced so unrelated settings can share the table. */
@@ -35,6 +44,7 @@ export const PRICING_KEYS = {
   roundCornersMarkup: "pricing.roundCornersMarkup",
   manualProofPrice: "pricing.manualProofPrice",
   shippingTiers: "pricing.shippingTiers",
+  shippingMarkup: "pricing.shippingMarkup",
 } as const;
 
 /**
@@ -48,6 +58,7 @@ export const PRICING_LIMITS = {
   markupMultiplier: { min: 1, max: 5 },
   roundCornersMarkup: { min: 1, max: 5 },
   manualProofPrice: { min: 0, max: 100 },
+  shippingMarkup: { min: 0, max: 50 },
   shippingPrice: { min: 0, max: 500 },
   businessDays: { min: 1, max: 60 },
 } as const;
@@ -68,6 +79,7 @@ export function parsePricingSettings(rows: { key: string; value: string }[]): Pr
     markupMultiplier: num(PRICING_KEYS.markupMultiplier, DEFAULT_PRICING.markupMultiplier, PRICING_LIMITS.markupMultiplier),
     roundCornersMarkup: num(PRICING_KEYS.roundCornersMarkup, DEFAULT_PRICING.roundCornersMarkup, PRICING_LIMITS.roundCornersMarkup),
     manualProofPrice: num(PRICING_KEYS.manualProofPrice, DEFAULT_PRICING.manualProofPrice, PRICING_LIMITS.manualProofPrice),
+    shippingMarkup: num(PRICING_KEYS.shippingMarkup, DEFAULT_PRICING.shippingMarkup, PRICING_LIMITS.shippingMarkup),
     shippingTiers: parseShippingTiers(byKey.get(PRICING_KEYS.shippingTiers)),
   };
 }

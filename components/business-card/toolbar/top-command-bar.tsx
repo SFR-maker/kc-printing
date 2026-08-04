@@ -5,6 +5,7 @@ import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, Grid3x3, Eye, EyeOff, Save, D
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCardEditorStore } from "@/lib/business-card/store";
+import { LogoTile } from "@/components/layout/Wordmark";
 
 interface TopCommandBarProps {
   onSave: () => void;
@@ -33,12 +34,9 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-kc-border bg-white px-4 py-2.5">
       <div className="flex items-center gap-1">
-        <Link
-          href="/"
-          title="Back to 611 Printing"
-          className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-kc-teal text-xs font-black text-white"
-        >
-          KC
+        <Link href="/" title="Back to 611 Printing" className="mr-1 shrink-0">
+          <LogoTile className="h-8 w-8" aria-hidden />
+          <span className="sr-only">Back to 611 Printing</span>
         </Link>
         <div className="mx-1 h-5 w-px bg-kc-border" />
         <IconButton label="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo}>

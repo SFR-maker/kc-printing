@@ -25,6 +25,7 @@ export function AdminPrintPricing({ settings }: { settings: PricingSettings }) {
   const [cornerMarkup, setCornerMarkup] = useState(String(settings.roundCornersMarkup));
   const [proofPrice, setProofPrice] = useState(String(settings.manualProofPrice));
   const [tiers, setTiers] = useState<ShippingTier[]>(settings.shippingTiers);
+  const [shipMarkup, setShipMarkup] = useState(String(settings.shippingMarkup));
 
   async function put(section: string, key: string, value: string) {
     setBusy(section);
@@ -163,6 +164,27 @@ export function AdminPrintPricing({ settings }: { settings: PricingSettings }) {
               <p className="mt-1 text-sm text-kc-muted">
                 Flat rates offered at checkout. Transit days are business days after despatch, and exclude
                 production time.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-kc-muted">Handling added to each live carrier rate ($)</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number" step="0.5" min={PRICING_LIMITS.shippingMarkup.min} max={PRICING_LIMITS.shippingMarkup.max}
+                  value={shipMarkup} onChange={(e) => setShipMarkup(e.target.value)}
+                  className="max-w-[110px] border-kc-border"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => put("shipmarkup", PRICING_KEYS.shippingMarkup, shipMarkup)}
+                  disabled={busy !== null || shipMarkup === String(settings.shippingMarkup)}
+                  className="bg-kc-teal text-white hover:bg-kc-teal/90"
+                >
+                  {busy === "shipmarkup" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+                </Button>
+              </div>
+              <p className="text-xs text-kc-muted">
+                Covers the box, tape, label and packing time — the carrier only prices the parcel.
               </p>
             </div>
             <Button size="sm" variant="outline" className="border-kc-border" onClick={() => setTiers(DEFAULT_PRICING.shippingTiers)}>

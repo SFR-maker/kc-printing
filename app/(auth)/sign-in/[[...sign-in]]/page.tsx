@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SignIn } from "@clerk/nextjs";
+import { LogoTile } from "@/components/layout/Wordmark";
 
 export const metadata: Metadata = {
   title: "Sign in",
@@ -13,9 +14,7 @@ export default function SignInPage() {
     <main className="min-h-screen bg-kc-bg flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-kc-teal mb-4">
-            <span className="text-xl font-black text-kc-coral">KC</span>
-          </div>
+          <LogoTile className="mx-auto mb-4 h-12 w-12" />
           <p className="text-2xl font-black text-kc-dark">Welcome back</p>
           <p className="text-kc-muted text-sm mt-1">Sign in to your 611 Printing account</p>
         </div>

@@ -43,7 +43,6 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
-            {/* Was still showing a "KC" tile after the rebrand. */}
             <Wordmark variant="inverse" className="mb-5" />
             <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/55">
               Business cards, postcards, banners, and rigid signs, designed by a real person and

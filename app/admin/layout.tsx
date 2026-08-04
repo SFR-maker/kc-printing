@@ -4,6 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { ensureUser, isAdminRole } from "@/lib/auth/ensure-user";
 import { AdminNav, AdminNavMobile } from "@/components/admin/AdminNav";
+import { LogoTile } from "@/components/layout/Wordmark";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // ensureUser creates the row on first sign-in, so a fresh Clerk account whose email matches
@@ -17,10 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="hidden w-56 shrink-0 flex-col border-r border-white/10 bg-kc-dark lg:flex">
         <div className="flex h-14 items-center border-b border-white/10 px-4">
           <Link href="/admin" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-kc-teal">
-              <span className="text-xs font-black text-kc-coral">KC</span>
-            </div>
-            <span className="text-xs font-bold uppercase tracking-widest text-white">Admin</span>
+            <LogoTile className="h-7 w-7" variant="inverse" aria-hidden />
+            <span className="text-xs font-bold uppercase tracking-widest text-white">611 Admin</span>
           </Link>
         </div>
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Boxes, FolderKanban, Globe, Image, LayoutDashboard, Package, ScrollText,
+  Boxes, ClipboardCheck, FolderKanban, Globe, Image, LayoutDashboard, Package, ScrollText,
   Search, Settings2, Sparkles, Star, Tag, Upload, Users, Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,7 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
       { href: "/admin/testimonials", label: "Testimonials", icon: Star },
       { href: "/admin/seo", label: "SEO", icon: Search },
       { href: "/admin/site-settings", label: "Site settings", icon: Wrench },
+      { href: "/admin/setup", label: "Setup checklist", icon: ClipboardCheck },
     ],
   },
   {

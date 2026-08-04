@@ -100,3 +100,23 @@ describe("settings actually move the price", () => {
     expect(calculateBusinessCardPrice(SPEC).total).toBe(calculateBusinessCardPrice(SPEC, DEFAULT_PRICING).total);
   });
 });
+
+describe("shipping markup", () => {
+  it("defaults to a handling charge rather than zero", () => {
+    // Passing the raw carrier rate through means the shop pays for boxes and labour on every order.
+    expect(DEFAULT_PRICING.shippingMarkup).toBeGreaterThan(0);
+  });
+
+  it("reads a stored value", () => {
+    expect(parsePricingSettings([{ key: PRICING_KEYS.shippingMarkup, value: "4.5" }]).shippingMarkup).toBe(4.5);
+  });
+
+  it("allows zero, which is a legitimate choice", () => {
+    expect(parsePricingSettings([{ key: PRICING_KEYS.shippingMarkup, value: "0" }]).shippingMarkup).toBe(0);
+  });
+
+  it("refuses a value large enough to look like a typo", () => {
+    expect(parsePricingSettings([{ key: PRICING_KEYS.shippingMarkup, value: "500" }]).shippingMarkup)
+      .toBe(DEFAULT_PRICING.shippingMarkup);
+  });
+});

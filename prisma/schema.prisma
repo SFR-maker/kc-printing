@@ -225,6 +225,11 @@ model Order {
 
   // Despatch details, entered by an admin when the parcel goes out. Kept on the order rather than
   // in an events row because the shop needs to answer "where is it" without replaying a timeline.
+  // The shipping the customer chose and was shown a price for, before checkout. Stored so Stripe
+  // charges exactly that figure rather than re-offering a menu at a different price.
+  shippingLabel        String?
+  shippingPrice        Float?
+
   trackingCarrier      String?
   trackingNumber       String?
   shippedAt            DateTime?

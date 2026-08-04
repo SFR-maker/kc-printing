@@ -6,6 +6,7 @@ import { canRefund } from "@/lib/orders/deletable";
 import { recordOrderEvent } from "@/lib/orders/events";
 import { db } from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
+import { sendRefundConfirmation } from "@/lib/resend";
 
 const schema = z.object({
   /** Dollars. Omit for a full refund of whatever is left. */
@@ -29,7 +30,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const parsed = schema.safeParse(body ?? {});
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const order = await db.order.findUnique({ where: { id } });
+  const order = await db.order.findUnique({ where: { id }, include: { user: true } });
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
   if (!canRefund(order)) {
@@ -111,6 +112,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         : `Refunded $${refunded.toFixed(2)} of $${(order.amountPaid ?? 0).toFixed(2)}, leaving $${remaining.toFixed(2)}`,
     actor: { id: user!.id, name: user!.name, email: user!.email },
   });
+
+  // After Stripe has confirmed, so we never tell someone money is coming back when it is not.
+  const customerEmail = order.user?.email ?? order.guestEmail;
+  if (customerEmail) {
+    await sendRefundConfirmation({
+      customerName: order.user?.name ?? order.shippingName ?? "there",
+      customerEmail,
+      orderId: id,
+      amount: refunded,
+      full: remaining <= 0,
+    });
+  }
 
   await logAudit({
     userId: user!.id,

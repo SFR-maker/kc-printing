@@ -130,7 +130,9 @@ export function Footer() {
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="mb-4 text-[13px] font-semibold text-white">{title}</h3>
+      {/* h2, not h3: these sit directly under the page <h1>, and skipping a level breaks
+          heading-based navigation for screen reader users on any page without an <h2>. */}
+      <h2 className="mb-4 text-[13px] font-semibold text-white">{title}</h2>
       <ul className="space-y-2.5">{children}</ul>
     </div>
   );

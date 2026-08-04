@@ -5,6 +5,7 @@ import { logAudit } from "@/lib/audit";
 import { recordOrderEvent, STATUS_LABELS } from "@/lib/orders/events";
 import { deleteBlockedReason } from "@/lib/orders/deletable";
 import { db } from "@/lib/prisma";
+import { sendShippingConfirmation, sendStatusUpdate } from "@/lib/resend";
 
 const schema = z.object({
   status: z.enum(["DRAFT", "PENDING", "PAID", "IN_PROGRESS", "REVIEW", "REVISION", "COMPLETE", "CANCELLED", "REFUNDED"]).optional(),
@@ -27,8 +28,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
 
-  const before = await db.order.findUnique({ where: { id } });
+  const before = await db.order.findUnique({
+    where: { id },
+    include: { user: true, items: { include: { product: true } } },
+  });
   if (!before) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Guests order without an account, so the address on the order is the only one we have.
+  const customerEmail = before.user?.email ?? before.guestEmail;
+  const customerName = before.user?.name ?? before.shippingName ?? "there";
+  const serviceName = before.items[0]?.product?.name ?? "print";
 
   const { timelineNote, ...fields } = parsed.data;
 
@@ -55,6 +64,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   if (nowShipping) {
     const carrier = after.trackingCarrier?.trim();
+    if (customerEmail) {
+      await sendShippingConfirmation({
+        customerName, customerEmail, orderId: id, serviceName,
+        carrier: carrier ?? null,
+        trackingNumber: after.trackingNumber!,
+      });
+    }
     await recordOrderEvent({
       orderId: id,
       kind: "shipped",
@@ -63,6 +79,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         : `Despatched, tracking ${after.trackingNumber}`,
       actor,
     });
+  }
+
+  // Only the transitions a customer would want to hear about. Emailing every internal step trains
+  // people to ignore the ones that matter.
+  const NOTIFY: Partial<Record<string, { heading: string; message: string }>> = {
+    IN_PROGRESS: { heading: "We've started on your order", message: "your job is now in production. We will email you a tracking number as soon as it ships." },
+    REVIEW: { heading: "Your proof is ready", message: "we have something for you to look at. Open your order to review it and let us know if anything needs changing." },
+    COMPLETE: { heading: "Your order is complete", message: "everything is finished and on its way to you. Thank you for printing with us." },
+    CANCELLED: { heading: "Your order has been cancelled", message: "we have cancelled this order. If money was taken, a refund follows separately." },
+  };
+  const notify = fields.status && fields.status !== before.status ? NOTIFY[fields.status] : undefined;
+  if (notify && customerEmail) {
+    await sendStatusUpdate({ customerName, customerEmail, orderId: id, ...notify });
   }
 
   if (timelineNote?.trim()) {

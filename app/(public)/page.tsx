@@ -417,7 +417,10 @@ export default async function HomePage() {
                 telephone: "+18165210462",
                 email: "kansasdesigners@gmail.com",
                 description: "Fully online print and design services studio.",
-                areaServed: ["Kansas City, MO", "Dallas, TX", "Plano, TX", "Addison, TX", "Overland Park, KS", "United States"],
+                // Was claiming Dallas, Plano and Addison TX for a Kansas City print shop - inherited from
+                // another project. Inflated service areas read as untrustworthy in local search, and
+                // the Terms already say Kansas City plus nationwide shipping.
+                areaServed: ["Kansas City, MO", "Overland Park, KS", "Independence, MO", "Lee's Summit, MO", "United States"],
               },
             ],
           }),

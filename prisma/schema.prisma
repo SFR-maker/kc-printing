@@ -301,7 +301,7 @@ model Project {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  order            Order             @relation(fields: [orderId], references: [id])
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user             User              @relation(fields: [userId], references: [id])
   revisionRequests RevisionRequest[]
 
@@ -321,7 +321,7 @@ model Upload {
   uploadedAt DateTime @default(now())
 
   user  User   @relation(fields: [userId], references: [id])
-  order Order? @relation(fields: [orderId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([orderId])

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { FileUp, Palette, Search, Truck } from "lucide-react";
+import { Search } from "lucide-react";
 import type { OrderStatus, Prisma } from "@prisma/client";
 import { db } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
-import { OrderStatusBadge, PaymentBadge } from "@/components/admin/OrderStatusBadge";
+import { AdminOrderTable, type AdminOrderRow } from "@/components/admin/AdminOrderTable";
 import { OPEN_STATUSES, PAID_STATUSES, STATUS_FLOW, STATUS_LABELS } from "@/lib/orders/status";
 import { cn, formatDollars } from "@/lib/utils";
 
@@ -52,6 +52,26 @@ export default async function AdminOrdersPage({
 
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  // Flattened and serialised here: Date objects and nested relations do not survive the boundary
+  // into a client component, and the table only needs these fields.
+  const rows: AdminOrderRow[] = orders.map((o) => ({
+    id: o.id,
+    status: o.status,
+    total: o.total,
+    amountPaid: o.amountPaid,
+    stripePaymentStatus: o.stripePaymentStatus,
+    stripeSessionId: o.stripeSessionId,
+    guestEmail: o.guestEmail,
+    shippingName: o.shippingName,
+    trackingNumber: o.trackingNumber,
+    artworkPath: o.artworkPath,
+    createdAt: o.createdAt.toISOString(),
+    customerName: o.user?.name ?? null,
+    customerEmail: o.user?.email ?? null,
+    productName: o.items[0]?.product?.name ?? null,
+    quantity: o.items[0]?.quantity ?? null,
+  }));
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -99,64 +119,15 @@ export default async function AdminOrdersPage({
         ))}
       </div>
 
-      <Card className="border-kc-border">
-        <CardContent className="overflow-x-auto p-0">
-          {orders.length === 0 ? (
-            <p className="p-12 text-center text-sm text-kc-muted">
-              {q || status ? "No orders match that filter." : "No orders yet."}
-            </p>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-kc-border bg-kc-bg text-xs text-kc-muted">
-                  {["Order", "Customer", "Product", "Total", "Payment", "Status", "Placed"].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-4 py-3 text-left font-medium">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-kc-border">
-                {orders.map((order) => (
-                  <tr key={order.id} className="transition-colors hover:bg-kc-bg">
-                    <td className="px-4 py-3">
-                      <Link href={`/admin/orders/${order.id}`} className="font-mono text-xs font-semibold text-kc-teal hover:underline">
-                        #{order.id.slice(-8)}
-                      </Link>
-                      <div className="mt-1 flex items-center gap-1.5 text-kc-muted">
-                        {order.artworkPath === "UPLOAD" ? (
-                          <FileUp className="h-3.5 w-3.5" strokeWidth={1.75} aria-label="Customer supplied the artwork" />
-                        ) : (
-                          <Palette className="h-3.5 w-3.5" strokeWidth={1.75} aria-label="We design it" />
-                        )}
-                        {order.trackingNumber && (
-                          <Truck className="h-3.5 w-3.5 text-emerald-600" strokeWidth={1.75} aria-label="Despatched" />
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-kc-dark">{order.user?.name ?? order.shippingName ?? "—"}</div>
-                      <div className="text-xs text-kc-muted">{order.user?.email ?? order.guestEmail ?? "—"}</div>
-                    </td>
-                    <td className="px-4 py-3 text-kc-muted">
-                      <div>{order.items[0]?.product?.name ?? "—"}</div>
-                      {order.items[0] && (
-                        <div className="text-xs">{order.items[0].quantity.toLocaleString()} units</div>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 font-semibold text-kc-dark">{formatDollars(order.total)}</td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      <PaymentBadge stripePaymentStatus={order.stripePaymentStatus} amountPaid={order.amountPaid} />
-                    </td>
-                    <td className="px-4 py-3"><OrderStatusBadge status={order.status} /></td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-kc-muted">
-                      {new Date(order.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </CardContent>
-      </Card>
+      {orders.length === 0 ? (
+        <Card className="border-kc-border">
+          <CardContent className="p-12 text-center text-sm text-kc-muted">
+            {q || status ? "No orders match that filter." : "No orders yet."}
+          </CardContent>
+        </Card>
+      ) : (
+        <AdminOrderTable orders={rows} />
+      )}
 
       {pages > 1 && (
         <div className="flex items-center justify-between text-sm">

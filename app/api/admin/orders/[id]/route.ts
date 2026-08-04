@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { logAudit } from "@/lib/audit";
 import { recordOrderEvent, STATUS_LABELS } from "@/lib/orders/events";
+import { deleteBlockedReason } from "@/lib/orders/deletable";
 import { db } from "@/lib/prisma";
 
 const schema = z.object({
@@ -100,4 +101,43 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(order);
+}
+
+/**
+ * Permanently removes an order, along with its items, history and design job.
+ *
+ * Uploaded customer files are detached rather than destroyed (Upload.orderId is set null by the
+ * schema), because those belong to the customer and may be referenced by another order.
+ */
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error, user } = await requireAdmin();
+  if (error) return error;
+
+  const { id } = await params;
+  const order = await db.order.findUnique({ where: { id } });
+  if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
+
+  const blocked = deleteBlockedReason(order);
+  if (blocked) return NextResponse.json({ error: blocked }, { status: 409 });
+
+  // Captured before the row disappears - the audit entry is the only trace left afterwards.
+  await logAudit({
+    userId: user!.id,
+    action: "order.delete",
+    entity: "Order",
+    entityId: id,
+    before: {
+      status: order.status,
+      total: order.total,
+      amountPaid: order.amountPaid,
+      email: order.guestEmail,
+      stripeSessionId: order.stripeSessionId,
+      createdAt: order.createdAt,
+    },
+    ip: req.headers.get("x-forwarded-for") ?? undefined,
+  });
+
+  await db.order.delete({ where: { id } });
+
+  return NextResponse.json({ deleted: id });
 }

@@ -108,24 +108,118 @@ export interface OrderEmailData {
   serviceName: string;
   packageName: string;
   total: number;
+  /** Everything below is optional so an order missing a detail still sends a receipt. */
+  items?: { name: string; detail?: string; quantity: number; price: number }[];
+  subtotal?: number;
+  shippingLabel?: string | null;
+  shippingPrice?: number | null;
+  tax?: number | null;
+  address?: string[];
+  /** Business days from payment to despatch, for the timeline. */
+  productionDays?: string;
+  transit?: string | null;
+  artworkApproved?: boolean;
+  designService?: boolean;
+}
+
+/**
+ * "What happens next", as a numbered list.
+ *
+ * The single most common post-purchase question is not "what did I buy" - the receipt answers that
+ * - it is "when will I get it, and do you need anything from me". Answering both unprompted is what
+ * stops the email arriving in the inbox two days later.
+ */
+function timeline(steps: { title: string; body: string }[]): string {
+  return `<div style="margin:20px 0">
+    <p style="color:${BRAND.ink};font-weight:700;font-size:14px;margin:0 0 10px">What happens next</p>
+    ${steps
+      .map(
+        (s, i) => `<div style="display:block;padding:0 0 12px 0">
+        <span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;background:${BRAND.teal};color:#fff;border-radius:11px;font-size:12px;font-weight:700">${i + 1}</span>
+        <span style="color:${BRAND.ink};font-weight:600;font-size:14px;margin-left:8px">${esc(s.title)}</span>
+        <div style="color:${BRAND.muted};font-size:13px;line-height:1.5;margin:2px 0 0 30px">${esc(s.body)}</div>
+      </div>`
+      )
+      .join("")}
+  </div>`;
+}
+
+/** A right-aligned money row for the cost breakdown. */
+function costRow(label: string, value: string, bold = false): string {
+  return `<tr>
+    <td style="padding:5px 0;color:${bold ? BRAND.ink : BRAND.muted};font-size:14px;${bold ? "font-weight:700;border-top:1px solid " + BRAND.line + ";padding-top:10px" : ""}">${esc(label)}</td>
+    <td style="padding:5px 0;text-align:right;color:${BRAND.ink};font-size:14px;${bold ? "font-weight:700;border-top:1px solid " + BRAND.line + ";padding-top:10px" : ""}">${esc(value)}</td>
+  </tr>`;
 }
 
 export async function sendOrderConfirmation(data: OrderEmailData): Promise<boolean> {
+  const orderNo = `#${data.orderId.slice(-8)}`;
+  const items = data.items?.length
+    ? data.items
+    : [{ name: data.serviceName, detail: data.packageName || undefined, quantity: 1, price: data.total }];
+
+  const lines = items
+    .map(
+      (i) => `<tr>
+        <td style="padding:8px 0;border-bottom:1px solid ${BRAND.line}">
+          <span style="color:${BRAND.ink};font-size:14px;font-weight:600">${esc(i.name)}</span>
+          ${i.detail ? `<br><span style="color:${BRAND.muted};font-size:13px">${esc(i.detail)}</span>` : ""}
+          <br><span style="color:${BRAND.muted};font-size:13px">Quantity: ${i.quantity.toLocaleString()}</span>
+        </td>
+        <td style="padding:8px 0;border-bottom:1px solid ${BRAND.line};text-align:right;color:${BRAND.ink};font-size:14px;white-space:nowrap">${esc(money(i.price))}</td>
+      </tr>`
+    )
+    .join("");
+
+  const costs =
+    costRow("Subtotal", money(data.subtotal ?? data.total)) +
+    (data.shippingPrice != null
+      ? costRow(data.shippingLabel ? `Shipping — ${data.shippingLabel}` : "Shipping", money(data.shippingPrice))
+      : "") +
+    (data.tax ? costRow("Sales tax", money(data.tax)) : "") +
+    costRow("Total paid", money(data.total), true);
+
+  const steps = [
+    data.designService
+      ? { title: "We design it", body: "A designer starts on your brief and sends a proof for approval, normally within 1 to 3 business days." }
+      : {
+          title: data.artworkApproved ? "Your artwork is approved" : "We check your artwork",
+          body: data.artworkApproved
+            ? "You approved the proof at checkout, so nothing is needed from you."
+            : "We check your file prints correctly and come back to you if anything needs changing.",
+        },
+    { title: "Printing", body: `Your job goes to press. Production usually takes ${data.productionDays ?? "2 to 4 business days"}.` },
+    {
+      title: "On its way",
+      body: data.transit
+        ? `We email a tracking number the moment it ships. ${data.transit} in transit after that.`
+        : "We email a tracking number the moment it ships.",
+    },
+  ];
+
   return sendEmail(
     data.customerEmail,
-    `Order confirmed: ${data.serviceName} - 611 Printing`,
+    `Order ${orderNo} confirmed - 611 Printing`,
     layout(
       "Order confirmed",
-      `<p style="color:${BRAND.muted};line-height:1.6">Hi ${esc(data.customerName)}, we have your order and your payment went through. Here is what we are making.</p>
-       ${panel(
-         detailRow("Product", data.serviceName) +
-         detailRow("Package", data.packageName) +
-         detailRow("Total paid", money(data.total)) +
-         detailRow("Order number", `#${data.orderId.slice(-8)}`)
-       )}
-       <p style="color:${BRAND.muted};line-height:1.6">We will email you again the moment it ships, with a tracking number.</p>
-       ${button(`${APP_URL}/account/orders`, "View your order")}`,
-      "Keep this email - the order number is the fastest way for us to find your job."
+      `<p style="color:${BRAND.muted};line-height:1.6;margin:0 0 4px">
+         Hi ${esc(data.customerName)}, your payment went through and your order is booked in.
+       </p>
+       <p style="color:${BRAND.ink};font-size:15px;font-weight:700;margin:0 0 16px">Order ${esc(orderNo)}</p>
+
+       <table style="width:100%;border-collapse:collapse">${lines}</table>
+       <table style="width:100%;border-collapse:collapse;margin-top:8px">${costs}</table>
+
+       ${data.address?.length
+         ? `<div style="margin-top:18px">
+              <p style="color:${BRAND.ink};font-weight:700;font-size:14px;margin:0 0 4px">Delivering to</p>
+              <p style="color:${BRAND.muted};font-size:14px;line-height:1.5;margin:0">${data.address.map(esc).join("<br>")}</p>
+            </div>`
+         : ""}
+
+       ${timeline(steps)}
+       ${button(`${APP_URL}/account/orders`, "Track your order")}`,
+      `Keep this email - order ${orderNo} is the fastest way for us to find your job.`
     )
   );
 }

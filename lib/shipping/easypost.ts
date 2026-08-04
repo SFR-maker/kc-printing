@@ -133,17 +133,24 @@ export async function getRates(to: ShipToAddress, parcel: Parcel): Promise<Carri
     return [];
   }
 
+  // Empty strings are not the same as absent. A pre-checkout quote knows only the ZIP, and
+  // EasyPost rates a domestic parcel from ZIP and country alone - but `street1: ""` trips its
+  // address validation and comes back with no rates at all, which silently looks identical to
+  // "the carrier had nothing for you".
+  const toAddress: Record<string, string> = { zip: to.zip, country: to.country };
+  for (const [key, value] of [
+    ["name", to.name],
+    ["street1", to.street1],
+    ["street2", to.street2],
+    ["city", to.city],
+    ["state", to.state],
+  ] as const) {
+    if (typeof value === "string" && value.trim()) toAddress[key] = value.trim();
+  }
+
   const shipment = await easypost<EasyPostShipment>("/shipments", {
     shipment: {
-      to_address: {
-        name: to.name ?? undefined,
-        street1: to.street1,
-        street2: to.street2 ?? undefined,
-        city: to.city,
-        state: to.state,
-        zip: to.zip,
-        country: to.country,
-      },
+      to_address: toAddress,
       from_address: from,
       parcel: {
         length: parcel.lengthIn,

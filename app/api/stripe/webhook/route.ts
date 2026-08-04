@@ -119,13 +119,36 @@ export async function POST(req: Request) {
       });
       const customerEmail = fullOrder?.user?.email ?? fullOrder?.guestEmail;
       if (customerEmail) {
+        // Everything the receipt needs is on the order by this point: Stripe has just told us the
+        // tax and the amount actually charged, and the shipping choice was recorded before checkout.
+        const bcSpec = (fullOrder?.items[0]?.config as { bcSpec?: { rush?: boolean } } | null)?.bcSpec;
         const emailData = {
-          customerName: fullOrder?.user?.name ?? customerEmail,
+          customerName: fullOrder?.user?.name ?? fullOrder?.shippingName ?? "there",
           customerEmail,
           orderId,
           serviceName: fullOrder?.items[0]?.product?.name ?? "Design Service",
           packageName: fullOrder?.items[0]?.packageTier?.name ?? "",
-          total: fullOrder?.total ?? 0,
+          total: fullOrder?.amountPaid ?? fullOrder?.total ?? 0,
+          items: fullOrder?.items.map((i) => ({
+            name: i.product?.name ?? "Print job",
+            detail: i.packageTier?.name ?? undefined,
+            quantity: i.quantity,
+            price: i.price,
+          })),
+          subtotal: fullOrder?.total ?? 0,
+          shippingLabel: fullOrder?.shippingLabel ?? null,
+          shippingPrice: fullOrder?.shippingPrice ?? null,
+          tax: fullOrder?.taxAmount ?? null,
+          address: [
+            fullOrder?.shippingName,
+            fullOrder?.shippingLine1,
+            fullOrder?.shippingLine2,
+            [fullOrder?.shippingCity, fullOrder?.shippingState, fullOrder?.shippingPostalCode].filter(Boolean).join(", "),
+          ].filter((l): l is string => Boolean(l)),
+          productionDays: bcSpec?.rush ? "1 business day on rush" : "2 to 4 business days",
+          transit: null,
+          artworkApproved: Boolean(fullOrder?.proofApprovedAt),
+          designService: fullOrder?.artworkPath === "DESIGN_SERVICE",
         };
         await Promise.all([sendOrderConfirmation(emailData), sendAdminNewOrder(emailData)]);
       }

@@ -95,7 +95,7 @@ export function Header() {
           <Wordmark />
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-7 lg:flex">
           {NAV_LINKS.map((link) => {
             const active = pathname.startsWith(link.href);
             return (
@@ -116,7 +116,7 @@ export function Header() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <a
             href="tel:+18165210462"
             className="flex items-center gap-1.5 font-mono text-[12.5px] text-kc-dark/60 transition-colors hover:text-kc-magenta-deep"
@@ -142,7 +142,7 @@ export function Header() {
           aria-label="Toggle navigation"
           aria-expanded={open}
           data-testid="mobile-nav"
-          className="edge p-2 text-kc-dark md:hidden"
+          className="edge p-2 text-kc-dark lg:hidden"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-5 w-5" strokeWidth={1.75} /> : <Menu className="h-5 w-5" strokeWidth={1.75} />}
@@ -152,7 +152,7 @@ export function Header() {
       {open && (
         <div
           data-testid="mobile-menu"
-          className="border-t border-kc-dark/10 bg-kc-bg px-4 pb-4 pt-2 md:hidden"
+          className="border-t border-kc-dark/10 bg-kc-bg px-4 pb-4 pt-2 lg:hidden"
         >
           <nav className="flex flex-col">
             {NAV_LINKS.map((link) => (

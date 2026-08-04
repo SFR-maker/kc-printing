@@ -24,7 +24,9 @@ module.exports = {
       { userAgent: "*", disallow: ["/admin", "/account", "/api"] },
     ],
   },
-  exclude: ["/admin/*", "/account/*", "/api/*", "/sign-in", "/sign-up"],
+  // /success and /cancel are checkout outcomes, not landing pages - they carry no content
+  // worth ranking and look like dead ends to anyone arriving from a search result.
+  exclude: ["/admin/*", "/account/*", "/api/*", "/sign-in", "/sign-up", "/success", "/cancel"],
   changefreq: "weekly",
   priority: 0.7,
   transform: async (config, path) => {

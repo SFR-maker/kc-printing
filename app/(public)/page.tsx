@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { db } from "@/lib/prisma";
+import { APP_URL } from "@/lib/app-url";
 
 export const metadata: Metadata = {
   title: "KC Printing - Business Cards, Postcards, Banners & Rigid Signs | Kansas City",
@@ -392,9 +393,27 @@ export default async function HomePage() {
             "@context": "https://schema.org",
             "@graph": [
               {
-                "@type": "Organization",
+                // LocalBusiness rather than Organization: this is a print shop with a service area
+                // and opening hours, and that is what local search results are built from.
+                "@type": "LocalBusiness",
+                "@id": `${APP_URL}/#business`,
                 name: "KC Printing",
-                url: "https://kcprinting.com",
+                // Was hardcoded to https://kcprinting.com, a domain the site is not served from,
+                // which pointed every structured-data consumer at the wrong host.
+                url: APP_URL,
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: "Kansas City",
+                  addressRegion: "MO",
+                  addressCountry: "US",
+                },
+                priceRange: "$$",
+                openingHoursSpecification: {
+                  "@type": "OpeningHoursSpecification",
+                  dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                  opens: "09:00",
+                  closes: "18:00",
+                },
                 telephone: "+18165210462",
                 email: "kansasdesigners@gmail.com",
                 description: "Fully online print and design services studio.",

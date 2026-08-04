@@ -126,8 +126,8 @@ export async function POST(req: Request) {
                 id: "chosen",
                 label: order.shippingLabel,
                 price: order.shippingPrice,
-                minBusinessDays: 1,
-                maxBusinessDays: 10,
+                minBusinessDays: order.shippingMinDays ?? 3,
+                maxBusinessDays: order.shippingMaxDays ?? 6,
                 recommended: true,
               }]
             : (await getPricingSettings()).shippingTiers

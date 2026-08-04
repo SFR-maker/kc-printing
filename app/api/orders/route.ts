@@ -86,7 +86,13 @@ const schema = z.object({
    * is charged the figure they were shown, and the print total is still recomputed server-side.
    */
   shipping: z
-    .object({ id: z.string(), label: z.string().max(120), price: z.number().min(0).max(1000) })
+    .object({
+      id: z.string(),
+      label: z.string().max(120),
+      price: z.number().min(0).max(1000),
+      minDays: z.number().int().min(1).max(60),
+      maxDays: z.number().int().min(1).max(60),
+    })
     .nullable()
     .optional(),
 });
@@ -178,6 +184,8 @@ export async function POST(req: Request) {
       // Stamped server-side so the record reflects when we actually received the agreement.
       shippingLabel: freeTestOrder ? null : shipping?.label ?? null,
       shippingPrice: freeTestOrder ? null : shipping?.price ?? null,
+      shippingMinDays: freeTestOrder ? null : shipping?.minDays ?? null,
+      shippingMaxDays: freeTestOrder ? null : shipping?.maxDays ?? null,
       termsVersion: TERMS_VERSION,
       termsAcceptedAt: new Date(),
       items: {

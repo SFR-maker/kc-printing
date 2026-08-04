@@ -9,7 +9,12 @@ test.describe("API routes", () => {
   });
 
   test("24 - contact route rejects invalid email", async ({ request }) => {
+    // The contact route rate-limits on x-forwarded-for, 5 per 10 minutes. Both browser projects run
+    // this test, and a few suite runs in quick succession used to push it over and return 429 -
+    // the limiter working correctly, but the assertion reading as a validation failure. A unique
+    // forwarded IP per run gives the test its own bucket instead of weakening what it asserts.
     const res = await request.post("/api/contact", {
+      headers: { "x-forwarded-for": `203.0.113.${Math.floor(Math.random() * 254) + 1}` },
       data: { name: "Test", email: "not-an-email", service: "Business Cards", message: "Hello" },
     });
     expect(res.status()).toBe(400);

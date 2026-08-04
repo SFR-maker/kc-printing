@@ -68,6 +68,8 @@ export async function POST(req: Request) {
         label: t.label,
         transit: transitLabel(t),
         price: t.price,
+        minDays: t.minBusinessDays,
+        maxDays: t.maxBusinessDays,
         recommended: Boolean(t.recommended),
       })),
     });
@@ -89,6 +91,10 @@ export async function POST(req: Request) {
       ? `${r.deliveryDays} business day${r.deliveryDays === 1 ? "" : "s"}`
       : "estimate not given",
     price: round2(r.price + settings.shippingMarkup),
+    // Carriers commit to a single number; Stripe wants a window, so allow a day either side rather
+    // than promising a date the carrier never guaranteed.
+    minDays: r.deliveryDays ?? 2,
+    maxDays: r.deliveryDays ? r.deliveryDays + 1 : 7,
     recommended: i === 0,
   }));
 

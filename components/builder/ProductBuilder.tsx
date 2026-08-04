@@ -268,6 +268,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
         })
       : null;
 
+  // Only products with a parcel model can be quoted; everything else still picks a flat tier on
+  // Stripe's page, so requiring a quote there would block checkout entirely.
+  const shippingRequired = isBusinessCards && Boolean(values.bcSpec) && !testCode;
+  const shippingMissing = shippingRequired && !shipping;
+
   const cheapestShipping = testCode
     ? 0
     : Math.min(...pricing.shippingTiers.map((t) => t.price));
@@ -1137,15 +1142,20 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               Next <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button
-              key="submit-button"
-              type="submit"
-              disabled={submitting}
-              className="bg-kc-coral hover:bg-kc-coral/90 text-white"
-            >
-              {submitting ? "Processing..." : "Proceed to Payment"}
-              {!submitting && <ArrowRight className="ml-2 h-4 w-4" />}
-            </Button>
+            <div className="flex flex-col items-end gap-1.5">
+              <Button
+                key="submit-button"
+                type="submit"
+                disabled={submitting || shippingMissing}
+                className="bg-kc-coral hover:bg-kc-coral/90 text-white"
+              >
+                {submitting ? "Processing..." : "Proceed to Payment"}
+                {!submitting && <ArrowRight className="ml-2 h-4 w-4" />}
+              </Button>
+              {shippingMissing && (
+                <p className="text-xs text-kc-muted">Price your shipping above to continue.</p>
+              )}
+            </div>
           )}
         </div>
       </form>

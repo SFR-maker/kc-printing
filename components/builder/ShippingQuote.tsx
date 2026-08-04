@@ -12,6 +12,8 @@ export interface QuoteOption {
   label: string;
   transit: string;
   price: number;
+  minDays: number;
+  maxDays: number;
   recommended: boolean;
 }
 

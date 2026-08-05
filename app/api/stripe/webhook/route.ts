@@ -150,7 +150,29 @@ export async function POST(req: Request) {
           artworkApproved: Boolean(fullOrder?.proofApprovedAt),
           designService: fullOrder?.artworkPath === "DESIGN_SERVICE",
         };
-        await Promise.all([sendOrderConfirmation(emailData), sendAdminNewOrder(emailData)]);
+        /**
+         * A failed receipt is recorded against the order, not just logged.
+         *
+         * Both senders already return false and log on a missing key, a rejected send or an
+         * unverified sender - but the result was discarded here, so the only trace was a line in
+         * the platform logs that nobody reads. A customer who paid and never got a receipt was
+         * indistinguishable from one who did. The payment itself is unaffected either way, so this
+         * never throws: the order stays paid and the failure becomes visible in admin.
+         */
+        const [customerSent, adminSent] = await Promise.all([
+          sendOrderConfirmation(emailData),
+          sendAdminNewOrder(emailData),
+        ]);
+        if (!customerSent || !adminSent) {
+          const failed = [!customerSent && `receipt to ${customerEmail}`, !adminSent && "admin notification"]
+            .filter(Boolean)
+            .join(" and ");
+          await recordOrderEvent({
+            orderId,
+            kind: "note",
+            message: `Could not send ${failed}. The payment went through - check the email settings on /admin/setup.`,
+          }).catch(() => {});
+        }
       }
     }
   }

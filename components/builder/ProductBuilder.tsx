@@ -324,9 +324,29 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
     }
   };
 
+  /**
+   * Free is the self-serve tier: no designer is booked, so the artwork has to come from the
+   * customer - an uploaded file or a design they built in the studio. Without either there is
+   * literally nothing to print, and the order would reach production empty.
+   */
+  const emptySelfServeOrder =
+    isBusinessCards
+    && !values.selectedPackage
+    && values.artwork?.path !== "UPLOAD"
+    && !cardDesignId;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
     const typed = data as FormValues;
+
+    if (emptySelfServeOrder) {
+      setSubmitError(
+        "There is no artwork on this order. Upload a print-ready file, design one in the studio, "
+        + "or pick a design package and we will make it for you."
+      );
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -489,7 +509,21 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               <p className="text-sm text-kc-muted">Upload a print-ready file, or have our designers build it for you.</p>
               <ArtworkStep
                 value={artwork}
-                onChange={(next) => setValue("artwork", next)}
+                onChange={(next) => {
+                  setValue("artwork", next);
+                  // "Design it for me" then landing on a Free self-serve package contradicts the
+                  // choice just made. Gold is the popular tier, and it stays changeable.
+                  if (next.path === "DESIGN_SERVICE" && !values.selectedPackage) {
+                    const gold = service.packages.find((p) => p.name.toLowerCase() === "gold")
+                      ?? service.packages.find((p) => p.popular)
+                      ?? service.packages[0];
+                    if (gold) setValue("selectedPackage", gold.name);
+                  }
+                  // Switching to upload means they are not buying a design package after all.
+                  if (next.path === "UPLOAD" && values.selectedPackage) {
+                    setValue("selectedPackage", "");
+                  }
+                }}
                 roundCorners={(values.bcSpec ?? DEFAULT_BC_SPEC).roundCorners}
                 needsBack={backNeeded}
                 backLabel={backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)}
@@ -1132,15 +1166,22 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               Next <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button
-              key="submit-button"
-              type="submit"
-              disabled={submitting}
-              className="bg-kc-coral hover:bg-kc-coral/90 text-white"
-            >
-              {submitting ? "Processing..." : "Proceed to Payment"}
-              {!submitting && <ArrowRight className="ml-2 h-4 w-4" />}
-            </Button>
+            <div className="flex flex-col items-end gap-1.5">
+              <Button
+                key="submit-button"
+                type="submit"
+                disabled={submitting || emptySelfServeOrder}
+                className="bg-kc-coral hover:bg-kc-coral/90 text-white"
+              >
+                {submitting ? "Processing..." : "Proceed to Payment"}
+                {!submitting && <ArrowRight className="ml-2 h-4 w-4" />}
+              </Button>
+              {emptySelfServeOrder && (
+                <p className="max-w-xs text-right text-xs text-kc-muted">
+                  Add artwork or pick a design package first.
+                </p>
+              )}
+            </div>
           )}
         </div>
       </form>

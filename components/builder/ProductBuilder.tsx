@@ -321,6 +321,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
         })
       : null;
 
+  /**
+   * True when this order is carrying a design built in the Design Studio.
+   *
+   * That design is the artwork - it is already print-ready at the chosen size - so it satisfies the
+   * artwork requirement on its own. Previously only an uploaded file or a booked design service
+   * counted, so arriving from the studio showed an uploader and then refused to advance, which made
+   * a studio design impossible to order at all.
+   *
+   * "Upload a file instead" clears it back to the normal uploader, so the escape hatch still exists.
+   */
+  const studioDesign = Boolean(cardDesignId) && artwork.path !== "UPLOAD";
+
   const backNeeded = isBusinessCards
     ? needsBackArtwork(values.bcSpec?.colorId ?? 1)
     : isPostcards
@@ -479,9 +491,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
     // were reaching payment without this, and the package gate below then refused them silently.
     if (hasPrintSpec && currentStep === "specs") {
       if (!printPrice?.valid) return;
-      // Either our designers are doing it, or there is an uploaded file with an approved proof.
-      // Without this an unapproved proof could be carried straight to payment.
-      if (!artworkComplete(artwork, backNeeded)) {
+      // Either the artwork came from the Design Studio, our designers are doing it, or there is an
+      // uploaded file with an approved proof. Without this an unapproved proof could be carried
+      // straight to payment.
+      if (!studioDesign && !artworkComplete(artwork, backNeeded)) {
         setArtworkError(
           artwork.path === null
             ? "Choose whether to upload your own design or have us design it."
@@ -649,6 +662,42 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
 
             <div className="space-y-4 border-t border-kc-border pt-8">
               <h2 className="text-xl font-bold text-kc-dark">Your Artwork</h2>
+              {studioDesign ? (
+                <>
+                  {/*
+                    The studio design is the artwork. Showing the uploader here asked for a file the
+                    customer had already made and then refused to continue without one, which made a
+                    design built in the studio impossible to order.
+                  */}
+                  <p className="text-sm text-kc-muted">
+                    Your design from the Design Studio will be sent to print. Nothing to upload.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border-2 border-kc-coral/40 bg-white p-5">
+                    <div>
+                      <div className="text-sm font-semibold text-kc-dark">Design Studio artwork</div>
+                      <div className="text-sm text-kc-muted">
+                        Print-ready at the size and finish selected above.
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <a
+                        href={`/services/${service.slug}/design/${cardDesignId}`}
+                        className="text-sm font-semibold text-kc-magenta-deep hover:underline"
+                      >
+                        Edit design
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" })}
+                        className="text-sm text-kc-muted underline hover:text-kc-dark"
+                      >
+                        Upload a file instead
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
               <p className="text-sm text-kc-muted">Upload a print-ready file, or have our designers build it for you.</p>
               <ArtworkStep
                 value={artwork}
@@ -678,6 +727,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                 }
                 spec={artworkSpec}
               />
+                </>
+              )}
               {artworkError && (
                 <p role="alert" className="text-sm text-red-600">{artworkError}</p>
               )}

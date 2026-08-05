@@ -91,7 +91,15 @@ export function CardCanvas() {
       const availW = parent.clientWidth - paddingX;
       const availH = parent.clientHeight - paddingY;
       if (availW <= 0 || availH <= 0) return;
-      const fitZoom = Math.min(availW / widthPx, availH / heightPx, 1);
+      /**
+       * Fill the space available rather than stopping at 1:1.
+       *
+       * The cap used to be 1, so a business card sat at 700 x 400 no matter how much room the
+       * screen had - a small card marooned in a large grey area, which made fine positioning
+       * needlessly fiddly. PX_PER_IN is 200, so 2.5x is 500 px/in on screen and still comfortably
+       * sharp; the artwork itself is vector and rescales cleanly.
+       */
+      const fitZoom = Math.min(availW / widthPx, availH / heightPx, 2.5);
       // Floor is intentionally low, not the ~25% that's plenty for a business card — a 33x81in
       // roll-up banner can genuinely need single-digit zoom to fit on screen at all, and flooring
       // it higher just makes most of the design scroll out of view instead of shrinking to fit.

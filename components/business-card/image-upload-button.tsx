@@ -114,6 +114,11 @@ export function ImageUploadButton({ onInserted }: { onInserted?: () => void }) {
         {status === "uploading" ? <Loader2 className="h-5 w-5 animate-spin" /> : <ImagePlus className="h-5 w-5" />}
         {status === "uploading" ? "Uploading..." : "Upload Image or Logo"}
       </button>
+      {/* Paste and drag-and-drop both work anywhere over the canvas, but nobody discovers an
+          invisible affordance - so the button says so. */}
+      <p className="text-center text-[11.77px] leading-snug text-kc-dark/60">
+        or paste with Ctrl+V, or drag a file onto the card
+      </p>
 
       {uploaded && (
         <div className="flex items-center gap-2 rounded-lg border border-kc-teal/30 bg-kc-teal/5 p-2">

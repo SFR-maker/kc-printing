@@ -65,19 +65,29 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
         </IconButton>
       </div>
 
-      <div className="flex items-center gap-1 rounded-lg border border-kc-border bg-kc-bg p-1">
-        <button
-          onClick={() => setActiveSide("front")}
-          className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${activeSide === "front" ? "bg-white text-kc-teal shadow-sm" : "text-kc-muted"}`}
-        >
-          Front
-        </button>
-        <button
-          onClick={() => setActiveSide("back")}
-          className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${activeSide === "back" ? "bg-white text-kc-teal shadow-sm" : "text-kc-muted"}`}
-        >
-          Back
-        </button>
+      {/* Which face you are editing is the single most consequential piece of state in the editor,
+          and it was a pair of extra-small grey words. Sized up and given a clear selected state so
+          it reads at a glance and cannot be confused with the icon buttons beside it. */}
+      <div
+        role="tablist"
+        aria-label="Card side"
+        className="flex items-center gap-1 rounded-xl border border-kc-border bg-kc-bg p-1"
+      >
+        {(["front", "back"] as const).map((side) => (
+          <button
+            key={side}
+            role="tab"
+            aria-selected={activeSide === side}
+            onClick={() => setActiveSide(side)}
+            className={`rounded-lg px-5 py-2 text-sm font-bold capitalize transition-colors ${
+              activeSide === side
+                ? "bg-kc-magenta-deep text-white shadow-sm"
+                : "text-kc-dark/60 hover:text-kc-dark"
+            }`}
+          >
+            {side}
+          </button>
+        ))}
       </div>
 
       <div className="flex items-center gap-2">

@@ -73,11 +73,29 @@ export function ProofScreen({ design, onBack, onConfirm, confirming }: ProofScre
   );
 }
 
+/**
+ * One face of the card, shown whole.
+ *
+ * renderSideToSvg emits width and height in pixels at the requested DPI - 525 x 300 for a card at
+ * 150 - which is wider than this column, so the card was being clipped by the surrounding
+ * overflow-hidden and the proof showed the top-left corner blown up rather than the finished piece.
+ *
+ * The SVG already carries a viewBox in inches, so overriding the pixel width to fill the column and
+ * letting the height follow scales the whole face down at its true proportions. Driving it from the
+ * viewBox rather than a hard-coded aspect class also keeps square and custom sizes honest.
+ */
 function PreviewCard({ label, svg }: { label: string; svg: string }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-kc-border bg-white">
-      <div className="border-b border-kc-border bg-kc-bg px-3 py-1.5 text-xs font-semibold text-kc-muted">{label}</div>
-      <div className="p-3" dangerouslySetInnerHTML={{ __html: svg }} />
-    </div>
+    <figure className="overflow-hidden rounded-xl border border-kc-border bg-white">
+      <figcaption className="border-b border-kc-border bg-kc-bg px-3 py-1.5 text-xs font-semibold text-kc-muted">
+        {label}
+      </figcaption>
+      <div className="p-3">
+        <div
+          className="overflow-hidden rounded-md ring-1 ring-kc-dark/10 [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      </div>
+    </figure>
   );
 }

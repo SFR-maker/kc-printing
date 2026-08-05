@@ -11,6 +11,7 @@ import { PRODUCT_ROUTE_SEGMENT, PRODUCT_DB_VALUE, type DesignProduct } from "@/l
 import { getAnonymousToken, saveDesignLocally, loadDesignLocally } from "@/lib/business-card/local-autosave";
 import { useIsMobile } from "./use-media-query";
 import { CardCanvas } from "./card-canvas";
+import { LogoDropZone } from "@/components/business-card/logo-drop-zone";
 import { LeftToolPanel } from "./toolbar/left-tool-panel";
 import { RightPropertiesPanel } from "./toolbar/right-properties-panel";
 import { TopCommandBar } from "./toolbar/top-command-bar";
@@ -181,14 +182,16 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
 
       <div className="flex flex-1 overflow-hidden">
         {!isMobile && <LeftToolPanel />}
-        <div
-          className="flex flex-1 items-center justify-center overflow-auto bg-kc-bg p-2 sm:p-8"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) clearSelection();
-          }}
-        >
-          <CardCanvas />
-        </div>
+        <LogoDropZone>
+          <div
+            className="flex flex-1 items-center justify-center overflow-auto bg-kc-bg p-2 sm:p-6"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) clearSelection();
+            }}
+          >
+            <CardCanvas />
+          </div>
+        </LogoDropZone>
         {!isMobile && <RightPropertiesPanel />}
       </div>
 

@@ -161,6 +161,14 @@ async function walk(depth, chosen) {
   }
 
   for (const o of opts) {
+    // Skip a top-level option whose every combination is already captured. On a resume the run
+    // otherwise re-walks completed sizes, performing thousands of page interactions against the
+    // supplier for zero new prices - which is what a flat price count across consecutive saves
+    // turned out to mean.
+    if (depth === 0 && isSizeComplete(o.t)) {
+      console.log(`skipping ${o.t} - already captured`);
+      continue;
+    }
     await choose(page, label, o.i);
     if (depth === 0) await applyFixed();
     await walk(depth + 1, [...chosen, o.t]);
@@ -170,6 +178,21 @@ async function walk(depth, chosen) {
       await page.waitForTimeout(2000);
     }
   }
+}
+
+/**
+ * True when a size already has as many prices as the most complete size in the file.
+ *
+ * A resume should not spend twenty minutes re-selecting options for data it already holds.
+ */
+function isSizeComplete(sizeLabel) {
+  const counts = {};
+  for (const key of Object.keys(data.prices)) {
+    const size = key.split("|")[0];
+    counts[size] = (counts[size] ?? 0) + 1;
+  }
+  const best = Math.max(0, ...Object.values(counts));
+  return best > 0 && (counts[sizeLabel] ?? 0) >= best;
 }
 
 let done = 0;

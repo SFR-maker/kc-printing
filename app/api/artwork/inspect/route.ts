@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { inspectArtwork, ArtworkRejectedError, assertAcceptedFormat } from "@/lib/business-card/inspect-artwork";
+import { printSpec } from "@/lib/print/spec";
 
 const schema = z.object({
   url: z.string().url(),
   fileName: z.string().min(1).max(300),
   roundCorners: z.boolean().default(false),
+  /**
+   * Which product and finished size the file is being measured against.
+   *
+   * Defaults to a business card so existing callers keep working unchanged. Everything else has to
+   * say what it is, because the resolution floor and the bleed are properties of the product - a
+   * banner prints at 150 DPI and would fail a card's 300 floor on artwork the press accepts.
+   */
+  product: z.enum(["business-cards", "postcards", "banners", "rigid-signs"]).default("business-cards"),
+  trimWidthIn: z.number().positive().max(600).optional(),
+  trimHeightIn: z.number().positive().max(600).optional(),
 });
 
 /**
@@ -35,7 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { url, fileName, roundCorners } = parsed.data;
+  const { url, fileName, roundCorners, product, trimWidthIn, trimHeightIn } = parsed.data;
 
   if (!hostAllowed(url)) {
     return NextResponse.json({ error: "That file location isn't supported." }, { status: 400 });
@@ -71,7 +82,15 @@ export async function POST(req: Request) {
   }
 
   try {
-    const inspection = await inspectArtwork(bytes, fileName, roundCorners);
+    // Rounded-corner cards are die-cut rather than guillotined, and the die has more positional
+    // play, so that one finish widens the bleed.
+    const spec = printSpec(
+      product,
+      trimWidthIn ?? 3.5,
+      trimHeightIn ?? 2,
+      product === "business-cards" && roundCorners ? 0.1625 : undefined
+    );
+    const inspection = await inspectArtwork(bytes, fileName, spec);
     return NextResponse.json(inspection);
   } catch (err) {
     if (err instanceof ArtworkRejectedError) {

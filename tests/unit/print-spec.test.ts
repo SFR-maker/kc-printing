@@ -92,3 +92,39 @@ describe("orientation", () => {
     expect(orientSpec(orientSpec(s, true), true)).toEqual(orientSpec(s, true));
   });
 });
+
+describe("the inspector is now product-aware", () => {
+  it("holds a banner to 150 DPI and a card to 300", async () => {
+    // The whole point of moving resolution into the spec: the same file is fine on one product and
+    // rejected on another, and previously both went through a hardcoded 300 floor.
+    const { inspectArtwork } = await import("@/lib/business-card/inspect-artwork");
+    const sharp = (await import("sharp")).default;
+
+    // 1200x600px. On a 3.6x2.1in card doc that is ~285 DPI; on a 4x2ft banner it is ~25 DPI.
+    const png = await sharp({
+      create: { width: 1200, height: 600, channels: 3, background: { r: 200, g: 200, b: 200 } },
+    }).png().toBuffer();
+
+    // 1200x600 is ~285 DPI on a 3.6x2.1in card document, and ~24 DPI spread over a 4x2ft banner.
+    const card = await inspectArtwork(png, "art.png", printSpec("business-cards", 3.5, 2));
+    expect(card.effectiveDpi).toBeGreaterThan(200);
+    expect(card.warnings.some((w) => w.level === "block")).toBe(false);
+
+    const banner = await inspectArtwork(png, "art.png", printSpec("banners", 48, 24));
+    expect(banner.effectiveDpi).toBeLessThan(100);
+    expect(banner.warnings.some((w) => w.code === "dpi-too-low" && w.level === "block")).toBe(true);
+  });
+
+  it("measures against the product's own document size", async () => {
+    const { inspectArtwork } = await import("@/lib/business-card/inspect-artwork");
+    const sharp = (await import("sharp")).default;
+    const png = await sharp({
+      create: { width: 900, height: 600, channels: 3, background: { r: 1, g: 1, b: 1 } },
+    }).png().toBuffer();
+
+    const banner = await inspectArtwork(png, "b.png", printSpec("banners", 48, 24));
+    // 48x24in trim plus 0.125in bleed each edge.
+    expect(banner.requiredWidthIn).toBe(48.25);
+    expect(banner.requiredHeightIn).toBe(24.25);
+  });
+});

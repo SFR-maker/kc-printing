@@ -1,7 +1,9 @@
 import sharp from "sharp";
 import { PDFDocument } from "pdf-lib";
-import { businessCardDocSpec } from "./print-spec";
-import { MIN_PRINT_DPI, RECOMMENDED_DPI } from "./print-spec";
+import { docSize, type PrintSpec } from "@/lib/print/spec";
+
+/** Assumed when a raster carries no DPI tag, purely to derive a physical size from pixels. */
+const DEFAULT_BASIS_DPI = 300;
 
 /** Formats we can measure and proof automatically. Anything else is rejected with export guidance. */
 export const ACCEPTED_ARTWORK_EXTENSIONS = ["pdf", "jpg", "jpeg", "png", "tif", "tiff"] as const;
@@ -84,13 +86,20 @@ export function assertAcceptedFormat(fileName: string): void {
   }
 }
 
+/**
+ * Measures an uploaded file against the document it will actually print at.
+ *
+ * Takes a PrintSpec rather than a card-shaped boolean, because the resolution floor is a property
+ * of the product: a 4 x 8 ft banner is printed at 150 DPI and a shared 300 floor would reject
+ * artwork the press is perfectly happy with.
+ */
 export async function inspectArtwork(
   bytes: Buffer,
   fileName: string,
-  roundCorners: boolean
+  spec: PrintSpec
 ): Promise<ArtworkInspection> {
   assertAcceptedFormat(fileName);
-  const spec = businessCardDocSpec(roundCorners);
+  const doc = docSize(spec);
   const ext = extensionOf(fileName);
 
   const measured =
@@ -99,28 +108,28 @@ export async function inspectArtwork(
   const { widthIn, heightIn, pixelWidth, pixelHeight, declaredDpi } = measured;
 
   // Cover-fit: scale so the artwork fills the document on both axes, then centre.
-  const scale = Math.max(spec.docWidthIn / widthIn, spec.docHeightIn / heightIn);
+  const scale = Math.max(doc.widthIn / widthIn, doc.heightIn / heightIn);
   const scaledW = widthIn * scale;
   const scaledH = heightIn * scale;
-  const offsetXIn = (spec.docWidthIn - scaledW) / 2;
-  const offsetYIn = (spec.docHeightIn - scaledH) / 2;
+  const offsetXIn = (doc.widthIn - scaledW) / 2;
+  const offsetYIn = (doc.heightIn - scaledH) / 2;
 
   const artAspect = widthIn / heightIn;
-  const docAspect = spec.docWidthIn / spec.docHeightIn;
+  const docAspect = doc.widthIn / doc.heightIn;
   const aspectMismatch = Math.abs(artAspect - docAspect) > ASPECT_TOLERANCE;
 
   const matchesRequiredSize =
-    Math.abs(widthIn - spec.docWidthIn) <= SIZE_TOLERANCE_IN &&
-    Math.abs(heightIn - spec.docHeightIn) <= SIZE_TOLERANCE_IN;
+    Math.abs(widthIn - doc.widthIn) <= SIZE_TOLERANCE_IN &&
+    Math.abs(heightIn - doc.heightIn) <= SIZE_TOLERANCE_IN;
 
   // Effective DPI is measured against the *required* document, since that is the size it will print
   // at after fitting - not against whatever size the file claims to be.
   const effectiveDpi =
     pixelWidth && pixelHeight
-      ? Math.floor(Math.min(pixelWidth / spec.docWidthIn, pixelHeight / spec.docHeightIn))
+      ? Math.floor(Math.min(pixelWidth / doc.widthIn, pixelHeight / doc.heightIn))
       : // A PDF is vector; resolution is only limited by any images placed inside it, which we do
         // not descend into. Report the recommended figure rather than a misleading number.
-        RECOMMENDED_DPI;
+        spec.recommendedDpi;
 
   const warnings: ArtworkWarning[] = [];
 
@@ -128,13 +137,13 @@ export async function inspectArtwork(
     warnings.push({
       level: "info",
       code: "resized",
-      message: `Your file is ${fmt(widthIn)} x ${fmt(heightIn)} in. We've fitted it to the required ${fmt(spec.docWidthIn)} x ${fmt(spec.docHeightIn)} in.`,
+      message: `Your file is ${fmt(widthIn)} x ${fmt(heightIn)} in. We've fitted it to the required ${fmt(doc.widthIn)} x ${fmt(doc.heightIn)} in.`,
     });
   }
 
   if (aspectMismatch) {
-    const lostW = Math.max(0, scaledW - spec.docWidthIn);
-    const lostH = Math.max(0, scaledH - spec.docHeightIn);
+    const lostW = Math.max(0, scaledW - doc.widthIn);
+    const lostH = Math.max(0, scaledH - doc.heightIn);
     warnings.push({
       level: "warn",
       code: "aspect",
@@ -142,17 +151,17 @@ export async function inspectArtwork(
     });
   }
 
-  if (pixelWidth && effectiveDpi < MIN_PRINT_DPI) {
+  if (pixelWidth && effectiveDpi < spec.minDpi) {
     warnings.push({
       level: "block",
       code: "dpi-too-low",
-      message: `This file is only ${pixelWidth} x ${pixelHeight} px, which is about ${effectiveDpi} DPI at card size. Below ${MIN_PRINT_DPI} DPI it will look visibly soft in print. Please supply a larger file.`,
+      message: `This file is only ${pixelWidth} x ${pixelHeight} px, which is about ${effectiveDpi} DPI at print size. Below ${spec.minDpi} DPI it will look visibly soft in print. Please supply a larger file.`,
     });
-  } else if (pixelWidth && effectiveDpi < RECOMMENDED_DPI) {
+  } else if (pixelWidth && effectiveDpi < spec.recommendedDpi) {
     warnings.push({
       level: "warn",
       code: "dpi-low",
-      message: `This file works out to about ${effectiveDpi} DPI at card size. ${RECOMMENDED_DPI} DPI is recommended for crisp small text.`,
+      message: `This file works out to about ${effectiveDpi} DPI at print size. ${spec.recommendedDpi} DPI is recommended.`,
     });
   }
 
@@ -164,8 +173,8 @@ export async function inspectArtwork(
     pixelHeight,
     effectiveDpi,
     declaredDpi,
-    requiredWidthIn: spec.docWidthIn,
-    requiredHeightIn: spec.docHeightIn,
+    requiredWidthIn: doc.widthIn,
+    requiredHeightIn: doc.heightIn,
     matchesRequiredSize,
     fit: {
       scale: round4(scale),
@@ -187,7 +196,7 @@ async function measureRaster(bytes: Buffer) {
   const declaredDpi = meta.density && meta.density !== 72 ? meta.density : null;
   // Physical size is taken from pixels at the file's own declared density when it has a meaningful
   // one, otherwise at the recommended print density. Either way `fit` re-scales it to the document.
-  const basisDpi = declaredDpi ?? RECOMMENDED_DPI;
+  const basisDpi = declaredDpi ?? DEFAULT_BASIS_DPI;
   return {
     widthIn: meta.width / basisDpi,
     heightIn: meta.height / basisDpi,

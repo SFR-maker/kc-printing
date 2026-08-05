@@ -1,4 +1,5 @@
 import { BC_PAPERS, BC_SIZES } from "@/lib/pricing/business-cards";
+import { bannerParcel } from "./banner-parcel";
 
 /**
  * Physical weight and size of a print run, for live carrier rating.
@@ -159,10 +160,15 @@ export function businessCardParcel(sizeId: number, paperId: number, quantity: nu
  */
 export function parcelForProduct(
   productSlug: string,
-  spec: { sizeId: number; paperId: number; quantity: number } | null
+  spec: { sizeId: number; paperId: number; quantity: number } | null,
+  /** Banners are described by label rather than numeric ids, and roll rather than stack. */
+  banner?: { size: string; material: string; quantity: number } | null
 ): Parcel | null {
   if (productSlug === "business-cards" && spec) {
     return businessCardParcel(spec.sizeId, spec.paperId, spec.quantity);
+  }
+  if (productSlug === "banners" && banner) {
+    return bannerParcel(banner.size, banner.material, banner.quantity);
   }
   return null;
 }

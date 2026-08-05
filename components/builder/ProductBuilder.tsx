@@ -22,6 +22,11 @@ import { BannerPrintSpec, DEFAULT_BANNER_SPEC, type BannerSpec } from "@/compone
 import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
 } from "@/components/builder/PostcardPrintSpec";
+import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
+import {
+  defaultRigidSpec, rigidNeedsBack, rigidBackLabel, sizeById,
+  type RigidMaterialId, type RigidSignSpec,
+} from "@/lib/pricing/rigid-signs";
 import { calculatePostcardPrice } from "@/lib/pricing/postcards";
 import { calculateBannerPrice } from "@/lib/pricing/banners";
 import { parseTrimSize, printSpec, type PrintSpec } from "@/lib/print/spec";
@@ -71,6 +76,18 @@ const schema = z.object({
     .optional(),
   postcardSpec: z
     .object({ size: z.string(), paper: z.string(), color: z.string(), quantity: z.number() })
+    .optional(),
+  /** Rigid signs use the supplier's numeric ids: their size and shape labels are not unique. */
+  rigidSpec: z
+    .object({
+      material: z.string(),
+      sizeId: z.number(),
+      shapeId: z.number(),
+      thickness: z.string(),
+      type: z.string(),
+      color: z.string(),
+      quantity: z.number(),
+    })
     .optional(),
   // Collected at Review regardless of sign-in state, since the client has no reliable way to know
   // auth status before submitting: guests need it so there's somewhere to send confirmation and
@@ -129,13 +146,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
   const isBusinessCards = service.slug === "business-cards";
   const isBanners = service.slug === "banners";
   const isPostcards = service.slug === "postcards";
+  const isRigidSigns = service.slug === "rigid-signs";
   /**
    * Products that carry real print specs and an artwork step, rather than only a design package.
    * Everything else still runs the old package-first flow until it has priced options of its own.
    */
-  const hasPrintSpec = isBusinessCards || isBanners || isPostcards;
+  const hasPrintSpec = isBusinessCards || isBanners || isPostcards || isRigidSigns;
 
   const [step, setStep] = useState(0);
+  /** Rigid signs are quoted by /api/price/rigid-signs; the picker reports the result up here. */
+  const [rigidPrice, setRigidPrice] = useState<RigidSignPriceState>({ valid: false, total: 0, loading: true });
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -272,7 +292,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
   const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec, pricing) : null;
   const bannerPrice = isBanners && values.bannerSpec ? calculateBannerPrice(values.bannerSpec) : null;
   const postcardPrice = isPostcards && values.postcardSpec ? calculatePostcardPrice(values.postcardSpec) : null;
-  const printPrice = isBanners ? bannerPrice : isPostcards ? postcardPrice : bcPrice;
+  /**
+   * Rigid signs are quoted by the server, so their price arrives asynchronously rather than being
+   * computed here. The five price tables are about two megabytes and are deliberately not bundled -
+   * see lib/pricing/rigid-signs - so there is nothing local to calculate from.
+   */
+  const printPrice = isBanners ? bannerPrice
+    : isPostcards ? postcardPrice
+    : isRigidSigns ? (rigidPrice.loading ? null : { valid: rigidPrice.valid, total: rigidPrice.total, error: rigidPrice.error })
+    : bcPrice;
 
   const rawPrice = hasPrintSpec
     ? (printPrice?.valid
@@ -297,7 +325,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
     ? needsBackArtwork(values.bcSpec?.colorId ?? 1)
     : isPostcards
       ? postcardNeedsBack((values.postcardSpec ?? DEFAULT_POSTCARD_SPEC).color)
-      : false;
+      : isRigidSigns
+        ? rigidNeedsBack((values.rigidSpec ?? defaultRigidSpec()).color)
+        : false;
 
   /** Geometry the artwork step and proof are measured against. */
   const artworkSpec: PrintSpec = (() => {
@@ -310,6 +340,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
       const trim = parseTrimSize(values.postcardSpec?.size ?? DEFAULT_POSTCARD_SPEC.size)
         ?? { widthIn: 6, heightIn: 4 };
       return printSpec("postcards", trim.widthIn, trim.heightIn);
+    }
+    if (isRigidSigns) {
+      // Boards state their real trim, which runs a little under the nominal size - a 6" x 24" board
+      // prints 23.875" x 5.875" - so the document is built from that rather than from the label.
+      const spec = (values.rigidSpec ?? defaultRigidSpec()) as RigidSignSpec;
+      const size = sizeById(spec.material as RigidMaterialId, spec.sizeId);
+      return printSpec("rigid-signs", size?.trimWidthIn ?? 24, size?.trimHeightIn ?? 18);
     }
     return printSpec(
       "business-cards",
@@ -438,8 +475,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
   };
 
   const goNext = async () => {
-    if (isBusinessCards && currentStep === "specs") {
-      if (!bcPrice?.valid) return;
+    // Applies to every product with real print specs, not just business cards. Banners and postcards
+    // were reaching payment without this, and the package gate below then refused them silently.
+    if (hasPrintSpec && currentStep === "specs") {
+      if (!printPrice?.valid) return;
       // Either our designers are doing it, or there is an uploaded file with an approved proof.
       // Without this an unapproved proof could be carried straight to payment.
       if (!artworkComplete(artwork, backNeeded)) {
@@ -456,7 +495,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
       }
       setArtworkError(null);
     }
-    if (!isBusinessCards && step === 0 && !values.selectedPackage) {
+    // Only the package-first products require a package here. On a print-spec product the specs step
+    // has no package field, so setting an error on it showed nothing at all and the button simply
+    // stopped working - choosing "I have my own design" deliberately clears the package, so this
+    // fired on exactly the path a customer is most likely to take.
+    if (!hasPrintSpec && step === 0 && !values.selectedPackage) {
       form.setError("selectedPackage", { message: "Please select a package" });
       return;
     }
@@ -538,9 +581,29 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               <p className="text-sm text-kc-muted">
                 {isBanners
                   ? "Real print pricing: size, material and quantity all affect your price."
-                  : "Real print pricing: size, paper, sides, and quantity all affect your price."}
+                  : isRigidSigns
+                    ? "Real print pricing: material, shape, size, thickness and quantity all affect your price."
+                    : "Real print pricing: size, paper, sides, and quantity all affect your price."}
               </p>
-              {isPostcards ? (
+              {isRigidSigns ? (
+                <RigidSignPrintSpec
+                  spec={(values.rigidSpec ?? defaultRigidSpec()) as RigidSignSpec}
+                  onPriceChange={setRigidPrice}
+                  onChange={(next) => {
+                    const prev = (values.rigidSpec ?? defaultRigidSpec()) as RigidSignSpec;
+                    setValue("rigidSpec", next);
+                    // Material, shape and size all decide the document, so a proof approved against
+                    // the old one no longer describes what prints. Drop it rather than carry a
+                    // stale approval through to the press.
+                    const changedDoc = prev.material !== next.material
+                      || prev.sizeId !== next.sizeId
+                      || prev.shapeId !== next.shapeId;
+                    if (changedDoc && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
+                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                    }
+                  }}
+                />
+              ) : isPostcards ? (
                 <PostcardPrintSpec
                   spec={values.postcardSpec ?? DEFAULT_POSTCARD_SPEC}
                   onChange={(next) => {
@@ -609,7 +672,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                 backLabel={
                   isPostcards
                     ? postcardBackLabel((values.postcardSpec ?? DEFAULT_POSTCARD_SPEC).color)
-                    : backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)
+                    : isRigidSigns
+                      ? rigidBackLabel()
+                      : backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)
                 }
                 spec={artworkSpec}
               />

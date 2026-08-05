@@ -6,6 +6,7 @@ import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
 import { calculateBannerPrice } from "@/lib/pricing/banners";
 import { calculatePostcardPrice } from "@/lib/pricing/postcards";
+import { calculateRigidSignPrice } from "@/lib/pricing/rigid-signs-server";
 import { isTestOrderCode } from "@/lib/pricing/test-order";
 import { getPricingSettings } from "@/lib/pricing/settings-server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
@@ -84,6 +85,18 @@ const schema = z.object({
       quantity: z.number().int().positive(),
     })
     .optional(),
+  /** Rigid signs are described by the supplier's numeric ids, since labels are not unique. */
+  rigidSpec: z
+    .object({
+      material: z.enum(["yard-signs", "corrugated-boards", "pvc-boards", "foam-boards", "aluminum-boards"]),
+      sizeId: z.number().int().positive(),
+      shapeId: z.number().int().positive(),
+      thickness: z.string().max(8),
+      type: z.string().max(8),
+      color: z.string().max(8),
+      quantity: z.number().int().positive(),
+    })
+    .optional(),
   // Only required for guests (see the userId check below) — a signed-in user's account email is
   // used instead, but the field is accepted either way so the client doesn't need to know the
   // customer's auth state before submitting.
@@ -128,7 +141,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, postcardSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, postcardSpec, rigidSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
 
   if (!acceptedTerms) {
     return NextResponse.json(
@@ -176,6 +189,14 @@ export async function POST(req: Request) {
     if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid banner specification" }, { status: 400 });
     printPrice = priced.total;
     orderQuantity = bannerSpec.quantity;
+  } else if (service === "rigid-signs" && rigidSpec) {
+    // Priced server-side from the same tables the builder quoted from. Those tables are two
+    // megabytes and never reach the browser, so unlike the other products the client could not have
+    // computed this figure itself - which makes pricing here the only pricing that happens.
+    const priced = calculateRigidSignPrice(rigidSpec);
+    if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid rigid sign specification" }, { status: 400 });
+    printPrice = priced.total;
+    orderQuantity = rigidSpec.quantity;
   } else if (service === "business-cards") {
     if (!bcSpec) return NextResponse.json({ error: "Missing print specifications" }, { status: 400 });
     const priced = calculateBusinessCardPrice(bcSpec, await getPricingSettings());
@@ -224,7 +245,7 @@ export async function POST(req: Request) {
           addOnIds: selectedAddOns,
           quantity: orderQuantity,
           price: total,
-          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, postcardSpec: postcardSpec ?? null, testOrder: freeTestOrder },
+          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, postcardSpec: postcardSpec ?? null, rigidSpec: rigidSpec ?? null, testOrder: freeTestOrder },
         },
       },
     },

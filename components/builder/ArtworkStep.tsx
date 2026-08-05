@@ -3,8 +3,7 @@
 import { useRef, useState } from "react";
 import { Loader2, Upload, PenLine, FileCheck2, Check } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing-client";
-import { docSize, printSpec } from "@/lib/print/spec";
-import { BUSINESS_CARD_BLEED, PRINT_SPEC } from "@/lib/business-card/print-spec";
+import { docSize, type PrintSpec } from "@/lib/print/spec";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
 import { fitPlacement, type ArtworkPlacement } from "@/lib/business-card/placement";
 import { ArtworkProof } from "@/components/builder/ArtworkProof";
@@ -97,23 +96,24 @@ export function ArtworkStep({
   roundCorners,
   needsBack,
   backLabel,
+  spec,
 }: {
   value: ArtworkState;
   onChange: (next: ArtworkState) => void;
+  /** Only meaningful for business cards, where the corner finish changes the bleed. */
   roundCorners: boolean;
   /** Set when the chosen print option puts something on the reverse. */
   needsBack: boolean;
   /** "Back (full colour)" or "Back (grayscale)", so the right file gets supplied. */
   backLabel: string;
+  /**
+   * Geometry and resolution floors for whatever is being printed.
+   *
+   * Passed in rather than built here: a banner is 0.125in bleed at 150 DPI, and a step that
+   * assumed a business card would ask a banner customer for a 3.6 x 2.1in file.
+   */
+  spec: PrintSpec;
 }) {
-  // A rounded-corner card is die-cut rather than guillotined, and the die has more positional play,
-  // so that finish alone widens the bleed.
-  const spec = printSpec(
-    "business-cards",
-    PRINT_SPEC.trimWidthIn,
-    PRINT_SPEC.trimHeightIn,
-    roundCorners ? BUSINESS_CARD_BLEED.rounded : BUSINESS_CARD_BLEED.square
-  );
   const doc = docSize(spec);
   const setSide = (which: "front" | "back", side: ArtworkSide) => onChange({ ...value, [which]: side });
 
@@ -197,7 +197,7 @@ function SideUploader({
   side: ArtworkSide;
   onChange: (next: ArtworkSide) => void;
   roundCorners: boolean;
-  spec: ReturnType<typeof printSpec>;
+  spec: PrintSpec;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"idle" | "uploading" | "inspecting">("idle");
@@ -308,9 +308,12 @@ function SideUploader({
           </dl>
           <p className="mt-4 text-[13.5px] leading-relaxed text-kc-dark/60">
             Extend backgrounds and edge-to-edge images all the way to {doc.widthIn} ×{" "}
-            {doc.heightIn} in. PDF, PNG, JPG or TIFF, 300 DPI or better.
-            {roundCorners && " Rounded corners need the larger document, since the die has more play than a straight cut."}
+            {doc.heightIn} in. PDF, PNG, JPG or TIFF, {spec.recommendedDpi} DPI or better, up to {spec.maxFileMb}MB.
+            {roundCorners && spec.product === "business-cards" && " Rounded corners need the larger document, since the die has more play than a straight cut."}
           </p>
+          {spec.note && (
+            <p className="mt-2 text-[13.5px] leading-relaxed text-kc-dark/60">{spec.note}</p>
+          )}
 
           <button
             type="button"

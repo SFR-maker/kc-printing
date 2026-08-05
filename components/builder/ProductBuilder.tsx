@@ -18,6 +18,10 @@ import { FREE_TEST_SHIPPING, transitLabel } from "@/lib/shipping/rates";
 import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
+import { BannerPrintSpec, DEFAULT_BANNER_SPEC, type BannerSpec } from "@/components/builder/BannerPrintSpec";
+import { calculateBannerPrice } from "@/lib/pricing/banners";
+import { parseTrimSize, printSpec, type PrintSpec } from "@/lib/print/spec";
+import { BUSINESS_CARD_BLEED, PRINT_SPEC } from "@/lib/business-card/print-spec";
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
 import { ArtworkStep, EMPTY_ARTWORK, artworkComplete, normaliseArtwork, type ArtworkState } from "@/components/builder/ArtworkStep";
 import { backArtworkLabel, needsBackArtwork } from "@/lib/business-card/print-spec";
@@ -58,6 +62,9 @@ const schema = z.object({
   brandFiles: z.array(z.object({ url: z.string(), name: z.string() })),
   quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
   bcSpec: bcSpecSchema.optional(),
+  bannerSpec: z
+    .object({ size: z.string(), material: z.string(), quantity: z.number() })
+    .optional(),
   // Collected at Review regardless of sign-in state, since the client has no reliable way to know
   // auth status before submitting: guests need it so there's somewhere to send confirmation and
   // print files (the API only actually requires it when the request turns out to be unauthenticated).
@@ -113,6 +120,12 @@ function round2(n: number): number {
 
 export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode, pricing = DEFAULT_PRICING }: ProductBuilderProps) {
   const isBusinessCards = service.slug === "business-cards";
+  const isBanners = service.slug === "banners";
+  /**
+   * Products that carry real print specs and an artwork step, rather than only a design package.
+   * Everything else still runs the old package-first flow until it has priced options of its own.
+   */
+  const hasPrintSpec = isBusinessCards || isBanners;
 
   const [step, setStep] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
@@ -175,7 +188,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
    * step can't silently shift what another step renders.
    */
   const artwork: ArtworkState = values.artwork ?? EMPTY_ARTWORK;
-  const stepKeys: StepKey[] = !isBusinessCards
+  const stepKeys: StepKey[] = !hasPrintSpec
     ? ["package", "options", "details", "payment"]
     : artwork.path === "UPLOAD"
       ? ["specs", "payment"]
@@ -249,11 +262,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
   });
 
   const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec, pricing) : null;
+  const bannerPrice = isBanners && values.bannerSpec ? calculateBannerPrice(values.bannerSpec) : null;
+  const printPrice = isBanners ? bannerPrice : bcPrice;
 
-  const rawPrice = isBusinessCards
-    ? (bcPrice?.valid
+  const rawPrice = hasPrintSpec
+    ? (printPrice?.valid
         ? (() => {
-            const total = round2(bcPrice.total + (selectedPkg?.price ?? 0) + selectedAddOnPrices.reduce((s, p) => s + p, 0));
+            const total = round2(printPrice.total + (selectedPkg?.price ?? 0) + selectedAddOnPrices.reduce((s, p) => s + p, 0));
             return { subtotal: total, discount: 0, total };
           })()
         : null)
@@ -270,6 +285,21 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
       : null;
 
   const backNeeded = isBusinessCards && needsBackArtwork(values.bcSpec?.colorId ?? 1);
+
+  /** Geometry the artwork step and proof are measured against. */
+  const artworkSpec: PrintSpec = (() => {
+    if (isBanners) {
+      const trim = parseTrimSize(values.bannerSpec?.size ?? DEFAULT_BANNER_SPEC.size)
+        ?? { widthIn: 72, heightIn: 36 };
+      return printSpec("banners", trim.widthIn, trim.heightIn);
+    }
+    return printSpec(
+      "business-cards",
+      PRINT_SPEC.trimWidthIn,
+      PRINT_SPEC.trimHeightIn,
+      values.bcSpec?.roundCorners ? BUSINESS_CARD_BLEED.rounded : BUSINESS_CARD_BLEED.square
+    );
+  })();
 
   const cheapestShipping = testCode
     ? 0
@@ -487,7 +517,25 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
           <div className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
-              <p className="text-sm text-kc-muted">Real print pricing: size, paper, sides, and quantity all affect your price.</p>
+              <p className="text-sm text-kc-muted">
+                {isBanners
+                  ? "Real print pricing: size, material and quantity all affect your price."
+                  : "Real print pricing: size, paper, sides, and quantity all affect your price."}
+              </p>
+              {isBanners ? (
+                <BannerPrintSpec
+                  spec={values.bannerSpec ?? DEFAULT_BANNER_SPEC}
+                  onChange={(next) => {
+                    const prev = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
+                    setValue("bannerSpec", next);
+                    // Size decides the document, so a proof approved against the old one no longer
+                    // describes what will print. Drop it rather than carry a stale approval.
+                    if (prev.size !== next.size && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
+                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                    }
+                  }}
+                />
+              ) : (
               <BusinessCardPrintSpec
                 pricing={pricing}
                 spec={values.bcSpec ?? DEFAULT_BC_SPEC}
@@ -502,6 +550,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                   }
                 }}
               />
+              )}
             </div>
 
             <div className="space-y-4 border-t border-kc-border pt-8">
@@ -527,6 +576,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                 roundCorners={(values.bcSpec ?? DEFAULT_BC_SPEC).roundCorners}
                 needsBack={backNeeded}
                 backLabel={backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)}
+                spec={artworkSpec}
               />
               {artworkError && (
                 <p role="alert" className="text-sm text-red-600">{artworkError}</p>

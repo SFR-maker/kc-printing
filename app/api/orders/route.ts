@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth/requireAdmin";
 import { safeClerkUserId } from "@/lib/safe-auth";
 import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
+import { calculateBannerPrice } from "@/lib/pricing/banners";
 import { isTestOrderCode } from "@/lib/pricing/test-order";
 import { getPricingSettings } from "@/lib/pricing/settings-server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
@@ -70,6 +71,10 @@ const schema = z.object({
   quantity: z.number().int().min(1).default(1),
   cardDesignId: z.string().optional(),
   bcSpec: bcSpecSchema.optional(),
+  /** Banners are described by label rather than numeric ids. */
+  bannerSpec: z
+    .object({ size: z.string().max(60), material: z.string().max(80), quantity: z.number().int().positive() })
+    .optional(),
   // Only required for guests (see the userId check below) — a signed-in user's account email is
   // used instead, but the field is accepted either way so the client doesn't need to know the
   // customer's auth state before submitting.
@@ -114,7 +119,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
 
   if (!acceptedTerms) {
     return NextResponse.json(
@@ -148,7 +153,14 @@ export async function POST(req: Request) {
   let printPrice = 0;
   let orderQuantity = quantity;
 
-  if (service === "business-cards") {
+  if (service === "banners" && bannerSpec) {
+    // Priced server-side from the same table the builder quoted from, so a tampered client cannot
+    // choose its own figure.
+    const priced = calculateBannerPrice(bannerSpec);
+    if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid banner specification" }, { status: 400 });
+    printPrice = priced.total;
+    orderQuantity = bannerSpec.quantity;
+  } else if (service === "business-cards") {
     if (!bcSpec) return NextResponse.json({ error: "Missing print specifications" }, { status: 400 });
     const priced = calculateBusinessCardPrice(bcSpec, await getPricingSettings());
     if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid print specifications" }, { status: 400 });
@@ -196,7 +208,7 @@ export async function POST(req: Request) {
           addOnIds: selectedAddOns,
           quantity: orderQuantity,
           price: total,
-          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, testOrder: freeTestOrder },
+          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, testOrder: freeTestOrder },
         },
       },
     },

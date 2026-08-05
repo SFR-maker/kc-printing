@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   },
   description:
     "Custom business cards, postcards, banners, and rigid signs. Fast online ordering, print-ready files. Serving Kansas City, Johnson County, Dallas-Fort Worth, and nationwide.",
+  // The root layout's relative "./" canonical resolves correctly on every route except this one,
+  // where Next renders it as /index - a URL that also returns 200, so the homepage was pointing
+  // search engines at a duplicate of itself and splitting its own ranking signals.
+  alternates: { canonical: "/" },
 };
 
 // Homepage pulls live testimonials from the DB (see below) — revalidate periodically so a newly
@@ -296,7 +300,7 @@ export default async function HomePage() {
               <blockquote className="display-tight text-[1.87rem] leading-[1.25] text-kc-dark sm:text-[2.41rem]">
                 &ldquo;{lead.text}&rdquo;
               </blockquote>
-              <div className="mt-6 text-sm text-kc-dark/55">
+              <div className="mt-6 text-sm text-kc-dark/60">
                 <span className="font-semibold text-kc-dark">{lead.name}</span>
                 {lead.company ? `, ${lead.company}` : ""}
               </div>
@@ -309,7 +313,7 @@ export default async function HomePage() {
                     <p className="line-clamp-3 text-[16.05px] leading-relaxed text-kc-dark/80">
                       &ldquo;{t.text}&rdquo;
                     </p>
-                    <div className="mt-3 text-xs text-kc-dark/50">
+                    <div className="mt-3 text-xs text-kc-dark/60">
                       {t.name}
                       {t.company ? `, ${t.company}` : ""}
                     </div>
@@ -477,7 +481,7 @@ function ProductTile({ service, wide = false }: { service: Service; wide?: boole
               {service.name}
             </h3>
           </Link>
-          <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/50">{service.price}</span>
+          <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/60">{service.price}</span>
         </div>
 
         <dl

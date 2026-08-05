@@ -191,14 +191,14 @@ export function ArtworkProof({
       <div className="edge border border-kc-dark/12 bg-kc-paper p-5 sm:p-8">
         <div className="mx-auto max-w-xl">
           {/* Width ruler */}
-          <div className="mb-2 flex items-center gap-2 text-[11.77px] text-kc-dark/45">
+          <div className="mb-2 flex items-center gap-2 text-[11.77px] text-kc-dark/60">
             <span className="h-px flex-1 bg-kc-dark/20" />
             <span className="font-mono">{inspection.requiredWidthIn - bleedIn * 2} in</span>
             <span className="h-px flex-1 bg-kc-dark/20" />
           </div>
 
           <div className="flex gap-2">
-            <div className="flex flex-col items-center justify-center gap-2 text-[11.77px] text-kc-dark/45">
+            <div className="flex flex-col items-center justify-center gap-2 text-[11.77px] text-kc-dark/60">
               <span className="w-px flex-1 bg-kc-dark/20" />
               <span className="font-mono [writing-mode:vertical-rl]">
                 {inspection.requiredHeightIn - bleedIn * 2} in
@@ -439,7 +439,7 @@ function Legend() {
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[13.38px] text-kc-dark/50">{label}</dt>
+      <dt className="text-[13.38px] text-kc-dark/60">{label}</dt>
       <dd className="mt-0.5 font-mono text-[14.45px] text-kc-dark">{children}</dd>
     </div>
   );
@@ -490,7 +490,7 @@ function PdfPage({ url }: { url: string }) {
     <div className="relative h-full w-full">
       <canvas ref={canvasRef} className="h-full w-full" />
       {state !== "ready" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white text-[13.91px] text-kc-dark/55">
+        <div className="absolute inset-0 flex items-center justify-center bg-white text-[13.91px] text-kc-dark/60">
           {state === "loading" ? (
             <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Rendering your PDF</span>
           ) : (

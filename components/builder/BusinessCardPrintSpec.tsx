@@ -81,7 +81,7 @@ export function BusinessCardPrintSpec({
           <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
             <Label>Size</Label>
             <Select value={String(spec.sizeId)} onValueChange={(v) => v && set("sizeId", Number(v))}>
-              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => DISPLAYED_BC_SIZES.find((s) => String(s.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
+              <SelectTrigger aria-label="Size" className="bg-white"><SelectValue>{(v: string) => DISPLAYED_BC_SIZES.find((s) => String(s.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
               <SelectContent>
                 {DISPLAYED_BC_SIZES.map((s) => (
                   <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
@@ -93,7 +93,7 @@ export function BusinessCardPrintSpec({
           <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
             <Label>Paper Stock</Label>
             <Select value={String(spec.paperId)} onValueChange={(v) => v && set("paperId", Number(v))}>
-              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => BC_PAPERS.find((p) => String(p.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
+              <SelectTrigger aria-label="Paper Stock" className="bg-white"><SelectValue>{(v: string) => BC_PAPERS.find((p) => String(p.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
               <SelectContent>
                 {BC_PAPERS.map((p) => (
                   <SelectItem key={p.id} value={String(p.id)}>{p.label}</SelectItem>
@@ -105,7 +105,7 @@ export function BusinessCardPrintSpec({
           <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
             <Label>Sides</Label>
             <Select value={String(spec.colorId)} onValueChange={(v) => v && set("colorId", Number(v))}>
-              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => BC_COLORS.find((c) => String(c.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
+              <SelectTrigger aria-label="Sides" className="bg-white"><SelectValue>{(v: string) => BC_COLORS.find((c) => String(c.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
               <SelectContent>
                 {BC_COLORS.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>{c.label}</SelectItem>
@@ -120,7 +120,7 @@ export function BusinessCardPrintSpec({
           <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
             <Label>Quantity</Label>
             <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))} disabled={quantities.length === 0}>
-              <SelectTrigger className="bg-white"><SelectValue>{(v: string) => `${formatQuantity(Number(v))} cards`}</SelectValue></SelectTrigger>
+              <SelectTrigger aria-label="Quantity" className="bg-white"><SelectValue>{(v: string) => `${formatQuantity(Number(v))} cards`}</SelectValue></SelectTrigger>
               <SelectContent>
                 {quantities.map((q) => (
                   <SelectItem key={q} value={String(q)}>{formatQuantity(q)} cards</SelectItem>

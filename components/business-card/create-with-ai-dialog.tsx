@@ -282,7 +282,7 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
                   value={form.sizeLabel || sizesFor(product)[0]?.value}
                   onValueChange={(v) => v && setForm({ ...form, sizeLabel: v })}
                 >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-label="Size"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {sizesFor(product).map((s) => (
                       <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
@@ -299,7 +299,7 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
               <div className="space-y-1.5">
                 <Label>Banner Format</Label>
                 <Select value={form.bannerFormat} onValueChange={(v) => v && setForm({ ...form, bannerFormat: v as "rollup" | "vinyl" })}>
-                  <SelectTrigger><SelectValue>{(v: string) => (v === "rollup" ? "Roll-Up Stand (tall, 33x81in)" : "Vinyl Banner (wide, 8ft)")}</SelectValue></SelectTrigger>
+                  <SelectTrigger aria-label="Banner Format"><SelectValue>{(v: string) => (v === "rollup" ? "Roll-Up Stand (tall, 33x81in)" : "Vinyl Banner (wide, 8ft)")}</SelectValue></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="vinyl">Vinyl Banner (wide, 8ft)</SelectItem>
                     <SelectItem value="rollup">Roll-Up Stand (tall, 33x81in)</SelectItem>

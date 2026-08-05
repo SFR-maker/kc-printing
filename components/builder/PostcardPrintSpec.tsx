@@ -70,7 +70,7 @@ export function PostcardPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
           <Select value={spec.size} onValueChange={(v) => v && set("size", v)}>
-            <SelectTrigger className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {POSTCARD_SIZES.map((s) => (
                 <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
@@ -82,7 +82,7 @@ export function PostcardPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Paper Stock</Label>
           <Select value={spec.paper} onValueChange={(v) => v && set("paper", v)}>
-            <SelectTrigger className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Paper Stock" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {POSTCARD_PAPERS.filter((p) => isComboAvailable(spec.size, p.label, availableColors(spec.size, p.label)[0] ?? "")).map((p) => (
                 <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
@@ -94,7 +94,7 @@ export function PostcardPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Printed Sides</Label>
           <Select value={spec.color} onValueChange={(v) => v && set("color", v)}>
-            <SelectTrigger className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Printed Sides" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {colors.map((c) => (
                 <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -109,7 +109,7 @@ export function PostcardPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
           <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {quantities.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q.toLocaleString("en-US")} postcards</SelectItem>

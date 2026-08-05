@@ -49,7 +49,7 @@ export function BannerPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
           <Select value={spec.size} onValueChange={(v) => v && set("size", v)}>
-            <SelectTrigger className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {BANNER_SIZES.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
@@ -63,7 +63,7 @@ export function BannerPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Material</Label>
           <Select value={spec.material} onValueChange={(v) => v && set("material", v)}>
-            <SelectTrigger className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Material" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {BANNER_MATERIALS.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
@@ -82,7 +82,7 @@ export function BannerPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
           <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {BANNER_QUANTITIES.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q === 1 ? "1 banner" : `${q} banners`}</SelectItem>

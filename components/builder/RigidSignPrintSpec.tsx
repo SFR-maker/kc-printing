@@ -86,7 +86,7 @@ export function RigidSignPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Material</Label>
           <Select value={spec.material} onValueChange={(v) => v && set("material", v as RigidMaterialId)}>
-            <SelectTrigger className="border-kc-border"><SelectValue>{materialLabel(spec.material)}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Material" className="border-kc-border"><SelectValue>{materialLabel(spec.material)}</SelectValue></SelectTrigger>
             <SelectContent>
               {RIGID_MATERIALS.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
@@ -98,7 +98,7 @@ export function RigidSignPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Shape</Label>
           <Select value={String(spec.shapeId)} onValueChange={(v) => v && set("shapeId", Number(v))}>
-            <SelectTrigger className="border-kc-border"><SelectValue>{shapeLabel(spec.material, spec.shapeId)}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Shape" className="border-kc-border"><SelectValue>{shapeLabel(spec.material, spec.shapeId)}</SelectValue></SelectTrigger>
             <SelectContent>
               {shapes.map((s) => (
                 <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
@@ -110,7 +110,7 @@ export function RigidSignPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
           <Select value={String(spec.sizeId)} onValueChange={(v) => v && set("sizeId", Number(v))}>
-            <SelectTrigger className="border-kc-border"><SelectValue>{size?.label ?? ""}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue>{size?.label ?? ""}</SelectValue></SelectTrigger>
             <SelectContent>
               {sizes.map((s) => (
                 <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
@@ -122,7 +122,7 @@ export function RigidSignPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Thickness</Label>
           <Select value={spec.thickness} onValueChange={(v) => v && set("thickness", v)}>
-            <SelectTrigger className="border-kc-border"><SelectValue>{thicknesses.find((t) => t.value === spec.thickness)?.label ?? ""}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Thickness" className="border-kc-border"><SelectValue>{thicknesses.find((t) => t.value === spec.thickness)?.label ?? ""}</SelectValue></SelectTrigger>
             <SelectContent>
               {thicknesses.map((t) => (
                 <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -138,7 +138,7 @@ export function RigidSignPrintSpec({
           <div className="rounded-lg border border-kc-border p-4">
             <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Grade</Label>
             <Select value={spec.type} onValueChange={(v) => v && set("type", v)}>
-              <SelectTrigger className="border-kc-border"><SelectValue>{types.find((t) => t.value === spec.type)?.label ?? ""}</SelectValue></SelectTrigger>
+              <SelectTrigger aria-label="Grade" className="border-kc-border"><SelectValue>{types.find((t) => t.value === spec.type)?.label ?? ""}</SelectValue></SelectTrigger>
               <SelectContent>
                 {types.map((t) => (
                   <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
@@ -154,7 +154,7 @@ export function RigidSignPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Printed Sides</Label>
           <Select value={spec.color} onValueChange={(v) => v && set("color", v)}>
-            <SelectTrigger className="border-kc-border"><SelectValue>{colors.find((c) => c.value === spec.color)?.label ?? ""}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Printed Sides" className="border-kc-border"><SelectValue>{colors.find((c) => c.value === spec.color)?.label ?? ""}</SelectValue></SelectTrigger>
             <SelectContent>
               {colors.map((c) => (
                 <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
@@ -166,7 +166,7 @@ export function RigidSignPrintSpec({
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
           <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger className="border-kc-border"><SelectValue>{spec.quantity === 1 ? "1 sign" : `${spec.quantity.toLocaleString("en-US")} signs`}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue>{spec.quantity === 1 ? "1 sign" : `${spec.quantity.toLocaleString("en-US")} signs`}</SelectValue></SelectTrigger>
             <SelectContent>
               {quantities.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q === 1 ? "1 sign" : `${q.toLocaleString("en-US")} signs`}</SelectItem>

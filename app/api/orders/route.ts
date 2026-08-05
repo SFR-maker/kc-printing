@@ -11,6 +11,7 @@ import { isTestOrderCode } from "@/lib/pricing/test-order";
 import { getPricingSettings } from "@/lib/pricing/settings-server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
 import { recordOrderEvent } from "@/lib/orders/events";
+import { clientKey, rateLimited } from "@/lib/rate-limit";
 
 const bcSpecSchema = z.object({
   sizeId: z.number(),
@@ -118,6 +119,16 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  // Unauthenticated by design (guest checkout), so a single caller could otherwise create order
+  // rows without limit - a burst of six in a row was accepted during the audit. Generous enough
+  // that a customer revising and resubmitting is never caught by it.
+  if (rateLimited(clientKey(req), { name: "orders", windowMs: 10 * 60 * 1000, max: 12 })) {
+    return NextResponse.json(
+      { error: "Too many orders from this connection. Please wait a few minutes and try again." },
+      { status: 429 },
+    );
+  }
+
   // Guest checkout: purchasing doesn't require an account, only AI features do. Resolve the
   // signed-in user if there is one, but don't hard-block anonymous requests the way requireAuth()
   // does — a guest just needs a valid email so there's somewhere to send confirmation and files.

@@ -222,7 +222,7 @@ export function ServicePageContent({
           <dl className="divide-y divide-kc-dark/10 border-t border-kc-dark/10">
             {service.specs.map((spec) => (
               <div key={spec.label} className="grid grid-cols-1 gap-1 py-4 sm:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] sm:gap-6">
-                <dt className="text-[14.98px] font-medium text-kc-dark/55">{spec.label}</dt>
+                <dt className="text-[14.98px] font-medium text-kc-dark/60">{spec.label}</dt>
                 <dd className="text-[16.05px] leading-snug text-kc-dark">{spec.value}</dd>
               </div>
             ))}
@@ -319,19 +319,21 @@ export function ServicePageContent({
               </h3>
               <dl className="grid grid-cols-1 gap-x-12 sm:grid-cols-2">
                 {service.addOns.map((addon) => (
+                  // A dl group may hold dt followed by dd, and nothing else. Nesting them inside a
+                  // second div - with the price as a bare span alongside - left the name and
+                  // description outside any list item as far as a screen reader was concerned.
+                  // A two-column grid keeps the same layout with dt and dd as direct children.
                   <div
                     key={addon.name}
-                    className="flex items-baseline justify-between gap-6 border-b border-kc-dark/10 py-4"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-6 border-b border-kc-dark/10 py-4"
                   >
-                    <div>
-                      <dt className="text-[16.05px] font-semibold text-kc-dark">{addon.name}</dt>
-                      <dd className="mt-0.5 text-[14.45px] leading-snug text-kc-dark/55">
-                        {addon.desc}
-                      </dd>
-                    </div>
-                    <span className="shrink-0 font-mono text-[13.91px] text-kc-dark/60">
+                    <dt className="text-[16.05px] font-semibold text-kc-dark">{addon.name}</dt>
+                    <dd className="shrink-0 font-mono text-[13.91px] text-kc-dark/60">
                       +{formatDollars(addon.price)}
-                    </span>
+                    </dd>
+                    <dd className="col-span-2 mt-0.5 text-[14.45px] leading-snug text-kc-dark/60">
+                      {addon.desc}
+                    </dd>
                   </div>
                 ))}
               </dl>

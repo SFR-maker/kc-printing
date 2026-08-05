@@ -17,7 +17,7 @@ export function AdminUserRoleSelect({ userId, currentRole }: { userId: string; c
 
   return (
     <Select value={role} onValueChange={(v) => v && update(v)}>
-      <SelectTrigger className="h-7 text-xs border-kc-border w-32">
+      <SelectTrigger aria-label="User role" className="h-7 text-xs border-kc-border w-32">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

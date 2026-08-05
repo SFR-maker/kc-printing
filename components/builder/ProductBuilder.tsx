@@ -910,7 +910,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                           value={values.selectedOption?.[spec.label] ?? ""}
                           onValueChange={(v) => v && setValue("selectedOption", { ...values.selectedOption, [spec.label]: v })}
                         >
-                          <SelectTrigger className="bg-white"><SelectValue placeholder={`Choose ${article} ${spec.label.toLowerCase().replace(/s$/, "")}`} /></SelectTrigger>
+                          <SelectTrigger aria-label={spec.label} className="bg-white"><SelectValue placeholder={`Choose ${article} ${spec.label.toLowerCase().replace(/s$/, "")}`} /></SelectTrigger>
                           <SelectContent>
                             {choices.map((c) => (
                               <SelectItem key={c} value={c}>{c}</SelectItem>

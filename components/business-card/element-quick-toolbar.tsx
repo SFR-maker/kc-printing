@@ -121,7 +121,7 @@ function TextQuickControls({ el, patch, compact }: { el: TextElement; patch: (p:
   return (
     <div className="flex shrink-0 items-center gap-1.5">
       <Select value={el.fontFamily} onValueChange={(v) => v && patch({ fontFamily: v })}>
-        <SelectTrigger className={compact ? "h-9 w-20 text-xs" : "h-9 w-36 text-xs"}><SelectValue /></SelectTrigger>
+        <SelectTrigger aria-label="Font" className={compact ? "h-9 w-20 text-xs" : "h-9 w-36 text-xs"}><SelectValue /></SelectTrigger>
         <SelectContent>
           {EDITOR_FONTS.map((f) => <SelectItem key={f.family} value={f.family}>{f.family}</SelectItem>)}
         </SelectContent>

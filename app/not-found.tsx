@@ -21,7 +21,7 @@ export default function NotFound() {
     <>
       <Header />
       <main className="section-pad container-tight max-w-xl text-center">
-        <p className="font-mono text-[13.91px] uppercase tracking-widest text-kc-dark/40">Error 404</p>
+        <p className="font-mono text-[13.91px] uppercase tracking-widest text-kc-dark/60">Error 404</p>
         <h1 className="mt-3 text-4xl font-black tracking-tight text-kc-dark">
           That page isn&apos;t here
         </h1>

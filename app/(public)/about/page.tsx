@@ -41,7 +41,7 @@ export default function AboutPage() {
             {FACTS.map((fact) => (
               <RevealItem key={fact.label} className="py-8 sm:px-7 sm:first:pl-0 sm:last:pr-0">
                 <div className="display-tight text-[2.41rem] text-kc-dark">{fact.value}</div>
-                <div className="mt-2 text-[14.45px] leading-snug text-kc-dark/55">{fact.label}</div>
+                <div className="mt-2 text-[14.45px] leading-snug text-kc-dark/60">{fact.label}</div>
               </RevealItem>
             ))}
           </RevealGroup>

@@ -89,7 +89,7 @@ export default function ServicesPage() {
                       <h2 className="display-tight text-xl text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
                         {s.name}
                       </h2>
-                      <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/50">
+                      <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/60">
                         {s.price}
                       </span>
                     </div>
@@ -98,7 +98,7 @@ export default function ServicesPage() {
                     </p>
                     <ul className="mb-5 space-y-1.5 border-t border-kc-dark/10 pt-4">
                       {s.highlights.map((h) => (
-                        <li key={h} className="text-xs leading-snug text-kc-dark/55">
+                        <li key={h} className="text-xs leading-snug text-kc-dark/60">
                           {h}
                         </li>
                       ))}

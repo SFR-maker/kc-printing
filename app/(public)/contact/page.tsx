@@ -30,7 +30,7 @@ const SERVICES = [
 ];
 
 const FIELD =
-  "edge h-11 border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/45 focus-visible:border-kc-dark/40";
+  "edge h-11 border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/60 focus-visible:border-kc-dark/40";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
@@ -114,11 +114,16 @@ export default function ContactPage() {
                   href: null,
                 },
               ].map((item) => (
-                <div key={item.label} className="flex items-start gap-3 py-4">
-                  <span className="mt-0.5 shrink-0">{item.icon}</span>
-                  <div>
-                    <dt className="text-[13.91px] text-kc-dark/50">{item.label}</dt>
-                    <dd className="mt-0.5">
+                // dt and dd must be the only children of a dl group. The icon sat alongside an
+                // inner div holding them, which put the term and its value outside the list as far
+                // as assistive tech was concerned; moving the icon into the dt fixes the structure
+                // and reads better too, since it labels the term rather than floating beside it.
+                <div key={item.label} className="py-4">
+                  <dt className="flex items-center gap-2 text-[13.91px] text-kc-dark/60">
+                    <span className="shrink-0">{item.icon}</span>
+                    {item.label}
+                  </dt>
+                  <dd className="mt-0.5 pl-6">
                       {item.href ? (
                         <a
                           href={item.href}
@@ -130,7 +135,6 @@ export default function ContactPage() {
                         <span className="text-[16.05px] font-medium text-kc-dark">{item.value}</span>
                       )}
                     </dd>
-                  </div>
                 </div>
               ))}
             </dl>
@@ -199,7 +203,7 @@ export default function ContactPage() {
                   <div className="space-y-2">
                     <Label className="text-[14.45px] font-medium text-kc-dark">Service needed</Label>
                     <Select onValueChange={(v) => { if (v) setValue("service", v as string); }}>
-                      <SelectTrigger className={FIELD}>
+                      <SelectTrigger aria-label="Service needed" className={FIELD}>
                         <SelectValue placeholder="Select a service" />
                       </SelectTrigger>
                       <SelectContent>
@@ -220,7 +224,7 @@ export default function ContactPage() {
                     id="message"
                     placeholder="Tell us about your project, timeline, and any specific requirements"
                     rows={6}
-                    className="edge border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/45 focus-visible:border-kc-dark/40"
+                    className="edge border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/60 focus-visible:border-kc-dark/40"
                     {...register("message")}
                   />
                   {errors.message && <p className="text-[13.38px] text-red-700">{errors.message.message}</p>}

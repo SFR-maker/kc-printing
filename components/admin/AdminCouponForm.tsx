@@ -45,7 +45,7 @@ export function AdminCouponForm() {
           <div className="space-y-1">
             <Label className="text-xs">Type</Label>
             <Select value={type} onValueChange={(v) => v && setType(v as "PERCENT" | "FIXED")}>
-              <SelectTrigger className="w-28 h-8 text-sm border-kc-border"><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label="Type" className="w-28 h-8 text-sm border-kc-border"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="PERCENT">Percent</SelectItem>
                 <SelectItem value="FIXED">Fixed $</SelectItem>

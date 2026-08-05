@@ -95,7 +95,7 @@ function TextProps({ el, patch }: { el: TextElement; patch: (p: Partial<TextElem
       </Field>
       <Field label="Font">
         <Select value={el.fontFamily} onValueChange={(v) => v && patch({ fontFamily: v })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Font"><SelectValue /></SelectTrigger>
           <SelectContent>
             {EDITOR_FONTS.map((f) => <SelectItem key={f.family} value={f.family}>{f.family}</SelectItem>)}
           </SelectContent>
@@ -120,7 +120,7 @@ function TextProps({ el, patch }: { el: TextElement; patch: (p: Partial<TextElem
       </div>
       <Field label="Case">
         <Select value={el.textTransform} onValueChange={(v) => v && patch({ textTransform: v as TextElement["textTransform"] })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger aria-label="Text case"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Normal</SelectItem>
             <SelectItem value="uppercase">UPPERCASE</SelectItem>

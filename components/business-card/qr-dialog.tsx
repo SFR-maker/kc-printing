@@ -57,7 +57,7 @@ export function QrDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
           <div className="space-y-1.5">
             <Label>QR Code Type</Label>
             <Select value={type} onValueChange={(v) => v && setType(v as QrPayloadType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger aria-label="QR Code Type"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Object.entries(TYPE_LABELS).map(([k, label]) => (
                   <SelectItem key={k} value={k}>{label}</SelectItem>

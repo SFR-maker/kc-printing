@@ -47,12 +47,12 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               // 'unsafe-inline'/'unsafe-eval' are Next's hydration payload and Clerk's loader.
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com https://js.stripe.com https://challenges.cloudflare.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.611printing.com https://*.clerk.accounts.dev https://*.clerk.com https://js.stripe.com https://challenges.cloudflare.com",
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: blob: https://*.ufs.sh https://utfs.io https://img.clerk.com https://images.clerk.dev",
+              "img-src 'self' data: blob: https://*.ufs.sh https://utfs.io https://img.clerk.com https://images.clerk.dev https://clerk.611printing.com",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://api.stripe.com https://*.uploadthing.com https://*.ufs.sh",
-              "frame-src https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://*.clerk.accounts.dev",
+              "connect-src 'self' https://clerk.611printing.com https://*.clerk.accounts.dev https://*.clerk.com https://api.stripe.com https://*.uploadthing.com https://*.ufs.sh",
+              "frame-src https://js.stripe.com https://hooks.stripe.com https://challenges.cloudflare.com https://clerk.611printing.com https://*.clerk.accounts.dev",
               "worker-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",

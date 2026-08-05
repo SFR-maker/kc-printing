@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Suppresses `X-Powered-By: Next.js`, which advertises the framework and version family to
+  // anyone scanning for known issues without giving a visitor anything.
+  poweredByHeader: false,
+
   // The dev-only route indicator badge has no safe corner on narrow viewports — bottom-left sat on
   // the business card editor's mobile toolbar, top-right sits on the order-flow "Continue" button.
   // It doesn't appear in production either way, so just hide it rather than chasing a safe spot.

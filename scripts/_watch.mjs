@@ -33,6 +33,28 @@ const liveScrapers = () => {
   } catch { return -1; }
 };
 
+/**
+ * Seconds since any scraper last wrote a line of output.
+ *
+ * Price counts are the wrong progress signal: a scraper saves once per size, and one postcard size
+ * takes about seventeen minutes, so a ten-minute window routinely shows no change and looked like a
+ * stall when the run was perfectly healthy. The log is written every twenty combinations, so its
+ * modification time is the honest measure of whether work is happening.
+ */
+const secondsSinceOutput = () => {
+  const dir = process.env.SCRAPE_LOG_DIR;
+  if (!dir || !fs.existsSync(dir)) return null;
+  let newest = 0;
+  for (const f of fs.readdirSync(dir)) {
+    if (!f.endsWith(".output")) continue;
+    try { newest = Math.max(newest, fs.statSync(`${dir}/${f}`).mtimeMs); } catch {}
+  }
+  return newest ? Math.round((Date.now() - newest) / 1000) : null;
+};
+
+/** A run is only stalled when nothing has been written for this long. */
+const STALL_SECONDS = 6 * 60;
+
 let prev = Object.fromEntries(Object.keys(FILES).map((k) => [k, count(FILES[k])]));
 let stalls = 0;
 let zeroes = 0;
@@ -48,9 +70,12 @@ for (let tick = 1; ; tick++) {
   const total = Object.values(now).reduce((a, b) => a + b, 0);
   const moved = Object.keys(FILES).some((k) => now[k] > prev[k]);
 
-  if (!moved && live > 0) {
+  const quietFor = secondsSinceOutput();
+  const reallyStalled = live > 0 && quietFor !== null && quietFor > STALL_SECONDS;
+
+  if (reallyStalled) {
     stalls++;
-    console.log(`STALLED x${stalls} | ${live} scraper(s) running but no new prices in 10min | ${total} total | ${parts.join(" · ")}`);
+    console.log(`STALLED x${stalls} | ${live} scraper(s) running but silent for ${quietFor}s | ${total} prices | ${parts.join(" · ")}`);
   } else if (live === 0) {
     // Two consecutive zero readings before declaring completion. One was enough to be wrong: a
     // single transient miscount reported "finished" while a scraper was still going, a second was
@@ -65,7 +90,8 @@ for (let tick = 1; ; tick++) {
   } else {
     stalls = 0;
     zeroes = 0;
-    console.log(`OK check ${tick} | ${live} running | ${total} prices | ${parts.join(" · ")}`);
+    const quiet = quietFor === null ? "" : ` | last output ${quietFor}s ago`;
+    console.log(`OK check ${tick} | ${live} running | ${total} prices${quiet} | ${parts.join(" · ")}`);
   }
   prev = now;
 }

@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { isAdminEmail } from "@/lib/auth/ensure-user";
 import { Webhook } from "svix";
 import { db } from "@/lib/prisma";
 
@@ -41,17 +42,30 @@ export async function POST(req: Request) {
     return new Response("Invalid signature", { status: 400 });
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? "";
-
   if (evt.type === "user.created") {
     const email = evt.data.email_addresses[0]?.email_address ?? "";
     const name = [evt.data.first_name, evt.data.last_name].filter(Boolean).join(" ") || null;
-    const role = email === adminEmail ? "SUPER_ADMIN" : "USER";
+
+    /**
+     * Role is decided on create only, and never on update.
+     *
+     * This handler previously wrote `role` in the update branch too, so any user.created event for
+     * an account that already existed - which is what a re-sign-in after the Clerk production
+     * migration produces, once ensureUser has re-pointed the row at the new Clerk id - overwrote the
+     * stored role. That silently demoted the shop owner from SUPER_ADMIN to USER and locked
+     * everyone out of /admin.
+     *
+     * It also compared the address against ADMIN_EMAIL whole, while ADMIN_EMAIL is a comma-separated
+     * list, so the admin branch could never be true in the first place. isAdminEmail handles the
+     * list, trimming and case, and is the same check ensureUser uses - one source of truth rather
+     * than two that disagree.
+     */
+    const role: "USER" | "SUPER_ADMIN" = isAdminEmail(email) ? "SUPER_ADMIN" : "USER";
 
     await db.user.upsert({
       where: { clerkId: evt.data.id },
-      update: { email, name, role: role as "USER" | "ADMIN" | "SUPER_ADMIN" },
-      create: { clerkId: evt.data.id, email, name, role: role as "USER" | "ADMIN" | "SUPER_ADMIN" },
+      update: { email, name },
+      create: { clerkId: evt.data.id, email, name, role },
     });
   }
 

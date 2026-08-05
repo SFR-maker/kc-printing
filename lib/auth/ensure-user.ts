@@ -69,7 +69,7 @@ async function claimGuestOrders(userId: string, email: string): Promise<void> {
  * Comma-separated so ownership does not depend on a single mailbox staying reachable. Compared
  * case-insensitively and trimmed, because ADMIN_EMAIL is typed by hand into a dashboard.
  */
-function isAdminEmail(email: string): boolean {
+export function isAdminEmail(email: string): boolean {
   const configured = (process.env.ADMIN_EMAIL ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())

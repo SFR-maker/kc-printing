@@ -19,7 +19,8 @@ import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
-import { ArtworkStep, EMPTY_ARTWORK, artworkComplete, type ArtworkState } from "@/components/builder/ArtworkStep";
+import { ArtworkStep, EMPTY_ARTWORK, artworkComplete, normaliseArtwork, type ArtworkState } from "@/components/builder/ArtworkStep";
+import { backArtworkLabel, needsBackArtwork } from "@/lib/business-card/print-spec";
 import { ShippingQuote, type QuoteOption } from "@/components/builder/ShippingQuote";
 import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
 import { getAnonymousToken } from "@/lib/business-card/local-autosave";
@@ -70,11 +71,8 @@ const schema = z.object({
   // defaultValues instead, including for drafts saved before this field existed.
   artwork: z.object({
     path: z.enum(["UPLOAD", "DESIGN_SERVICE"]).nullable(),
-    fileUrl: z.string().nullable(),
-    fileName: z.string().nullable(),
-    inspection: z.any().nullable(),
-    placement: z.any().nullable(),
-    approved: z.boolean(),
+    front: z.any(),
+    back: z.any(),
   }),
 }).superRefine((v, ctx) => {
   // Enforced here rather than on the field so it can depend on the chosen route. Without this the
@@ -139,7 +137,14 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
-            return { selectedAddOns: [], brandFiles: [], quantity: 1, businessName: "", acceptedTerms: false, bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID, artwork: EMPTY_ARTWORK, ...JSON.parse(saved) };
+            const parsed = JSON.parse(saved);
+            return {
+              selectedAddOns: [], brandFiles: [], quantity: 1, businessName: "", acceptedTerms: false,
+              bcSpec: DEFAULT_BC_SPEC, colorPaletteId: AI_PALETTE_AUTO_ID,
+              ...parsed,
+              // A draft saved before artwork gained a back would have no `front` at all.
+              artwork: normaliseArtwork(parsed.artwork),
+            };
           } catch {
             // fall through to plain defaults below
           }
@@ -270,6 +275,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
 
   // Only products with a parcel model can be quoted; everything else still picks a flat tier on
   // Stripe's page, so requiring a quote there would block checkout entirely.
+  const backNeeded = isBusinessCards && needsBackArtwork(values.bcSpec?.colorId ?? 1);
+
   const shippingRequired = isBusinessCards && Boolean(values.bcSpec) && !testCode;
   const shippingMissing = shippingRequired && !shipping;
 
@@ -376,13 +383,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
       if (!bcPrice?.valid) return;
       // Either our designers are doing it, or there is an uploaded file with an approved proof.
       // Without this an unapproved proof could be carried straight to payment.
-      if (!artworkComplete(artwork)) {
+      if (!artworkComplete(artwork, backNeeded)) {
         setArtworkError(
           artwork.path === null
             ? "Choose whether to upload your own design or have us design it."
-            : !artwork.fileUrl
+            : !artwork.front.fileUrl
               ? "Upload your artwork to continue, or switch to having us design it."
-              : "Please approve the proof before continuing."
+              : backNeeded && !artwork.back.fileUrl
+                ? "You picked a double-sided option, so the back needs a file too."
+                : "Please approve every proof before continuing."
         );
         return;
       }
@@ -477,7 +486,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                   // Corner finish decides the document size, so a file measured against the old
                   // finish is no longer proofed correctly. Drop the proof and make them re-upload
                   // rather than let an approved proof silently apply to a different spec.
-                  if (prev.roundCorners !== next.roundCorners && artwork.path === "UPLOAD" && artwork.fileUrl) {
+                  if (prev.roundCorners !== next.roundCorners && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
                     setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
                   }
                 }}
@@ -491,6 +500,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                 value={artwork}
                 onChange={(next) => setValue("artwork", next)}
                 roundCorners={(values.bcSpec ?? DEFAULT_BC_SPEC).roundCorners}
+                needsBack={backNeeded}
+                backLabel={backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)}
               />
               {artworkError && (
                 <p role="alert" className="text-sm text-red-600">{artworkError}</p>
@@ -893,7 +904,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                     <span className="text-kc-muted">Artwork</span>
                     <span className="font-medium text-kc-dark text-right">
                       {artwork.path === "UPLOAD"
-                        ? `${artwork.fileName ?? "Uploaded file"} · proof approved`
+                        ? backNeeded
+                          ? `${artwork.front.fileName ?? "Front"} + ${artwork.back.fileName ?? "Back"} · both proofs approved`
+                          : `${artwork.front.fileName ?? "Uploaded file"} · proof approved`
                         : "Designed by 611 Printing"}
                     </span>
                   </div>

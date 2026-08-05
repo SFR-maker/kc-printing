@@ -202,6 +202,17 @@ model Order {
   // Set when the customer ticks the approval box. Null means no approved proof exists yet.
   proofApprovedAt      DateTime?
 
+  // The reverse face, for the grayscale-back and full-colour-both-sides print options. Null on a
+  // single-sided order. Kept as its own set of columns rather than a JSON blob because production
+  // needs to find the back file as directly as the front.
+  backArtworkFileUrl   String?
+  backArtworkFileName  String?
+  backArtworkWidthIn   Float?
+  backArtworkHeightIn  Float?
+  backArtworkDpi       Int?
+  backArtworkPlacement Json?
+  backProofApprovedAt  DateTime?
+
   // Which version of the Terms of Sale the customer agreed to, and when. Recorded per order rather
   // than only at signup: the terms that bind a sale are the ones in force when that sale was made,
   // and guests can order without ever creating an account.

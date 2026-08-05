@@ -168,7 +168,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
                     The file did not match the document size and was scaled to fit. Check the placement before printing.
                   </p>
                 )}
-                <Row label="Proof approved">
+                <Row label="Front proof approved">
                   {order.proofApprovedAt ? (
                     <span className="inline-flex items-center gap-1 text-emerald-700">
                       <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -180,11 +180,52 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
                 </Row>
                 {order.artworkPlacement != null && (
                   <details className="text-xs text-kc-muted">
-                    <summary className="cursor-pointer font-semibold text-kc-dark">Approved placement</summary>
+                    <summary className="cursor-pointer font-semibold text-kc-dark">Front placement</summary>
                     <pre className="mt-2 overflow-x-auto rounded-lg bg-kc-bg p-3">
                       {JSON.stringify(order.artworkPlacement, null, 2)}
                     </pre>
                   </details>
+                )}
+
+                {/* Double-sided orders carry a second file. Printing the front without checking for
+                    a back is how a two-sided job goes out blank on one side. */}
+                {order.backArtworkFileUrl && (
+                  <div className="mt-4 space-y-2 border-t border-kc-border pt-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-kc-muted">Back</p>
+                    <a
+                      href={order.backArtworkFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs font-semibold text-kc-teal hover:underline"
+                    >
+                      <FileIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                      {order.backArtworkFileName ?? "Download back artwork"}
+                    </a>
+                    {order.backArtworkWidthIn && order.backArtworkHeightIn && (
+                      <Row label="File size">
+                        {order.backArtworkWidthIn} × {order.backArtworkHeightIn} in
+                        {order.backArtworkDpi ? ` at ${order.backArtworkDpi} DPI` : ""}
+                      </Row>
+                    )}
+                    <Row label="Back proof approved">
+                      {order.backProofApprovedAt ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-700">
+                          <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.75} />
+                          {new Date(order.backProofApprovedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                        </span>
+                      ) : (
+                        <span className="font-semibold text-red-700">Not approved — do not print</span>
+                      )}
+                    </Row>
+                    {order.backArtworkPlacement != null && (
+                      <details className="text-xs text-kc-muted">
+                        <summary className="cursor-pointer font-semibold text-kc-dark">Back placement</summary>
+                        <pre className="mt-2 overflow-x-auto rounded-lg bg-kc-bg p-3">
+                          {JSON.stringify(order.backArtworkPlacement, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (

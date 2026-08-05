@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Loader2, Upload, PenLine, FileCheck2 } from "lucide-react";
+import { Loader2, Upload, PenLine, FileCheck2, Check } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing-client";
 import { businessCardDocSpec } from "@/lib/business-card/print-spec";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
@@ -11,18 +11,23 @@ import { cn } from "@/lib/utils";
 
 export type ArtworkPath = "UPLOAD" | "DESIGN_SERVICE";
 
-export interface ArtworkState {
-  path: ArtworkPath | null;
+/** One printed face. A double-sided card needs two, each proofed and approved separately. */
+export interface ArtworkSide {
   fileUrl: string | null;
   fileName: string | null;
   inspection: ArtworkInspection | null;
-  /** Where the customer positioned the artwork. Null until a file has been inspected. */
+  /** Where the customer positioned this face. Null until a file has been inspected. */
   placement: ArtworkPlacement | null;
   approved: boolean;
 }
 
-export const EMPTY_ARTWORK: ArtworkState = {
-  path: null,
+export interface ArtworkState {
+  path: ArtworkPath | null;
+  front: ArtworkSide;
+  back: ArtworkSide;
+}
+
+export const EMPTY_SIDE: ArtworkSide = {
   fileUrl: null,
   fileName: null,
   inspection: null,
@@ -30,28 +35,164 @@ export const EMPTY_ARTWORK: ArtworkState = {
   approved: false,
 };
 
+export const EMPTY_ARTWORK: ArtworkState = {
+  path: null,
+  front: { ...EMPTY_SIDE },
+  back: { ...EMPTY_SIDE },
+};
+
 /**
- * True when the customer can move on: either our designers are doing the work, or they have
- * uploaded a file, we have measured it, and they have ticked the approval box.
+ * Brings a saved draft up to the current shape.
+ *
+ * Artwork used to be one flat set of fields, because only the front was ever uploaded. Drafts live
+ * in sessionStorage and outlive a deploy, so a returning customer would otherwise land on a state
+ * with no `front` at all and crash the step. Legacy fields become the front, which is what they were.
  */
-export function artworkComplete(a: ArtworkState): boolean {
+export function normaliseArtwork(value: unknown): ArtworkState {
+  if (!value || typeof value !== "object") return { ...EMPTY_ARTWORK };
+  const v = value as Record<string, unknown>;
+  if (v.front && typeof v.front === "object") {
+    return {
+      path: (v.path as ArtworkPath | null) ?? null,
+      front: { ...EMPTY_SIDE, ...(v.front as object) },
+      back: { ...EMPTY_SIDE, ...((v.back as object) ?? {}) },
+    };
+  }
+  return {
+    path: (v.path as ArtworkPath | null) ?? null,
+    front: {
+      fileUrl: (v.fileUrl as string | null) ?? null,
+      fileName: (v.fileName as string | null) ?? null,
+      inspection: (v.inspection as ArtworkInspection | null) ?? null,
+      placement: (v.placement as ArtworkPlacement | null) ?? null,
+      approved: Boolean(v.approved),
+    },
+    back: { ...EMPTY_SIDE },
+  };
+}
+
+/** A face is done when a file has been measured, positioned and approved. */
+export function sideComplete(side: ArtworkSide): boolean {
+  return Boolean(side.fileUrl && side.inspection && side.placement && side.approved);
+}
+
+/**
+ * True when the customer can move on: either our designers are doing the work, or every face that
+ * will actually be printed has an approved proof.
+ *
+ * `needsBack` comes from the chosen print option, not from whether a back file happens to exist - a
+ * single-sided order with a stray back upload is still complete, and a double-sided one without a
+ * back is not.
+ */
+export function artworkComplete(a: ArtworkState, needsBack: boolean): boolean {
   if (a.path === "DESIGN_SERVICE") return true;
-  return a.path === "UPLOAD" && !!a.fileUrl && !!a.inspection && !!a.placement && a.approved;
+  if (a.path !== "UPLOAD") return false;
+  return sideComplete(a.front) && (!needsBack || sideComplete(a.back));
 }
 
 export function ArtworkStep({
   value,
   onChange,
   roundCorners,
+  needsBack,
+  backLabel,
 }: {
   value: ArtworkState;
   onChange: (next: ArtworkState) => void;
   roundCorners: boolean;
+  /** Set when the chosen print option puts something on the reverse. */
+  needsBack: boolean;
+  /** "Back (full colour)" or "Back (grayscale)", so the right file gets supplied. */
+  backLabel: string;
+}) {
+  const spec = businessCardDocSpec(roundCorners);
+  const setSide = (which: "front" | "back", side: ArtworkSide) => onChange({ ...value, [which]: side });
+
+  if (value.path === "UPLOAD") {
+    return (
+      <div className="space-y-7">
+        <SideUploader
+          heading={needsBack ? "Front" : "Your artwork"}
+          side={value.front}
+          onChange={(s) => setSide("front", s)}
+          roundCorners={roundCorners}
+          spec={spec}
+        />
+
+        {needsBack && (
+          <>
+            <div className="border-t border-kc-dark/10" />
+            <SideUploader
+              heading={backLabel}
+              side={value.back}
+              onChange={(s) => setSide("back", s)}
+              roundCorners={roundCorners}
+              spec={spec}
+            />
+            <p className="text-[13.5px] leading-relaxed text-kc-dark/60">
+              Each face needs its own file and its own approval. The back prints on the same sheet, so
+              it uses the same {spec.docWidthIn} × {spec.docHeightIn} in document as the front.
+            </p>
+          </>
+        )}
+
+        <button
+          type="button"
+          onClick={() => onChange({ ...EMPTY_ARTWORK })}
+          className="text-[13.5px] font-semibold text-kc-magenta-deep hover:text-kc-dark"
+        >
+          Start over, or have us design it instead
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Choice
+        selected={false}
+        icon={<Upload className="h-5 w-5" strokeWidth={1.75} />}
+        title="I have my own design"
+        body={
+          needsBack
+            ? `Upload a print-ready file for each side at ${spec.docWidthIn} × ${spec.docHeightIn} in. We'll proof both for you to approve.`
+            : `Upload a print-ready file at ${spec.docWidthIn} × ${spec.docHeightIn} in. We'll show you a proof to approve.`
+        }
+        onClick={() => onChange({ ...EMPTY_ARTWORK, path: "UPLOAD" })}
+      />
+      <Choice
+        selected={value.path === "DESIGN_SERVICE"}
+        icon={<PenLine className="h-5 w-5" strokeWidth={1.75} />}
+        title="Design it for me"
+        body="Tell us about your business and a real designer builds the layout. First draft in 1 to 3 business days."
+        onClick={() => onChange({ ...EMPTY_ARTWORK, path: "DESIGN_SERVICE" })}
+      />
+    </div>
+  );
+}
+
+/**
+ * Upload, inspect and proof one face.
+ *
+ * Each side owns its upload state so a failure on the back never disturbs an approved front -
+ * throwing away an approval the customer already gave is worse than making them retry an upload.
+ */
+function SideUploader({
+  heading,
+  side,
+  onChange,
+  roundCorners,
+  spec,
+}: {
+  heading: string;
+  side: ArtworkSide;
+  onChange: (next: ArtworkSide) => void;
+  roundCorners: boolean;
+  spec: ReturnType<typeof businessCardDocSpec>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"idle" | "uploading" | "inspecting">("idle");
   const [error, setError] = useState<string | null>(null);
-  const spec = businessCardDocSpec(roundCorners);
 
   const { startUpload } = useUploadThing("brandFile", {
     onUploadError: (e) =>
@@ -86,7 +227,6 @@ export function ArtworkStep({
 
       const inspection = payload as ArtworkInspection;
       onChange({
-        path: "UPLOAD",
         fileUrl: first.url,
         fileName: first.name,
         inspection,
@@ -102,33 +242,17 @@ export function ArtworkStep({
     }
   }
 
-  // Once a proof exists, it is the whole step.
-  if (value.path === "UPLOAD" && value.inspection && value.fileUrl && value.fileName && value.placement) {
-    return (
-      <div className="space-y-5">
-        <div className="flex items-center gap-2 text-[14px] text-kc-dark/70">
-          <FileCheck2 className="h-4 w-4 text-kc-coral" strokeWidth={1.75} />
-          <span className="truncate font-medium text-kc-dark">{value.fileName}</span>
-        </div>
-        <ArtworkProof
-          fileUrl={value.fileUrl}
-          fileName={value.fileName}
-          inspection={value.inspection}
-          placement={value.placement}
-          onPlacementChange={(placement) => onChange({ ...value, placement })}
-          approved={value.approved}
-          onApprovedChange={(approved) => onChange({ ...value, approved })}
-          onReplace={() => {
-            onChange({ ...EMPTY_ARTWORK, path: "UPLOAD" });
-            setError(null);
-          }}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-[15px] font-bold text-kc-dark">{heading}</h3>
+        {sideComplete(side) && (
+          <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-emerald-700">
+            <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> Approved
+          </span>
+        )}
+      </div>
+
       <input
         ref={inputRef}
         type="file"
@@ -140,27 +264,27 @@ export function ArtworkStep({
         }}
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Choice
-          selected={value.path === "UPLOAD"}
-          icon={<Upload className="h-5 w-5" strokeWidth={1.75} />}
-          title="I have my own design"
-          body={`Upload a print-ready file at ${spec.docWidthIn} × ${spec.docHeightIn} in. We'll show you a proof to approve.`}
-          onClick={() => {
-            onChange({ ...EMPTY_ARTWORK, path: "UPLOAD" });
-            inputRef.current?.click();
-          }}
-        />
-        <Choice
-          selected={value.path === "DESIGN_SERVICE"}
-          icon={<PenLine className="h-5 w-5" strokeWidth={1.75} />}
-          title="Design it for me"
-          body="Tell us about your business and a real designer builds the layout. First draft in 1 to 3 business days."
-          onClick={() => onChange({ ...EMPTY_ARTWORK, path: "DESIGN_SERVICE" })}
-        />
-      </div>
-
-      {value.path === "UPLOAD" && (
+      {side.inspection && side.fileUrl && side.fileName && side.placement ? (
+        <>
+          <div className="flex items-center gap-2 text-[14px] text-kc-dark/70">
+            <FileCheck2 className="h-4 w-4 text-kc-coral" strokeWidth={1.75} />
+            <span className="truncate font-medium text-kc-dark">{side.fileName}</span>
+          </div>
+          <ArtworkProof
+            fileUrl={side.fileUrl}
+            fileName={side.fileName}
+            inspection={side.inspection}
+            placement={side.placement}
+            onPlacementChange={(placement) => onChange({ ...side, placement })}
+            approved={side.approved}
+            onApprovedChange={(approved) => onChange({ ...side, approved })}
+            onReplace={() => {
+              onChange({ ...EMPTY_SIDE });
+              setError(null);
+            }}
+          />
+        </>
+      ) : (
         <div className="edge border border-kc-dark/12 bg-white p-5">
           <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-[13.5px] sm:grid-cols-3">
             <SpecFact label="Upload at">
@@ -186,7 +310,7 @@ export function ArtworkStep({
             {busy === "idle" ? (
               <>
                 <Upload className="h-5 w-5 text-kc-dark/50" strokeWidth={1.75} />
-                <span className="text-[14.5px] font-medium text-kc-dark">Choose your artwork</span>
+                <span className="text-[14.5px] font-medium text-kc-dark">Choose your file</span>
               </>
             ) : (
               <>

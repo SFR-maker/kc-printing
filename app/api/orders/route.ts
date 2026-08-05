@@ -19,6 +19,37 @@ const bcSpecSchema = z.object({
   manualProof: z.boolean(),
 });
 
+/**
+ * One printed face, as the client reports it.
+ *
+ * Re-derived rather than trusted wholesale: only the file reference, the measured size and the
+ * approval flag are kept, and the approval timestamp is stamped server-side.
+ */
+const artworkSideSchema = z.object({
+  fileUrl: z.string().url().nullable(),
+  fileName: z.string().max(300).nullable(),
+  inspection: z
+    .object({
+      widthIn: z.number().optional(),
+      heightIn: z.number().optional(),
+      effectiveDpi: z.number().optional(),
+      matchesRequiredSize: z.boolean().optional(),
+    })
+    .passthrough()
+    .nullable(),
+  placement: z
+    .object({
+      scaleX: z.number().positive(),
+      scaleY: z.number().positive(),
+      offsetXIn: z.number(),
+      offsetYIn: z.number(),
+      rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]),
+    })
+    .nullable()
+    .optional(),
+  approved: z.boolean(),
+});
+
 const schema = z.object({
   service: z.string().min(1),
   // Optional overall: business cards allow "design it myself" (no package). Enforced as required
@@ -50,31 +81,9 @@ const schema = z.object({
   artwork: z
     .object({
       path: z.enum(["UPLOAD", "DESIGN_SERVICE"]).nullable(),
-      fileUrl: z.string().url().nullable(),
-      fileName: z.string().max(300).nullable(),
-      inspection: z
-        .object({
-          widthIn: z.number().optional(),
-          heightIn: z.number().optional(),
-          effectiveDpi: z.number().optional(),
-          matchesRequiredSize: z.boolean().optional(),
-        })
-        .passthrough()
-        .nullable(),
-      // How the customer positioned the artwork on the sheet. Stored so the print file is produced
-      // from exactly the placement they approved, not re-fitted at output time.
-      placement: z
-        .object({
-          // Per axis, so a customer who stretched the artwork gets printed what they approved.
-          scaleX: z.number().positive(),
-          scaleY: z.number().positive(),
-          offsetXIn: z.number(),
-          offsetYIn: z.number(),
-          rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]),
-        })
-        .nullable()
-        .optional(),
-      approved: z.boolean(),
+      front: artworkSideSchema,
+      // Only present on the grayscale-back and both-sides print options.
+      back: artworkSideSchema.optional(),
     })
     .optional(),
   /** Secret that makes this a free test order. Validated here; never trusted from the client. */
@@ -132,6 +141,10 @@ export async function POST(req: Request) {
 
   // Checked before anything is priced. A wrong code is refused outright rather than quietly falling
   // back to the real price, so a mistyped test link cannot bill someone for a live print run.
+  const upload = artwork?.path === "UPLOAD";
+  const front = artwork?.front;
+  const back = artwork?.back;
+
   const freeTestOrder = isTestOrderCode(testCode);
   if (testCode && !freeTestOrder) {
     return NextResponse.json({ error: "That test link is not valid." }, { status: 403 });
@@ -173,14 +186,22 @@ export async function POST(req: Request) {
       // An uploaded file is only accepted as approved when the client says the box was ticked; the
       // timestamp is set here, server-side, so it reflects when we recorded the consent.
       artworkPath: artwork?.path === "UPLOAD" ? "UPLOAD" : "DESIGN_SERVICE",
-      artworkFileUrl: artwork?.path === "UPLOAD" ? artwork.fileUrl : null,
-      artworkFileName: artwork?.path === "UPLOAD" ? artwork.fileName : null,
-      artworkWidthIn: artwork?.inspection?.widthIn ?? null,
-      artworkHeightIn: artwork?.inspection?.heightIn ?? null,
-      artworkDpi: artwork?.inspection?.effectiveDpi ? Math.round(artwork.inspection.effectiveDpi) : null,
-      artworkFitApplied: artwork?.inspection ? artwork.inspection.matchesRequiredSize === false : false,
-      artworkPlacement: artwork?.path === "UPLOAD" && artwork.placement ? artwork.placement : undefined,
-      proofApprovedAt: artwork?.path === "UPLOAD" && artwork.approved ? new Date() : null,
+      artworkFileUrl: upload ? front?.fileUrl ?? null : null,
+      artworkFileName: upload ? front?.fileName ?? null : null,
+      artworkWidthIn: front?.inspection?.widthIn ?? null,
+      artworkHeightIn: front?.inspection?.heightIn ?? null,
+      artworkDpi: front?.inspection?.effectiveDpi ? Math.round(front.inspection.effectiveDpi) : null,
+      artworkFitApplied: front?.inspection ? front.inspection.matchesRequiredSize === false : false,
+      artworkPlacement: upload && front?.placement ? front.placement : undefined,
+      proofApprovedAt: upload && front?.approved ? new Date() : null,
+
+      backArtworkFileUrl: upload ? back?.fileUrl ?? null : null,
+      backArtworkFileName: upload ? back?.fileName ?? null : null,
+      backArtworkWidthIn: back?.inspection?.widthIn ?? null,
+      backArtworkHeightIn: back?.inspection?.heightIn ?? null,
+      backArtworkDpi: back?.inspection?.effectiveDpi ? Math.round(back.inspection.effectiveDpi) : null,
+      backArtworkPlacement: upload && back?.placement ? back.placement : undefined,
+      backProofApprovedAt: upload && back?.approved ? new Date() : null,
       // Stamped server-side so the record reflects when we actually received the agreement.
       shippingLabel: freeTestOrder ? null : shipping?.label ?? null,
       shippingPrice: freeTestOrder ? null : shipping?.price ?? null,

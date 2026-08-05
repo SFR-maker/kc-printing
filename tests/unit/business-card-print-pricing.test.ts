@@ -1,24 +1,34 @@
 import { describe, it, expect } from "vitest";
 import { DEFAULT_PRICING } from "@/lib/pricing/settings";
+import { backArtworkLabel, needsBackArtwork } from "@/lib/business-card/print-spec";
 import { calculateBusinessCardPrice, availableQuantities, isComboAvailable, BC_SIZES, BC_PAPERS, BC_COLORS, BC_ALL_QUANTITIES } from "@/lib/pricing/business-cards";
 
 // Reference numbers below are gotprint.com's own scraped prices (before 611 Printing's 1.25x markup),
 // captured 2026-07-25 from their pricing REST API for the standard 2x3.5 card (size=101), 14pt Gloss
 // (paper=1), full color front only (color=1), regular turnaround.
 describe("calculateBusinessCardPrice", () => {
-  it("applies the markup to the base gotprint price for the standard config", () => {
+  it("applies whatever markup is configured, rather than a hardcoded one", () => {
+    // Asserted against the configured multiplier, not a literal. Print now sells at cost, and the
+    // owner can change that from /admin/pricing at any time - a test pinned to 1.25 broke the
+    // moment they did, while testing nothing about the calculation itself.
     const result = calculateBusinessCardPrice({ sizeId: 101, paperId: 1, colorId: 1, quantity: 100 });
     expect(result.valid).toBe(true);
-    expect(result.basePrice).toBeCloseTo(11.55 * 1.25, 2);
+    expect(result.basePrice).toBeCloseTo(11.55 * DEFAULT_PRICING.markupMultiplier, 2);
     expect(result.total).toBeCloseTo(result.basePrice, 2);
   });
 
   it("scales correctly across quantity tiers", () => {
+    const m = DEFAULT_PRICING.markupMultiplier;
     const qty50 = calculateBusinessCardPrice({ sizeId: 101, paperId: 1, colorId: 1, quantity: 50 });
     const qty1000 = calculateBusinessCardPrice({ sizeId: 101, paperId: 1, colorId: 1, quantity: 1000 });
-    expect(qty50.basePrice).toBeCloseTo(9.59 * 1.25, 2);
-    expect(qty1000.basePrice).toBeCloseTo(32.76 * 1.25, 2);
+    expect(qty50.basePrice).toBeCloseTo(9.59 * m, 2);
+    expect(qty1000.basePrice).toBeCloseTo(32.76 * m, 2);
     expect(qty1000.basePrice).toBeGreaterThan(qty50.basePrice);
+  });
+
+  it("sells print at cost by default", () => {
+    // The shop's decision: margin comes from design services and shipping handling, not print.
+    expect(DEFAULT_PRICING.markupMultiplier).toBe(1);
   });
 
   it("premium paper costs more than standard gloss at the same size/quantity", () => {
@@ -127,5 +137,23 @@ describe("published GotPrint pricing", () => {
     for (const qty of Object.keys(VERIFIED).map(Number)) {
       expect(cost(UNCOATED, qty)).toBeGreaterThan(cost(GLOSS, qty));
     }
+  });
+});
+
+describe("which print options need a back file", () => {
+  it("front-only needs no back", () => {
+    expect(needsBackArtwork(1)).toBe(false);
+  });
+
+  it("a grayscale back is still a back", () => {
+    // The commonest miss: "grayscale back" reads like an option rather than a second face, but it
+    // prints on the reverse and needs its own file and its own approval.
+    expect(needsBackArtwork(2)).toBe(true);
+    expect(backArtworkLabel(2)).toBe("Back (grayscale)");
+  });
+
+  it("full colour both sides needs a back", () => {
+    expect(needsBackArtwork(3)).toBe(true);
+    expect(backArtworkLabel(3)).toBe("Back (full colour)");
   });
 });

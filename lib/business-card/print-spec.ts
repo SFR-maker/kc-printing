@@ -165,3 +165,21 @@ export function effectiveImageDpi(naturalWidthPx: number, renderedWidthIn: numbe
   if (renderedWidthIn <= 0) return Infinity;
   return naturalWidthPx / renderedWidthIn;
 }
+
+/**
+ * Whether the chosen print option puts anything on the reverse.
+ *
+ * GotPrint colour ids: 1 is front only, 2 is a grayscale back, 3 is full colour both sides. Ids 2
+ * and 3 both print a second face, so both need their own artwork file and their own approval - a
+ * grayscale back is still a back.
+ */
+export function needsBackArtwork(colorId: number): boolean {
+  return colorId === 2 || colorId === 3;
+}
+
+/** What to call the second upload, so the customer supplies the right kind of file. */
+export function backArtworkLabel(colorId: number): string {
+  if (colorId === 2) return "Back (grayscale)";
+  if (colorId === 3) return "Back (full colour)";
+  return "Back";
+}

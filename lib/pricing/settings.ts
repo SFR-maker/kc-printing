@@ -31,8 +31,10 @@ export interface PricingSettings {
 }
 
 export const DEFAULT_PRICING: PricingSettings = {
-  markupMultiplier: 1.25,
-  roundCornersMarkup: 1.25,
+  // At cost. Print is sold at the supplier price; margin comes from design services and
+  // the shipping handling charge. Change from /admin/pricing without a deploy.
+  markupMultiplier: 1,
+  roundCornersMarkup: 1,
   manualProofPrice: 3,
   shippingTiers: SHIPPING_TIERS,
   shippingMarkup: 2,

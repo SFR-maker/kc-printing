@@ -29,14 +29,48 @@ const POINTS_PER_INCH = 72;
  * each <text> in our rendered SVG) resolve to the real typeface instead of silently falling back to
  * Helvetica — keeping the exported PDF visually consistent with what the editor shows on screen.
  */
+/** PDFKit registers one file per name, so each weight needs its own registration. */
+const BOLD_SUFFIX = "__bold";
+
+/**
+ * Registers a regular and a bold cut for every editor font.
+ *
+ * Only one file per family was registered before, and twenty of the families ship the 700 cut, so
+ * every regular-weight run printed bold - the body of a card whose proof showed it regular. The
+ * proof is rasterised by librsvg, which resolves by name and honours font-weight, so the two
+ * disagreed and only the printed piece was wrong.
+ */
 function registerEditorFonts(doc: InstanceType<typeof PDFDocument>): void {
+  const dir = path.join(process.cwd(), "lib/business-card/fonts-ttf");
   for (const font of EDITOR_FONTS) {
-    try {
-      doc.registerFont(font.family, path.join(process.cwd(), "lib/business-card/fonts-ttf", font.file));
-    } catch {
-      // Missing/corrupt font file — that text falls back to Helvetica rather than failing the export.
+    // The bundled file is whichever weight `weight` says; the other cut comes from regularFile.
+    const boldFile = font.weight === "700" ? font.file : null;
+    const regularFile = font.regularFile ?? (font.weight === "400" ? font.file : null);
+
+    for (const [name, file] of [
+      [font.family, regularFile ?? font.file],
+      [`${font.family}${BOLD_SUFFIX}`, boldFile ?? regularFile ?? font.file],
+    ] as const) {
+      try {
+        doc.registerFont(name, path.join(dir, file));
+      } catch {
+        // Missing or corrupt file: that run falls back to Helvetica rather than failing the export.
+      }
     }
   }
+}
+
+/**
+ * Picks the registered cut for a run of text.
+ *
+ * svg-to-pdfkit hands us the family and whether the run is bold; without this it calls doc.font()
+ * with the raw family name and every weight resolves to the single registration.
+ */
+function pdfFontCallback(family: string, bold: boolean): string {
+  const wanted = String(family ?? "").replace(/['"]/g, "").split(",")[0].trim();
+  const known = EDITOR_FONTS.find((f) => f.family.toLowerCase() === wanted.toLowerCase());
+  if (!known) return bold ? "Helvetica-Bold" : "Helvetica";
+  return bold ? `${known.family}${BOLD_SUFFIX}` : known.family;
 }
 
 export interface RasterExportResult {
@@ -91,10 +125,10 @@ export async function exportCardPdf(front: CardSide, back: CardSide): Promise<Pd
   });
 
   doc.addPage({ size: [frontWidthPt, frontHeightPt], margin: 0 });
-  SVGtoPDF(doc, frontSvg, 0, 0, { width: frontWidthPt, height: frontHeightPt, assumePt: true });
+  SVGtoPDF(doc, frontSvg, 0, 0, { width: frontWidthPt, height: frontHeightPt, assumePt: true, fontCallback: pdfFontCallback });
 
   doc.addPage({ size: [backWidthPt, backHeightPt], margin: 0 });
-  SVGtoPDF(doc, backSvg, 0, 0, { width: backWidthPt, height: backHeightPt, assumePt: true });
+  SVGtoPDF(doc, backSvg, 0, 0, { width: backWidthPt, height: backHeightPt, assumePt: true, fontCallback: pdfFontCallback });
 
   doc.end();
   const buffer = await donePromise;

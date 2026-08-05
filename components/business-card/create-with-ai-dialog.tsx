@@ -13,6 +13,17 @@ import { PRODUCT_ROUTE_SEGMENT, type DesignProduct } from "@/lib/business-card/p
 import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
 import { renderSideToSvg } from "@/lib/business-card/render-svg";
 import type { CardSide } from "@/lib/business-card/schema";
+import { BANNER_SIZES } from "@/lib/pricing/banners";
+import { POSTCARD_SIZES } from "@/lib/pricing/postcards";
+import { parseTrimSize } from "@/lib/print/spec";
+
+/** Turns the chosen size label into the inches the API needs. */
+function trimFor(product: DesignProduct, sizeLabel: string) {
+  const label = sizeLabel || sizesFor(product)[0]?.value;
+  if (!label) return {};
+  const trim = parseTrimSize(label);
+  return trim ? { trimWidthIn: trim.widthIn, trimHeightIn: trim.heightIn } : {};
+}
 
 interface FormState {
   businessName: string;
@@ -26,16 +37,28 @@ interface FormState {
   colorPaletteId: string;
   includeQrCode: boolean;
   bannerFormat: "rollup" | "vinyl";
+  /** Finished size, so the generated background is composed for the piece it will print on. */
+  sizeLabel: string;
 }
 
 const EMPTY_FORM: FormState = {
   businessName: "", tagline: "", description: "", phone: "", email: "", website: "", linkedin: "", address: "",
-  colorPaletteId: AI_PALETTE_AUTO_ID, includeQrCode: false, bannerFormat: "vinyl",
+  colorPaletteId: AI_PALETTE_AUTO_ID, includeQrCode: false, bannerFormat: "vinyl", sizeLabel: "",
 };
 
 interface PreviewData {
   designId: string;
   front: CardSide;
+}
+
+/**
+ * Sizes offered per product, taken from the priced catalogues so the picker can only offer
+ * something the shop actually sells.
+ */
+function sizesFor(product: DesignProduct): { value: string; label: string }[] {
+  if (product === "banner") return BANNER_SIZES.map((s) => ({ value: s.label, label: s.label }));
+  if (product === "postcard") return POSTCARD_SIZES.map((s) => ({ value: s.label, label: s.label }));
+  return [];
 }
 
 export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
@@ -80,7 +103,9 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
       const res = await fetch("/api/ai-design", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product, ...form }),
+        // The chosen size drives the generated aspect ratio. Without it a postcard is always
+        // composed 3:2 and a banner 2:1, and anything outside that shape is cropped away.
+        body: JSON.stringify({ product, ...form, ...trimFor(product, form.sizeLabel) }),
       });
       if (res.status === 401) {
         setStatus("signin");
@@ -249,6 +274,26 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
                 <span className="block text-xs text-kc-muted">Links to your website (or contact info if no website is given).</span>
               </span>
             </label>
+
+            {sizesFor(product).length > 0 && (
+              <div className="space-y-1.5">
+                <Label>Size</Label>
+                <Select
+                  value={form.sizeLabel || sizesFor(product)[0]?.value}
+                  onValueChange={(v) => v && setForm({ ...form, sizeLabel: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {sizesFor(product).map((s) => (
+                      <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-kc-muted">
+                  The background is composed for this shape, so pick the size you intend to order.
+                </p>
+              </div>
+            )}
 
             {product === "banner" && (
               <div className="space-y-1.5">

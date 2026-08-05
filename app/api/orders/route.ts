@@ -152,7 +152,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, postcardSpec, rigidSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, postcardSpec, rigidSpec, cardDesignId, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
 
   if (!acceptedTerms) {
     return NextResponse.json(
@@ -221,6 +221,12 @@ export async function POST(req: Request) {
 
   const total = freeTestOrder ? 0 : round2(printPrice + (packageTier?.price ?? 0) + addOnsTotal);
 
+  // A design id can arrive from a stale link or a cleared draft. Confirming it exists keeps a bad
+  // reference from failing the insert and losing an order the customer is trying to place.
+  const designExists = cardDesignId
+    ? Boolean(await db.cardDesign.findUnique({ where: { id: cardDesignId }, select: { id: true } }))
+    : false;
+
   const order = await db.order.create({
     data: {
       userId: user?.id ?? null,
@@ -230,6 +236,11 @@ export async function POST(req: Request) {
       // An uploaded file is only accepted as approved when the client says the box was ticked; the
       // timestamp is set here, server-side, so it reflects when we recorded the consent.
       artworkPath: artwork?.path === "UPLOAD" ? "UPLOAD" : "DESIGN_SERVICE",
+      // The Design Studio design being printed, as a real column rather than only inside the item
+      // config, so production can query for it and admin can show and download it. Verified to
+      // exist first: a stale id from a cleared draft would otherwise fail the whole insert on the
+      // foreign key, losing the order over a broken reference.
+      cardDesignId: designExists ? cardDesignId : null,
       artworkFileUrl: upload ? front?.fileUrl ?? null : null,
       artworkFileName: upload ? front?.fileName ?? null : null,
       artworkWidthIn: front?.inspection?.widthIn ?? null,
@@ -256,7 +267,7 @@ export async function POST(req: Request) {
           addOnIds: selectedAddOns,
           quantity: orderQuantity,
           price: total,
-          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, postcardSpec: postcardSpec ?? null, rigidSpec: rigidSpec ?? null, testOrder: freeTestOrder },
+          config: { ...config, cardDesignId: cardDesignId ?? null, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, postcardSpec: postcardSpec ?? null, rigidSpec: rigidSpec ?? null, testOrder: freeTestOrder },
         },
       },
     },

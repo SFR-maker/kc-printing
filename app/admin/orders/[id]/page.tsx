@@ -26,6 +26,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     where: { id },
     include: {
       user: true,
+      cardDesign: { select: { id: true, title: true, product: true, thumbnailFront: true, thumbnailBack: true, updatedAt: true } },
       items: { include: { product: true, packageTier: true } },
       project: { include: { revisionRequests: true } },
       coupon: true,
@@ -142,7 +143,64 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
           </Panel>
 
           <Panel title="Artwork">
-            {order.artworkPath === "UPLOAD" ? (
+            {order.cardDesign ? (
+              /*
+               * A Design Studio order has no uploaded file - the design itself is the artwork - so
+               * the upload panel below would show nothing at all and production had no way to get
+               * the print file. Both faces are shown, with the PDF the press needs and per-side
+               * PNGs, rendered from the stored design on demand.
+               */
+              <div className="space-y-3 text-sm">
+                <Row label="Source">Built in the Design Studio</Row>
+                <Row label="Design">{order.cardDesign.title}</Row>
+                <div className="grid grid-cols-2 gap-3">
+                  {([["Front", order.cardDesign.thumbnailFront], ["Back", order.cardDesign.thumbnailBack]] as const).map(
+                    ([face, thumb]) => (
+                      <figure key={face} className="overflow-hidden rounded-lg border border-kc-border bg-white">
+                        <figcaption className="border-b border-kc-border bg-kc-bg px-2 py-1 text-[11.77px] font-semibold text-kc-muted">
+                          {face}
+                        </figcaption>
+                        {thumb ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img src={thumb} alt={`${face} of ${order.cardDesign!.title}`} className="block w-full" />
+                        ) : (
+                          <div className="px-2 py-6 text-center text-[11.77px] text-kc-muted">No preview stored</div>
+                        )}
+                      </figure>
+                    ),
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`/api/admin/orders/${order.id}/print-file`}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-kc-magenta-deep px-3 py-2 text-xs font-semibold text-white hover:opacity-90"
+                  >
+                    <FileIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                    Download print PDF
+                  </a>
+                  <a
+                    href={`/api/admin/orders/${order.id}/print-file?side=front`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs font-semibold text-kc-teal hover:underline"
+                  >
+                    Front PNG
+                  </a>
+                  <a
+                    href={`/api/admin/orders/${order.id}/print-file?side=back`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs font-semibold text-kc-teal hover:underline"
+                  >
+                    Back PNG
+                  </a>
+                  <a
+                    href={`/services/business-cards/design/${order.cardDesign.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs font-semibold text-kc-muted hover:underline"
+                  >
+                    Open in editor
+                  </a>
+                </div>
+              </div>
+            ) : order.artworkPath === "UPLOAD" ? (
               <div className="space-y-2 text-sm">
                 <Row label="Source">Customer supplied a print-ready file</Row>
                 {order.artworkFileUrl && (

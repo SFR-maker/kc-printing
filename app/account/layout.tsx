@@ -2,13 +2,14 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Package, FolderOpen, FileText, Files, Settings } from "lucide-react";
+import { LayoutDashboard, Package, FolderOpen, FileText, Files, Palette, Settings } from "lucide-react";
 import { LogoTile } from "@/components/layout/Wordmark";
 
 const NAV = [
   { href: "/account", label: "Dashboard", icon: LayoutDashboard },
   { href: "/account/orders", label: "Orders", icon: Package },
   { href: "/account/projects", label: "Projects", icon: FolderOpen },
+  { href: "/account/designs", label: "Designs", icon: Palette },
   { href: "/account/files", label: "Files", icon: Files },
   { href: "/account/invoices", label: "Invoices", icon: FileText },
   { href: "/account/settings", label: "Settings", icon: Settings },

@@ -211,7 +211,9 @@ async function persist(
   try {
     const anonymousToken = getAnonymousToken();
     if (designId) {
-      await fetch(`/api/card-designs/${designId}`, {
+      // The token identifies an anonymous author on write as well as on read; without it every
+      // autosave answered 401 and the work never left the browser.
+      await fetch(`/api/card-designs/${designId}?anonymousToken=${encodeURIComponent(anonymousToken)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: design.title, front: design.front, back: design.back }),

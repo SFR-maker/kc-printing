@@ -109,13 +109,32 @@ export function validateSide(side: CardSide, label: "front" | "back"): DesignWar
           elementId: visible[i].id,
           severity: "warning",
           code: "overlap",
-          message: `Two elements on the ${label} overlap heavily and may be hiding each other.`,
+          // Named, because three identical "two elements overlap" lines tell you there are three
+          // problems and nothing about where any of them are.
+          message: `${describeElement(visible[i])} and ${describeElement(visible[j])} on the ${label} overlap heavily and may be hiding each other.`,
         });
       }
     }
   }
 
   return warnings;
+}
+
+/**
+ * Names an element the way its owner would recognise it.
+ *
+ * Overlap warnings previously all read the same, so a card with three overlaps produced three
+ * indistinguishable lines and no way to tell which elements were meant.
+ */
+function describeElement(el: CardElement): string {
+  if (el.type === "text") {
+    const text = el.text.trim().replace(/\s+/g, " ");
+    if (!text) return "an empty text box";
+    return `"${text.length > 24 ? `${text.slice(0, 24)}...` : text}"`;
+  }
+  if (el.type === "image") return "an image";
+  if (el.type === "qr") return "the QR code";
+  return "a shape";
 }
 
 function boundsOverlapArea(a: CardElement, b: CardElement): number {

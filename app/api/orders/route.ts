@@ -108,7 +108,7 @@ const schema = z.object({
   // trusted wholesale: only the file reference, the measured size and the approval flag are kept.
   artwork: z
     .object({
-      path: z.enum(["UPLOAD", "DESIGN_SERVICE"]).nullable(),
+      path: z.enum(["UPLOAD", "DESIGN_SERVICE", "STUDIO"]).nullable(),
       front: artworkSideSchema,
       // Only present on the grayscale-back and both-sides print options.
       back: artworkSideSchema.optional(),
@@ -223,6 +223,7 @@ export async function POST(req: Request) {
 
   // A design id can arrive from a stale link or a cleared draft. Confirming it exists keeps a bad
   // reference from failing the insert and losing an order the customer is trying to place.
+  const studioOrder = artwork?.path === "STUDIO";
   const designExists = cardDesignId
     ? Boolean(await db.cardDesign.findUnique({ where: { id: cardDesignId }, select: { id: true } }))
     : false;
@@ -235,7 +236,11 @@ export async function POST(req: Request) {
       total,
       // An uploaded file is only accepted as approved when the client says the box was ticked; the
       // timestamp is set here, server-side, so it reflects when we recorded the consent.
-      artworkPath: artwork?.path === "UPLOAD" ? "UPLOAD" : "DESIGN_SERVICE",
+      // A studio design is its own thing: no file was uploaded and no designer was booked. Recording
+      // it as UPLOAD made the order claim a file that does not exist, and the dashboard flagged it
+      // "proof not approved" permanently, since an upload's proof cannot be approved with nothing
+      // uploaded.
+      artworkPath: artwork?.path === "UPLOAD" ? "UPLOAD" : studioOrder ? "STUDIO" : "DESIGN_SERVICE",
       // The Design Studio design being printed, as a real column rather than only inside the item
       // config, so production can query for it and admin can show and download it. Verified to
       // exist first: a stale id from a cleared draft would otherwise fail the whole insert on the
@@ -248,7 +253,9 @@ export async function POST(req: Request) {
       artworkDpi: front?.inspection?.effectiveDpi ? Math.round(front.inspection.effectiveDpi) : null,
       artworkFitApplied: front?.inspection ? front.inspection.matchesRequiredSize === false : false,
       artworkPlacement: upload && front?.placement ? front.placement : undefined,
-      proofApprovedAt: upload && front?.approved ? new Date() : null,
+      // The studio's own proof screen gathers the same approval before it hands over to the order,
+      // so a studio order carries a real consent record too.
+      proofApprovedAt: (upload && front?.approved) || (studioOrder && front?.approved) ? new Date() : null,
 
       backArtworkFileUrl: upload ? back?.fileUrl ?? null : null,
       backArtworkFileName: upload ? back?.fileName ?? null : null,

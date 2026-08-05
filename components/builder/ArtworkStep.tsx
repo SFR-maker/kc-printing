@@ -9,7 +9,14 @@ import { fitPlacement, type ArtworkPlacement } from "@/lib/business-card/placeme
 import { ArtworkProof } from "@/components/builder/ArtworkProof";
 import { cn } from "@/lib/utils";
 
-export type ArtworkPath = "UPLOAD" | "DESIGN_SERVICE";
+/**
+ * How the artwork for an order is produced.
+ *
+ * STUDIO means the customer built it in the Design Studio: nothing is uploaded and no designer is
+ * booked, so it is neither of the other two. Recording those orders as UPLOAD left them claiming a
+ * file that did not exist and permanently flagged "proof not approved".
+ */
+export type ArtworkPath = "UPLOAD" | "DESIGN_SERVICE" | "STUDIO";
 
 /** One printed face. A double-sided card needs two, each proofed and approved separately. */
 export interface ArtworkSide {

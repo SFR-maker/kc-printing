@@ -584,4 +584,9 @@ model BrandProfile {
 enum ArtworkPath {
   UPLOAD
   DESIGN_SERVICE
+  // Built by the customer in the Design Studio. Neither an uploaded file nor a job for our
+  // designers, and recording it as UPLOAD left orders claiming a file that does not exist and being
+  // flagged "proof not approved" forever, because an upload's proof can never be approved when
+  // there is nothing uploaded.
+  STUDIO
 }

@@ -145,7 +145,9 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
         onConfirm={async () => {
           setConfirming(true);
           await handleSave();
-          const params = new URLSearchParams({ designId: designId ?? "", package: "gold" });
+          // `proof=approved` is only ever set here, after the review checkbox has been ticked, so
+          // the order records a real consent rather than assuming one from the design's presence.
+          const params = new URLSearchParams({ designId: designId ?? "", proof: "approved" });
           router.push(`/services/${routeSegment}/order?${params.toString()}`);
         }}
       />

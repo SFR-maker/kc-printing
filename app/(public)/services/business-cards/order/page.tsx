@@ -15,7 +15,7 @@ const service = SERVICES["business-cards"];
 export default async function OrderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ package?: string; designId?: string; test?: string }>;
+  searchParams: Promise<{ package?: string; designId?: string; test?: string; proof?: string }>;
 }) {
   if (!service) notFound();
   const params = await searchParams;
@@ -28,6 +28,7 @@ export default async function OrderPage({
       service={service}
       defaultPackage={params.package}
       cardDesignId={params.designId}
+      proofApproved={params.proof === "approved"}
       testCode={testCode}
       pricing={await getPricingSettings()}
     />

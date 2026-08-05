@@ -103,7 +103,7 @@ const schema = z.object({
   // output, and react-hook-form's resolver typing rejects the mismatch. It is supplied through
   // defaultValues instead, including for drafts saved before this field existed.
   artwork: z.object({
-    path: z.enum(["UPLOAD", "DESIGN_SERVICE"]).nullable(),
+    path: z.enum(["UPLOAD", "DESIGN_SERVICE", "STUDIO"]).nullable(),
     front: z.any(),
     back: z.any(),
   }),
@@ -127,6 +127,8 @@ interface ProductBuilderProps {
   service: ServiceDef;
   defaultPackage?: string;
   cardDesignId?: string;
+  /** Set by the Design Studio's proof screen once the review checkbox has been ticked. */
+  proofApproved?: boolean;
   /**
    * Present only when the page was opened with a valid test link. Turns the order into a free
    * end-to-end run of the upload -> proof -> checkout path against live Stripe. Sent back to
@@ -145,7 +147,7 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode, pricing = DEFAULT_PRICING }: ProductBuilderProps) {
+export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApproved = false, testCode, pricing = DEFAULT_PRICING }: ProductBuilderProps) {
   const isBusinessCards = service.slug === "business-cards";
   const isBanners = service.slug === "banners";
   const isPostcards = service.slug === "postcards";
@@ -477,6 +479,22 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onSubmit = async (data: any) => {
     const typed = data as FormValues;
+
+    /**
+     * A studio order describes itself honestly at submit time.
+     *
+     * The form's artwork state can still say UPLOAD - it is restored from a draft, and the studio
+     * handoff does not touch it - which made the order claim an uploaded file it never had. The
+     * proof approval comes from the studio's own review screen, which gates on the same checkbox
+     * the upload path uses.
+     */
+    if (studioDesign) {
+      typed.artwork = {
+        ...EMPTY_ARTWORK,
+        path: "STUDIO",
+        front: { ...EMPTY_ARTWORK.front, approved: proofApproved },
+      };
+    }
 
     if (emptySelfServeOrder) {
       setSubmitError(

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     absolute: "611 Printing - Business Cards, Postcards, Banners & Rigid Signs in Kansas City",
   },
   description:
-    "Custom business cards, postcards, banners, and rigid signs. Fast online ordering, print-ready files. Serving Kansas City, Dallas, Plano, and nationwide.",
+    "Custom business cards, postcards, banners, and rigid signs. Fast online ordering, print-ready files. Serving Kansas City, Johnson County, Dallas-Fort Worth, and nationwide.",
 };
 
 // Homepage pulls live testimonials from the DB (see below) — revalidate periodically so a newly
@@ -91,7 +91,7 @@ const FAQS = [
   { q: "What file formats do you deliver?", a: "Business cards, postcards, banners, and rigid signs all come as a print-ready PDF with proper bleed (and a die line for rigid signs), plus a high-resolution JPG and PNG, ready to send to any print shop, including ours." },
   { q: "I don't have a finished design. Can you still help?", a: "Yes. Upload a logo, some brand colors, or just tell us what you're going for, and our AI-assisted brief tool helps capture the direction before a real designer starts the layout." },
   { q: "Can I request revisions?", a: "Yes. Every package includes 4 to 8 revisions depending on the tier. Need more than that? Additional revisions are available at a flat rate." },
-  { q: "Do you serve businesses outside Kansas City?", a: "We do. 611 Printing is based in Kansas City but works with businesses in Dallas, Plano, Overland Park, and nationwide. All ordering and file delivery happens online." },
+  { q: "Do you serve businesses outside Kansas City?", a: "We do. 611 Printing works out of the Kansas City metro and serves Johnson County, Dallas-Fort Worth, and businesses nationwide. All ordering and file delivery happens online." },
 ];
 
 /* Shared button treatments. Magenta is the page's only interactive accent; cyan and gold appear
@@ -426,10 +426,10 @@ export default async function HomePage() {
                 telephone: "+18165210462",
                 email: "kansasdesigners@gmail.com",
                 description: "Fully online print and design services studio.",
-                // Was claiming Dallas, Plano and Addison TX for a Kansas City print shop - inherited from
-                // another project. Inflated service areas read as untrustworthy in local search, and
-                // the Terms already say Kansas City plus nationwide shipping.
-                areaServed: ["Shawnee, KS", "Overland Park, KS", "Lenexa, KS", "Kansas City, KS", "Kansas City, MO", "United States"],
+                // Counties and metros rather than individual suburbs: Johnson County covers the
+                // Kansas side of the metro in one term Google recognises as an administrative area,
+                // and DFW is the market rather than three separately-listed cities inside it.
+                areaServed: ["Johnson County, KS", "Kansas City, MO", "Kansas City, KS", "Dallas-Fort Worth, TX", "United States"],
               },
             ],
           }),

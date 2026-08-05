@@ -25,10 +25,8 @@ const LEGAL = [
 
 const AREAS = [
   "Kansas City, MO",
-  "Overland Park, KS",
-  "Dallas, TX",
-  "Plano, TX",
-  "Addison, TX",
+  "Johnson County, KS",
+  "Dallas-Fort Worth, TX",
   "Nationwide Online",
 ];
 

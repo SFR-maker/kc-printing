@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: "%s | 611 Printing",
   },
   description:
-    "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Fast online ordering. Serving Kansas City, Dallas, Plano, and nationwide.",
+    "Custom business cards, postcards, and banners designed by a real designer and delivered print-ready. Fast online ordering. Serving Kansas City, Johnson County, Dallas-Fort Worth, and nationwide.",
   metadataBase: new URL(APP_URL),
   // A relative canonical in the root layout resolves per-route, so every page gets a correct
   // self-referencing canonical without repeating it in 20 files. This also collapses the

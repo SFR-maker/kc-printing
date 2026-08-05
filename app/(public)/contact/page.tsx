@@ -138,7 +138,7 @@ export default function ContactPage() {
             <div className="mt-10">
               <h2 className="text-[13px] font-semibold text-kc-dark">Service areas</h2>
               <ul className="mt-3 space-y-1.5 text-[14px] text-kc-dark/60">
-                {["Kansas City, MO", "Overland Park, KS", "Dallas, TX", "Plano, TX", "Addison, TX", "Nationwide Online"].map((city) => (
+                {["Kansas City, MO", "Johnson County, KS", "Dallas-Fort Worth, TX", "Nationwide Online"].map((city) => (
                   <li key={city}>{city}</li>
                 ))}
               </ul>

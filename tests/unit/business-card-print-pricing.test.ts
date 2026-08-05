@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { DEFAULT_PRICING } from "@/lib/pricing/settings";
 import { calculateBusinessCardPrice, availableQuantities, isComboAvailable, BC_SIZES, BC_PAPERS, BC_COLORS, BC_ALL_QUANTITIES } from "@/lib/pricing/business-cards";
 
 // Reference numbers below are gotprint.com's own scraped prices (before 611 Printing's 1.25x markup),
@@ -81,5 +82,50 @@ describe("calculateBusinessCardPrice", () => {
     const qtys = availableQuantities(101, 1, 1);
     expect(qtys.length).toBeGreaterThan(20);
     expect(qtys).toEqual([...qtys].sort((a, b) => a - b));
+  });
+});
+
+/**
+ * Guards the prices against GotPrint's published figures.
+ *
+ * The 14 pt. Uncoated column was scraped as gloss and sat below cost for months - $16.45 quoted for
+ * 250 cards that cost $27.30 to buy. These pin the two stocks the spreadsheet verifies in full, so
+ * a future re-scrape cannot quietly reintroduce the same class of error.
+ */
+describe("published GotPrint pricing", () => {
+  const GLOSS = 1;
+  const UNCOATED = 2;
+  const STANDARD = 101;
+  const FRONT_ONLY = 1;
+
+  const VERIFIED: Record<number, { gloss: number; uncoated: number }> = {
+    50: { gloss: 9.59, uncoated: 14.7 },
+    100: { gloss: 11.55, uncoated: 16.8 },
+    250: { gloss: 16.8, uncoated: 27.3 },
+    500: { gloss: 24.85, uncoated: 31.5 },
+    1000: { gloss: 32.76, uncoated: 42.7 },
+    2500: { gloss: 59.5, uncoated: 67.2 },
+    5000: { gloss: 108.5, uncoated: 126 },
+    10000: { gloss: 206.5, uncoated: 241.5 },
+  };
+
+  /** Base price before markup — what the stock costs us. */
+  const cost = (paperId: number, quantity: number) =>
+    calculateBusinessCardPrice(
+      { sizeId: STANDARD, paperId, colorId: FRONT_ONLY, quantity },
+      { ...DEFAULT_PRICING, markupMultiplier: 1 }
+    ).basePrice;
+
+  for (const [qty, want] of Object.entries(VERIFIED)) {
+    it(`matches GotPrint at ${qty} cards`, () => {
+      expect(cost(GLOSS, Number(qty))).toBeCloseTo(want.gloss, 2);
+      expect(cost(UNCOATED, Number(qty))).toBeCloseTo(want.uncoated, 2);
+    });
+  }
+
+  it("never sells uncoated below gloss, which is what the bad scrape did", () => {
+    for (const qty of Object.keys(VERIFIED).map(Number)) {
+      expect(cost(UNCOATED, qty)).toBeGreaterThan(cost(GLOSS, qty));
+    }
   });
 });

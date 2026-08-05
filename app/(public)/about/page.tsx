@@ -7,7 +7,7 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 export const metadata: Metadata = {
   title: "About 611 Printing - Online Design Studio",
   description:
-    "611 Printing is a fully online design studio serving Kansas City, Dallas, Plano, Addison, Overland Park, and businesses nationwide. Fast, professional, print-ready.",
+    "611 Printing is a fully online design studio serving Kansas City, Johnson County, Dallas-Fort Worth, and businesses nationwide. Fast, professional, print-ready.",
 };
 
 // Real, verifiable facts only — no client counts, ratings, or years-in-business claims until
@@ -21,10 +21,8 @@ const FACTS = [
 
 const AREAS = [
   "Kansas City, MO",
-  "Overland Park, KS",
-  "Dallas, TX",
-  "Plano, TX",
-  "Addison, TX",
+  "Johnson County, KS",
+  "Dallas-Fort Worth, TX",
   "Nationwide Online",
 ];
 

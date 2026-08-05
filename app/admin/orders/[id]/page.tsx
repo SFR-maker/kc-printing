@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { CardSideSchema } from "@/lib/business-card/schema";
+import { renderSideToSvg } from "@/lib/business-card/render-svg";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle2, CreditCard, ExternalLink, FileIcon, Flag, PenLine, Truck } from "lucide-react";
 import { db } from "@/lib/prisma";
@@ -26,7 +28,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     where: { id },
     include: {
       user: true,
-      cardDesign: { select: { id: true, title: true, product: true, thumbnailFront: true, thumbnailBack: true, updatedAt: true } },
+      cardDesign: { select: { id: true, title: true, product: true, front: true, back: true, updatedAt: true } },
       items: { include: { product: true, packageTier: true } },
       project: { include: { revisionRequests: true } },
       coupon: true,
@@ -153,22 +155,31 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
               <div className="space-y-3 text-sm">
                 <Row label="Source">Built in the Design Studio</Row>
                 <Row label="Design">{order.cardDesign.title}</Row>
+                {/*
+                  Rendered from the stored design, not from CardDesign.thumbnailFront/Back: those
+                  columns exist but nothing writes them, so every design on file has null thumbnails
+                  and a preview built on them would always be blank. This also guarantees the shop is
+                  looking at the same artwork the print file is produced from.
+                */}
                 <div className="grid grid-cols-2 gap-3">
-                  {([["Front", order.cardDesign.thumbnailFront], ["Back", order.cardDesign.thumbnailBack]] as const).map(
-                    ([face, thumb]) => (
+                  {([["Front", order.cardDesign.front], ["Back", order.cardDesign.back]] as const).map(([face, raw]) => {
+                    const parsed = CardSideSchema.safeParse(raw);
+                    return (
                       <figure key={face} className="overflow-hidden rounded-lg border border-kc-border bg-white">
                         <figcaption className="border-b border-kc-border bg-kc-bg px-2 py-1 text-[11.77px] font-semibold text-kc-muted">
                           {face}
                         </figcaption>
-                        {thumb ? (
-                          /* eslint-disable-next-line @next/next/no-img-element */
-                          <img src={thumb} alt={`${face} of ${order.cardDesign!.title}`} className="block w-full" />
+                        {parsed.success ? (
+                          <div
+                            className="bg-white [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+                            dangerouslySetInnerHTML={{ __html: renderSideToSvg(parsed.data, 150) }}
+                          />
                         ) : (
-                          <div className="px-2 py-6 text-center text-[11.77px] text-kc-muted">No preview stored</div>
+                          <div className="px-2 py-6 text-center text-[11.77px] text-kc-muted">Could not be read</div>
                         )}
                       </figure>
-                    ),
-                  )}
+                    );
+                  })}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <a

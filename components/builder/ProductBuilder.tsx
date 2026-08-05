@@ -23,6 +23,8 @@ import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
 } from "@/components/builder/PostcardPrintSpec";
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
+import { CardSideSchema } from "@/lib/business-card/schema";
+import { renderSideToSvg } from "@/lib/business-card/render-svg";
 import {
   defaultRigidSpec, rigidNeedsBack, rigidBackLabel, sizeById,
   type RigidMaterialId, type RigidSignSpec,
@@ -50,7 +52,8 @@ const bcSpecSchema = z.object({
 
 // Cheapest real combo (100 lb. Matte Cover, 250 cards, single-sided) so the order flow opens on
 // its lowest-friction, lowest-price starting point rather than nudging toward a bigger order.
-const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 7, colorId: 1, quantity: 250, rush: false, roundCorners: false, manualProof: false };
+// paperId 1 is 14 pt. Gloss - the house default, and what most people picture as a business card.
+const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 250, rush: false, roundCorners: false, manualProof: false };
 
 const schema = z.object({
   selectedOption: z.record(z.string(), z.string()).optional(),
@@ -156,6 +159,23 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
   const [step, setStep] = useState(0);
   /** Rigid signs are quoted by /api/price/rigid-signs; the picker reports the result up here. */
   const [rigidPrice, setRigidPrice] = useState<RigidSignPriceState>({ valid: false, total: 0, loading: true });
+  /**
+   * Set only by "Upload a file instead".
+   *
+   * Deliberately not derived from artwork.path: the order draft is restored from sessionStorage, so
+   * a path of UPLOAD left over from an earlier visit made the studio design look absent and the
+   * step demanded a file the customer had already designed.
+   */
+  const [uploadInstead, setUploadInstead] = useState(false);
+  /**
+   * The studio design's two faces, rendered to SVG for display.
+   *
+   * Drawn from the stored design rather than from CardDesign.thumbnailFront/Back: those columns
+   * exist but nothing ever writes them, so every one of the designs on file has null thumbnails and
+   * a preview built on them would show nothing. Rendering the same JSON the press will print is
+   * also the only version guaranteed to match.
+   */
+  const [designPreview, setDesignPreview] = useState<{ title: string; front: string | null; back: string | null } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -216,9 +236,25 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
    * step can't silently shift what another step renders.
    */
   const artwork: ArtworkState = values.artwork ?? EMPTY_ARTWORK;
+  /**
+   * True when this order is carrying a design built in the Design Studio.
+   *
+   * That design is the artwork - it is already print-ready at the chosen size - so it satisfies the
+   * artwork requirement on its own. Previously only an uploaded file or a booked design service
+   * counted, so arriving from the studio showed an uploader and then refused to advance, which made
+   * a studio design impossible to order at all.
+   *
+   * "Upload a file instead" clears it back to the normal uploader, so the escape hatch still exists.
+   */
+  const studioDesign = Boolean(cardDesignId) && !uploadInstead;
+
   const stepKeys: StepKey[] = !hasPrintSpec
     ? ["package", "options", "details", "payment"]
-    : artwork.path === "UPLOAD"
+    : // Someone who built their own design in the studio is in exactly the position of someone who
+      // uploaded a finished file: there is nothing for a designer to do and no brand brief to take.
+      // They were being routed through Design Service and asked to buy a package to have artwork
+      // made that they had already made themselves.
+      artwork.path === "UPLOAD" || studioDesign
       ? ["specs", "payment"]
       : ["specs", "design", "details", "payment"];
   const currentStep = stepKeys[Math.min(step, stepKeys.length - 1)];
@@ -267,8 +303,26 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
     const token = getAnonymousToken();
     fetch(`/api/card-designs/${cardDesignId}?anonymousToken=${encodeURIComponent(token)}`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { design?: { meta?: Record<string, string> | null } } | null) => {
-        const meta = data?.design?.meta;
+      .catch(() => null)
+      .then((data: { design?: { title?: string; meta?: Record<string, string> | null; front?: unknown; back?: unknown } } | null) => {
+        const d = data?.design;
+        // A design is only readable by its owner or by the browser that made it. If that check
+        // fails - signed in on a different device, storage cleared - the preview must say so rather
+        // than sit on "Loading your design" forever.
+        if (!d) {
+          setDesignPreview({ title: "", front: null, back: null });
+          return;
+        }
+        if (d) {
+          const front = CardSideSchema.safeParse(d.front);
+          const back = CardSideSchema.safeParse(d.back);
+          setDesignPreview({
+            title: d.title ?? "Your design",
+            front: front.success ? renderSideToSvg(front.data, 150) : null,
+            back: back.success ? renderSideToSvg(back.data, 150) : null,
+          });
+        }
+        const meta = d?.meta;
         if (!meta) return;
         if (meta.businessName && !form.getValues("businessName")) setValue("businessName", meta.businessName);
         if (meta.phone) setValue("phone", meta.phone);
@@ -320,18 +374,6 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
           addOnPrices: selectedAddOnPrices,
         })
       : null;
-
-  /**
-   * True when this order is carrying a design built in the Design Studio.
-   *
-   * That design is the artwork - it is already print-ready at the chosen size - so it satisfies the
-   * artwork requirement on its own. Previously only an uploaded file or a booked design service
-   * counted, so arriving from the studio showed an uploader and then refused to advance, which made
-   * a studio design impossible to order at all.
-   *
-   * "Upload a file instead" clears it back to the normal uploader, so the escape hatch still exists.
-   */
-  const studioDesign = Boolean(cardDesignId) && artwork.path !== "UPLOAD";
 
   const backNeeded = isBusinessCards
     ? needsBackArtwork(values.bcSpec?.colorId ?? 1)
@@ -670,29 +712,57 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                     design built in the studio impossible to order.
                   */}
                   <p className="text-sm text-kc-muted">
-                    Your design from the Design Studio will be sent to print. Nothing to upload.
+                    This is what will print. Nothing to upload.
                   </p>
-                  <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border-2 border-kc-coral/40 bg-white p-5">
-                    <div>
-                      <div className="text-sm font-semibold text-kc-dark">Design Studio artwork</div>
-                      <div className="text-sm text-kc-muted">
-                        Print-ready at the size and finish selected above.
-                      </div>
+                  <div className="rounded-xl border-2 border-kc-coral/40 bg-white p-5">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {([["Front", designPreview?.front], ["Back", designPreview?.back]] as const).map(([face, src]) => (
+                        <figure key={face} className="overflow-hidden rounded-lg border border-kc-border bg-kc-bg">
+                          <figcaption className="border-b border-kc-border px-3 py-1.5 text-xs font-semibold text-kc-muted">
+                            {face}
+                          </figcaption>
+                          {src ? (
+                            // The SVG carries pixel width/height at the render DPI, which overflows
+                            // this column; the viewBox is in inches, so filling the width and letting
+                            // height follow shows the whole face at true proportions.
+                            <div
+                              className="bg-white [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+                              dangerouslySetInnerHTML={{ __html: src }}
+                            />
+                          ) : (
+                            <div className="px-3 py-10 text-center text-xs text-kc-muted">
+                              {!designPreview
+                                ? "Loading your design…"
+                                : designPreview.title
+                                  ? "This side is empty"
+                                  : "Preview unavailable on this device — open it in the editor to check."}
+                            </div>
+                          )}
+                        </figure>
+                      ))}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <a
-                        href={`/services/${service.slug}/design/${cardDesignId}`}
-                        className="text-sm font-semibold text-kc-magenta-deep hover:underline"
-                      >
-                        Edit design
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" })}
-                        className="text-sm text-kc-muted underline hover:text-kc-dark"
-                      >
-                        Upload a file instead
-                      </button>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-kc-border pt-4">
+                      <div className="text-sm text-kc-muted">
+                        {designPreview?.title || "Your design"} — print-ready at the size and finish above.
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <a
+                          href={`/services/${service.slug}/design/${cardDesignId}`}
+                          className="text-sm font-semibold text-kc-magenta-deep hover:underline"
+                        >
+                          Edit design
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUploadInstead(true);
+                            setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                          }}
+                          className="text-sm text-kc-muted underline hover:text-kc-dark"
+                        >
+                          Upload a file instead
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>

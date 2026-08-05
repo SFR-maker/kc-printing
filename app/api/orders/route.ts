@@ -5,6 +5,7 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
 import { calculateBannerPrice } from "@/lib/pricing/banners";
+import { calculatePostcardPrice } from "@/lib/pricing/postcards";
 import { isTestOrderCode } from "@/lib/pricing/test-order";
 import { getPricingSettings } from "@/lib/pricing/settings-server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
@@ -75,6 +76,14 @@ const schema = z.object({
   bannerSpec: z
     .object({ size: z.string().max(60), material: z.string().max(80), quantity: z.number().int().positive() })
     .optional(),
+  postcardSpec: z
+    .object({
+      size: z.string().max(60),
+      paper: z.string().max(80),
+      color: z.string().max(80),
+      quantity: z.number().int().positive(),
+    })
+    .optional(),
   // Only required for guests (see the userId check below) — a signed-in user's account email is
   // used instead, but the field is accepted either way so the client doesn't need to know the
   // customer's auth state before submitting.
@@ -119,7 +128,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, postcardSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
 
   if (!acceptedTerms) {
     return NextResponse.json(
@@ -153,7 +162,14 @@ export async function POST(req: Request) {
   let printPrice = 0;
   let orderQuantity = quantity;
 
-  if (service === "banners" && bannerSpec) {
+  if (service === "postcards" && postcardSpec) {
+    // Priced server-side from the same table the builder quoted from, so a tampered client cannot
+    // choose its own figure - and an unavailable paper/colour combination is refused here too.
+    const priced = calculatePostcardPrice(postcardSpec);
+    if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid postcard specification" }, { status: 400 });
+    printPrice = priced.total;
+    orderQuantity = postcardSpec.quantity;
+  } else if (service === "banners" && bannerSpec) {
     // Priced server-side from the same table the builder quoted from, so a tampered client cannot
     // choose its own figure.
     const priced = calculateBannerPrice(bannerSpec);
@@ -208,7 +224,7 @@ export async function POST(req: Request) {
           addOnIds: selectedAddOns,
           quantity: orderQuantity,
           price: total,
-          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, testOrder: freeTestOrder },
+          config: { ...config, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, postcardSpec: postcardSpec ?? null, testOrder: freeTestOrder },
         },
       },
     },

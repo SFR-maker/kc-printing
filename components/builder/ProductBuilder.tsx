@@ -19,6 +19,10 @@ import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BannerPrintSpec, DEFAULT_BANNER_SPEC, type BannerSpec } from "@/components/builder/BannerPrintSpec";
+import {
+  PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
+} from "@/components/builder/PostcardPrintSpec";
+import { calculatePostcardPrice } from "@/lib/pricing/postcards";
 import { calculateBannerPrice } from "@/lib/pricing/banners";
 import { parseTrimSize, printSpec, type PrintSpec } from "@/lib/print/spec";
 import { BUSINESS_CARD_BLEED, PRINT_SPEC } from "@/lib/business-card/print-spec";
@@ -64,6 +68,9 @@ const schema = z.object({
   bcSpec: bcSpecSchema.optional(),
   bannerSpec: z
     .object({ size: z.string(), material: z.string(), quantity: z.number() })
+    .optional(),
+  postcardSpec: z
+    .object({ size: z.string(), paper: z.string(), color: z.string(), quantity: z.number() })
     .optional(),
   // Collected at Review regardless of sign-in state, since the client has no reliable way to know
   // auth status before submitting: guests need it so there's somewhere to send confirmation and
@@ -121,11 +128,12 @@ function round2(n: number): number {
 export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode, pricing = DEFAULT_PRICING }: ProductBuilderProps) {
   const isBusinessCards = service.slug === "business-cards";
   const isBanners = service.slug === "banners";
+  const isPostcards = service.slug === "postcards";
   /**
    * Products that carry real print specs and an artwork step, rather than only a design package.
    * Everything else still runs the old package-first flow until it has priced options of its own.
    */
-  const hasPrintSpec = isBusinessCards || isBanners;
+  const hasPrintSpec = isBusinessCards || isBanners || isPostcards;
 
   const [step, setStep] = useState(0);
   const [aiLoading, setAiLoading] = useState(false);
@@ -263,7 +271,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
 
   const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec, pricing) : null;
   const bannerPrice = isBanners && values.bannerSpec ? calculateBannerPrice(values.bannerSpec) : null;
-  const printPrice = isBanners ? bannerPrice : bcPrice;
+  const postcardPrice = isPostcards && values.postcardSpec ? calculatePostcardPrice(values.postcardSpec) : null;
+  const printPrice = isBanners ? bannerPrice : isPostcards ? postcardPrice : bcPrice;
 
   const rawPrice = hasPrintSpec
     ? (printPrice?.valid
@@ -284,7 +293,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
         })
       : null;
 
-  const backNeeded = isBusinessCards && needsBackArtwork(values.bcSpec?.colorId ?? 1);
+  const backNeeded = isBusinessCards
+    ? needsBackArtwork(values.bcSpec?.colorId ?? 1)
+    : isPostcards
+      ? postcardNeedsBack((values.postcardSpec ?? DEFAULT_POSTCARD_SPEC).color)
+      : false;
 
   /** Geometry the artwork step and proof are measured against. */
   const artworkSpec: PrintSpec = (() => {
@@ -292,6 +305,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
       const trim = parseTrimSize(values.bannerSpec?.size ?? DEFAULT_BANNER_SPEC.size)
         ?? { widthIn: 72, heightIn: 36 };
       return printSpec("banners", trim.widthIn, trim.heightIn);
+    }
+    if (isPostcards) {
+      const trim = parseTrimSize(values.postcardSpec?.size ?? DEFAULT_POSTCARD_SPEC.size)
+        ?? { widthIn: 6, heightIn: 4 };
+      return printSpec("postcards", trim.widthIn, trim.heightIn);
     }
     return printSpec(
       "business-cards",
@@ -522,7 +540,20 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                   ? "Real print pricing: size, material and quantity all affect your price."
                   : "Real print pricing: size, paper, sides, and quantity all affect your price."}
               </p>
-              {isBanners ? (
+              {isPostcards ? (
+                <PostcardPrintSpec
+                  spec={values.postcardSpec ?? DEFAULT_POSTCARD_SPEC}
+                  onChange={(next) => {
+                    const prev = values.postcardSpec ?? DEFAULT_POSTCARD_SPEC;
+                    setValue("postcardSpec", next);
+                    // Size decides the document, so a proof approved against the old one no longer
+                    // describes what prints.
+                    if (prev.size !== next.size && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
+                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                    }
+                  }}
+                />
+              ) : isBanners ? (
                 <BannerPrintSpec
                   spec={values.bannerSpec ?? DEFAULT_BANNER_SPEC}
                   onChange={(next) => {
@@ -575,7 +606,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                 }}
                 roundCorners={(values.bcSpec ?? DEFAULT_BC_SPEC).roundCorners}
                 needsBack={backNeeded}
-                backLabel={backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)}
+                backLabel={
+                  isPostcards
+                    ? postcardBackLabel((values.postcardSpec ?? DEFAULT_POSTCARD_SPEC).color)
+                    : backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)
+                }
                 spec={artworkSpec}
               />
               {artworkError && (

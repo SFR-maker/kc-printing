@@ -88,22 +88,6 @@ const schema = z.object({
     .optional(),
   /** Secret that makes this a free test order. Validated here; never trusted from the client. */
   testCode: z.string().optional(),
-  /**
-   * The shipping option the customer picked and saw a price for.
-   *
-   * Recorded, not trusted as revenue: it becomes the single Stripe shipping option so the customer
-   * is charged the figure they were shown, and the print total is still recomputed server-side.
-   */
-  shipping: z
-    .object({
-      id: z.string(),
-      label: z.string().max(120),
-      price: z.number().min(0).max(1000),
-      minDays: z.number().int().min(1).max(60),
-      maxDays: z.number().int().min(1).max(60),
-    })
-    .nullable()
-    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -130,7 +114,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, acceptedTerms, testCode, shipping, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
 
   if (!acceptedTerms) {
     return NextResponse.json(
@@ -203,10 +187,6 @@ export async function POST(req: Request) {
       backArtworkPlacement: upload && back?.placement ? back.placement : undefined,
       backProofApprovedAt: upload && back?.approved ? new Date() : null,
       // Stamped server-side so the record reflects when we actually received the agreement.
-      shippingLabel: freeTestOrder ? null : shipping?.label ?? null,
-      shippingPrice: freeTestOrder ? null : shipping?.price ?? null,
-      shippingMinDays: freeTestOrder ? null : shipping?.minDays ?? null,
-      shippingMaxDays: freeTestOrder ? null : shipping?.maxDays ?? null,
       termsVersion: TERMS_VERSION,
       termsAcceptedAt: new Date(),
       items: {

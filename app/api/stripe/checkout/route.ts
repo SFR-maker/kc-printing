@@ -115,22 +115,10 @@ export async function POST(req: Request) {
       // to the destination - some states tax carriage, some do not.
       // A zero-value order is a gated test order (see lib/pricing/test-order.ts) - nothing else in
       // the shop totals zero. Charging carriage on it would defeat the point, so it ships free.
-      // When the customer priced shipping before checkout, that exact option is the only one
-      // offered - re-presenting a menu here would let them pay a different figure to the one the
-      // order was quoted at, and the order record would no longer match the charge.
+      // Stripe owns the shipping choice: it is the only screen with the delivery address, and it
+      // renders each tier with a real delivery date worked out against the customer's own calendar.
       shipping_options: buildShippingOptions(
-        order.total === 0
-          ? [FREE_TEST_SHIPPING]
-          : order.shippingLabel && order.shippingPrice != null
-            ? [{
-                id: "chosen",
-                label: order.shippingLabel,
-                price: order.shippingPrice,
-                minBusinessDays: order.shippingMinDays ?? 3,
-                maxBusinessDays: order.shippingMaxDays ?? 6,
-                recommended: true,
-              }]
-            : (await getPricingSettings()).shippingTiers
+        order.total === 0 ? [FREE_TEST_SHIPPING] : (await getPricingSettings()).shippingTiers
       ),
     });
   } catch (err) {

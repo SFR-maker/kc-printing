@@ -21,7 +21,6 @@ import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/build
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
 import { ArtworkStep, EMPTY_ARTWORK, artworkComplete, normaliseArtwork, type ArtworkState } from "@/components/builder/ArtworkStep";
 import { backArtworkLabel, needsBackArtwork } from "@/lib/business-card/print-spec";
-import { ShippingQuote, type QuoteOption } from "@/components/builder/ShippingQuote";
 import { AI_PALETTES, AI_PALETTE_AUTO_ID } from "@/lib/business-card/templates/ai-palettes";
 import { getAnonymousToken } from "@/lib/business-card/local-autosave";
 import type { ServiceDef } from "@/lib/service-data";
@@ -126,9 +125,6 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [designMetaLoaded, setDesignMetaLoaded] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(!cardDesignId);
-  // Chosen before checkout so the customer sees the real total. Passed to Stripe as the single
-  // shipping option, which locks the price to the one they were shown.
-  const [shipping, setShipping] = useState<QuoteOption | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -273,12 +269,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
         })
       : null;
 
-  // Only products with a parcel model can be quoted; everything else still picks a flat tier on
-  // Stripe's page, so requiring a quote there would block checkout entirely.
   const backNeeded = isBusinessCards && needsBackArtwork(values.bcSpec?.colorId ?? 1);
-
-  const shippingRequired = isBusinessCards && Boolean(values.bcSpec) && !testCode;
-  const shippingMissing = shippingRequired && !shipping;
 
   const cheapestShipping = testCode
     ? 0
@@ -342,7 +333,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ service: service.slug, cardDesignId, testCode, shipping, ...typed }),
+        body: JSON.stringify({ service: service.slug, cardDesignId, testCode, ...typed }),
       });
 
       const result = await res.json() as { orderId?: string; error?: string };
@@ -1000,26 +991,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
                   </div>
                 )}
                 <div className="border-t border-kc-border pt-3">
-                  {shipping && (
-                    <div className="mb-1 flex justify-between text-sm">
-                      <span className="text-kc-muted">{shipping.label}</span>
-                      <span className="text-kc-dark">{formatDollars(shipping.price)}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between font-bold">
-                    {/* Was labelled "Total" while excluding shipping and tax, so the figure jumped
-                        the moment Stripe added them. It only says Total once shipping is priced. */}
-                    <span>{shipping ? "Total" : "Subtotal"}</span>
-                    <span className="text-kc-magenta-deep text-lg">
-                      {price ? formatDollars(price.total + (shipping?.price ?? 0)) : "--"}
-                    </span>
+                    {/* Not "Total": shipping and tax are added on Stripe's page, and calling this a
+                        total makes the figure jump the moment they are. */}
+                    <span>Subtotal</span>
+                    <span className="text-kc-magenta-deep text-lg">{price ? formatDollars(price.total) : "--"}</span>
                   </div>
                   <p className="mt-1.5 text-xs text-kc-muted">
                     {testCode
-                      ? "Free test order — nothing to pay."
-                      : shipping
-                        ? "Sales tax is added at checkout, worked out from your delivery address."
-                        : `Enter a delivery ZIP above to price shipping. From ${formatDollars(cheapestShipping)}.`}
+                      ? "Free test order - nothing to pay."
+                      : `Shipping from ${formatDollars(cheapestShipping)} and sales tax are added at checkout, once you enter your delivery address.`}
                   </p>
                 </div>
               </CardContent>
@@ -1056,32 +1037,28 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               </div>
             )}
 
-            {isBusinessCards && values.bcSpec && !testCode ? (
-              <ShippingQuote
-                spec={{ sizeId: values.bcSpec.sizeId, paperId: values.bcSpec.paperId, quantity: values.bcSpec.quantity }}
-                selected={shipping}
-                onSelect={setShipping}
-              />
-            ) : (
-              /* Products without a weight model, and free test orders, still fall back to flat
-                 tiers chosen on Stripe's page. */
-              <div className="rounded-lg border border-dashed border-kc-border bg-kc-bg p-4">
-                <div className="mb-1 flex items-baseline gap-2">
-                  <Truck className="h-4 w-4 shrink-0 text-kc-muted" strokeWidth={1.75} />
-                  <p className="text-sm font-semibold text-kc-dark">You choose your shipping speed at checkout</p>
-                </div>
-                <dl className="mt-2 space-y-1">
-                  {(testCode ? [FREE_TEST_SHIPPING] : pricing.shippingTiers).map((tier) => (
-                    <div key={tier.id} className="flex items-baseline justify-between gap-3 text-xs">
-                      <dt className="text-kc-muted">
-                        {tier.label}<span className="text-kc-muted/70"> — {transitLabel(tier)}</span>
-                      </dt>
-                      <dd className="shrink-0 font-mono text-kc-dark">{formatDollars(tier.price)}</dd>
-                    </div>
-                  ))}
-                </dl>
+            {/* Reference only. Stripe collects the delivery address on its own page and presents
+                these speeds there with real delivery dates, so there is nothing to select here. */}
+            <div className="rounded-lg border border-dashed border-kc-border bg-kc-bg p-4">
+              <div className="mb-1 flex items-baseline gap-2">
+                <Truck className="h-4 w-4 shrink-0 text-kc-muted" strokeWidth={1.75} />
+                <p className="text-sm font-semibold text-kc-dark">You choose your shipping speed at checkout</p>
               </div>
-            )}
+              <p className="mb-3 text-xs leading-relaxed text-kc-muted">
+                The next screen collects your delivery address, then shows these speeds with real
+                delivery dates.
+              </p>
+              <dl className="space-y-1">
+                {(testCode ? [FREE_TEST_SHIPPING] : pricing.shippingTiers).map((tier) => (
+                  <div key={tier.id} className="flex items-baseline justify-between gap-3 text-xs">
+                    <dt className="text-kc-muted">
+                      {tier.label}<span className="text-kc-muted/70"> - {transitLabel(tier)}</span>
+                    </dt>
+                    <dd className="shrink-0 font-mono text-kc-dark">{formatDollars(tier.price)}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="guestEmail">Email for order confirmation *</Label>
@@ -1155,20 +1132,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, testCode
               Next <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <div className="flex flex-col items-end gap-1.5">
-              <Button
-                key="submit-button"
-                type="submit"
-                disabled={submitting || shippingMissing}
-                className="bg-kc-coral hover:bg-kc-coral/90 text-white"
-              >
-                {submitting ? "Processing..." : "Proceed to Payment"}
-                {!submitting && <ArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
-              {shippingMissing && (
-                <p className="text-xs text-kc-muted">Price your shipping above to continue.</p>
-              )}
-            </div>
+            <Button
+              key="submit-button"
+              type="submit"
+              disabled={submitting}
+              className="bg-kc-coral hover:bg-kc-coral/90 text-white"
+            >
+              {submitting ? "Processing..." : "Proceed to Payment"}
+              {!submitting && <ArrowRight className="ml-2 h-4 w-4" />}
+            </Button>
           )}
         </div>
       </form>

@@ -65,12 +65,12 @@ export default function PricingPage() {
           {ALL_SERVICES.map((service) => (
             <div key={service.name}>
               <Reveal className="mb-6 flex flex-wrap items-baseline justify-between gap-3 border-b border-kc-dark/12 pb-4">
-                <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem]">
+                <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
                   {service.name}
                 </h2>
                 <Link
                   href={service.href}
-                  className="flex items-center gap-1.5 text-[14px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+                  className="flex items-center gap-1.5 text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
                 >
                   View details <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} />
                 </Link>
@@ -87,19 +87,19 @@ export default function PricingPage() {
                     >
                       <div className="flex items-baseline justify-between gap-3">
                         <span
-                          className={`text-[14.5px] font-semibold ${
+                          className={`text-[15.52px] font-semibold ${
                             pkg.popular ? "text-white" : "text-kc-dark"
                           }`}
                         >
                           {pkg.name}
                         </span>
                         {pkg.popular && (
-                          <span className="font-mono text-[11px] text-white/60">Most popular</span>
+                          <span className="font-mono text-[11.77px] text-white/60">Most popular</span>
                         )}
                       </div>
 
                       <div
-                        className={`display-tight mt-3 text-[2.25rem] ${
+                        className={`display-tight mt-3 text-[2.41rem] ${
                           pkg.popular ? "text-white" : "text-kc-dark"
                         }`}
                       >
@@ -114,7 +114,7 @@ export default function PricingPage() {
                         {pkg.features.map((f) => (
                           <li
                             key={f}
-                            className={`text-[13.5px] leading-snug ${
+                            className={`text-[14.45px] leading-snug ${
                               pkg.popular ? "text-white/70" : "text-kc-dark/65"
                             }`}
                           >
@@ -127,8 +127,8 @@ export default function PricingPage() {
                         asChild
                         className={
                           pkg.popular
-                            ? "edge mt-6 h-11 w-full bg-kc-coral text-[14px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
-                            : "edge mt-6 h-11 w-full border border-kc-dark/20 bg-transparent text-[14px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+                            ? "edge mt-6 h-11 w-full bg-kc-coral text-[14.98px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
+                            : "edge mt-6 h-11 w-full border border-kc-dark/20 bg-transparent text-[14.98px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
                         }
                       >
                         <Link href={`${service.href}/order?package=${pkg.name.toLowerCase()}`}>

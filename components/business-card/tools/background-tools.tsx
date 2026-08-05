@@ -51,7 +51,7 @@ export function BackgroundTools({ onInserted }: { onInserted?: () => void }) {
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] leading-snug text-kc-muted">Swaps this template&apos;s color scheme in one click.</p>
+          <p className="mt-2 text-[11.77px] leading-snug text-kc-muted">Swaps this template&apos;s color scheme in one click.</p>
         </div>
       )}
 
@@ -98,14 +98,14 @@ export function BackgroundTools({ onInserted }: { onInserted?: () => void }) {
               title={p.label}
               disabled={insertingPattern === p.key}
               onClick={() => applyPattern(p.key)}
-              className="flex h-14 flex-col items-center justify-center gap-1 rounded-md border border-kc-border bg-kc-bg text-[10px] font-medium text-kc-muted hover:border-kc-teal/40 disabled:opacity-40"
+              className="flex h-14 flex-col items-center justify-center gap-1 rounded-md border border-kc-border bg-kc-bg text-[10.7px] font-medium text-kc-muted hover:border-kc-teal/40 disabled:opacity-40"
             >
               <PatternPreview patternKey={p.key} />
               {p.label}
             </button>
           ))}
         </div>
-        <p className="mt-2 text-[11px] leading-snug text-kc-muted">Patterns are added as a locked background layer, sent behind everything else.</p>
+        <p className="mt-2 text-[11.77px] leading-snug text-kc-muted">Patterns are added as a locked background layer, sent behind everything else.</p>
       </div>
     </div>
   );

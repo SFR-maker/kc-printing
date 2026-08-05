@@ -56,7 +56,7 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
               aria-pressed={selected}
               disabled={count === 0}
               className={cn(
-                "edge border px-4 py-2 text-[13.5px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+                "edge border px-4 py-2 text-[14.45px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
                 selected
                   ? "border-kc-coral bg-kc-coral text-white"
                   : "border-kc-dark/15 bg-white text-kc-dark/70 hover:border-kc-dark/40 hover:text-kc-dark"
@@ -65,7 +65,7 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
               {cat}
               <span
                 className={cn(
-                  "ml-2 font-mono text-[11.5px]",
+                  "ml-2 font-mono text-[12.31px]",
                   selected ? "text-white/70" : "text-kc-dark/40"
                 )}
               >
@@ -78,12 +78,12 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
 
       {visible.length === 0 ? (
         <div className="edge border border-dashed border-kc-dark/20 bg-white px-6 py-16 text-center">
-          <p className="text-[15px] text-kc-dark/60">
+          <p className="text-[16.05px] text-kc-dark/60">
             No {active.toLowerCase()} examples are published yet.
           </p>
           <Link
             href="/contact"
-            className="mt-3 inline-block text-[14px] font-semibold text-kc-magenta-deep hover:text-kc-dark"
+            className="mt-3 inline-block text-[14.98px] font-semibold text-kc-magenta-deep hover:text-kc-dark"
           >
             Ask us for samples
           </Link>
@@ -119,10 +119,10 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
                   />
                 </div>
                 <div className="border-t border-kc-dark/10 p-4">
-                  <h3 className="line-clamp-2 min-h-[2.6em] text-[14px] font-semibold leading-snug text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
+                  <h3 className="line-clamp-2 min-h-[2.6em] text-[14.98px] font-semibold leading-snug text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
                     {sample.title}
                   </h3>
-                  <p className="mt-1 text-[12.5px] text-kc-dark/50">
+                  <p className="mt-1 text-[13.38px] text-kc-dark/50">
                     {sample.industry ? `${sample.industry} · ${sample.category}` : sample.category}
                   </p>
                 </div>

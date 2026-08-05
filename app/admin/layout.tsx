@@ -30,7 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <UserButton />
             <div className="min-w-0">
               <p className="truncate text-xs text-white/70">{user.name ?? user.email}</p>
-              <p className="text-[10px] uppercase tracking-wide text-white/35">
+              <p className="text-[10.7px] uppercase tracking-wide text-white/35">
                 {user.role === "SUPER_ADMIN" ? "Owner" : "Admin"}
               </p>
             </div>

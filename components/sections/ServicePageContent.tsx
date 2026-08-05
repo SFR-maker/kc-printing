@@ -18,9 +18,9 @@ interface ServicePageContentProps {
 /* Magenta is the only interactive accent; cyan and gold live in the photography and the
    registration bar. Same button system as the homepage. */
 const BTN_PRIMARY =
-  "edge h-12 bg-kc-coral px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep";
+  "edge h-12 bg-kc-coral px-7 text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep";
 const BTN_SECONDARY =
-  "edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5";
+  "edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[16.05px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5";
 
 /** Studio photography per product, shot for the redesign. Falls back to the card shot. */
 const HERO_PHOTO: Record<string, { src: string; alt: string }> = {
@@ -61,12 +61,12 @@ export function ServicePageContent({
         <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[500px] lg:px-8 lg:py-16">
           <div className="lg:max-w-[52%]">
             <Reveal y={16}>
-              <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl lg:text-[3.5rem]">
+              <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl lg:text-[3.75rem]">
                 {service.name}
               </h1>
             </Reveal>
             <Reveal y={16} delay={0.08}>
-              <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-kc-dark/65">
+              <p className="mt-6 max-w-[46ch] text-[18.19px] leading-relaxed text-kc-dark/65">
                 {service.tagline}
               </p>
             </Reveal>
@@ -134,7 +134,7 @@ export function ServicePageContent({
                 className="flex items-start gap-3 py-7 sm:px-7 sm:first:pl-0 sm:last:pr-0"
               >
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-kc-coral" strokeWidth={1.75} />
-                <span className="text-[14.5px] leading-snug text-kc-dark/75">{text}</span>
+                <span className="text-[15.52px] leading-snug text-kc-dark/75">{text}</span>
               </RevealItem>
             ))}
           </RevealGroup>
@@ -147,16 +147,16 @@ export function ServicePageContent({
           <div className="container-tight">
             <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div className="max-w-xl">
-                <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem]">
+                <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
                   Start from a design
                 </h2>
-                <p className="mt-3 text-[15.5px] leading-relaxed text-kc-dark/60">
+                <p className="mt-3 text-[16.59px] leading-relaxed text-kc-dark/60">
                   Open any of these in the editor and make it yours, or start from a blank file.
                 </p>
               </div>
               <Link
                 href="/portfolio"
-                className="text-[14px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+                className="text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
               >
                 See all examples
               </Link>
@@ -182,7 +182,7 @@ export function ServicePageContent({
                       />
                     </div>
                     <div className="border-t border-kc-dark/10 px-4 py-3.5">
-                      <span className="text-[14px] font-semibold text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
+                      <span className="text-[14.98px] font-semibold text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
                         {img.title}
                       </span>
                     </div>
@@ -192,7 +192,7 @@ export function ServicePageContent({
             </RevealGroup>
 
             {aiDesignHref && (
-              <p className="mt-6 text-[14.5px] text-kc-dark/60">
+              <p className="mt-6 text-[15.52px] text-kc-dark/60">
                 Prefer to describe it?{" "}
                 <Link
                   href={aiDesignHref}
@@ -211,10 +211,10 @@ export function ServicePageContent({
       <section className="band bg-kc-bg">
         <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
           <div>
-            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.5rem]">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">
               Sizes, stock, and files
             </h2>
-            <p className="mt-4 max-w-sm text-[16.5px] leading-relaxed text-kc-dark/60">
+            <p className="mt-4 max-w-sm text-[17.66px] leading-relaxed text-kc-dark/60">
               {service.description}
             </p>
           </div>
@@ -222,8 +222,8 @@ export function ServicePageContent({
           <dl className="divide-y divide-kc-dark/10 border-t border-kc-dark/10">
             {service.specs.map((spec) => (
               <div key={spec.label} className="grid grid-cols-1 gap-1 py-4 sm:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] sm:gap-6">
-                <dt className="text-[14px] font-medium text-kc-dark/55">{spec.label}</dt>
-                <dd className="text-[15px] leading-snug text-kc-dark">{spec.value}</dd>
+                <dt className="text-[14.98px] font-medium text-kc-dark/55">{spec.label}</dt>
+                <dd className="text-[16.05px] leading-snug text-kc-dark">{spec.value}</dd>
               </div>
             ))}
           </dl>
@@ -234,10 +234,10 @@ export function ServicePageContent({
       <section className="band bg-kc-paper">
         <div className="container-tight">
           <Reveal className="mb-10 max-w-xl">
-            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
               Choose your package
             </h2>
-            <p className="mt-4 text-[16.5px] leading-relaxed text-kc-dark/60">
+            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/60">
               Every package includes print-ready file delivery and revisions.
             </p>
           </Reveal>
@@ -259,19 +259,19 @@ export function ServicePageContent({
                 >
                   <div className="flex items-baseline justify-between gap-3">
                     <span
-                      className={`text-[15px] font-semibold ${
+                      className={`text-[16.05px] font-semibold ${
                         pkg.popular ? "text-white" : "text-kc-dark"
                       }`}
                     >
                       {pkg.name}
                     </span>
                     {pkg.popular && (
-                      <span className="font-mono text-[11px] text-white/60">Most popular</span>
+                      <span className="font-mono text-[11.77px] text-white/60">Most popular</span>
                     )}
                   </div>
 
                   <div
-                    className={`display-tight mt-4 text-[2.5rem] ${
+                    className={`display-tight mt-4 text-[2.68rem] ${
                       pkg.popular ? "text-white" : "text-kc-dark"
                     }`}
                   >
@@ -286,7 +286,7 @@ export function ServicePageContent({
                     {pkg.features.map((f) => (
                       <li
                         key={f}
-                        className={`text-[14px] leading-snug ${
+                        className={`text-[14.98px] leading-snug ${
                           pkg.popular ? "text-white/70" : "text-kc-dark/65"
                         }`}
                       >
@@ -299,8 +299,8 @@ export function ServicePageContent({
                     asChild
                     className={
                       pkg.popular
-                        ? "edge mt-7 h-11 w-full bg-kc-coral text-[14.5px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
-                        : "edge mt-7 h-11 w-full border border-kc-dark/20 bg-transparent text-[14.5px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+                        ? "edge mt-7 h-11 w-full bg-kc-coral text-[15.52px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
+                        : "edge mt-7 h-11 w-full border border-kc-dark/20 bg-transparent text-[15.52px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
                     }
                   >
                     <Link href={`${orderHref}?package=${pkg.name.toLowerCase()}`}>
@@ -324,12 +324,12 @@ export function ServicePageContent({
                     className="flex items-baseline justify-between gap-6 border-b border-kc-dark/10 py-4"
                   >
                     <div>
-                      <dt className="text-[15px] font-semibold text-kc-dark">{addon.name}</dt>
-                      <dd className="mt-0.5 text-[13.5px] leading-snug text-kc-dark/55">
+                      <dt className="text-[16.05px] font-semibold text-kc-dark">{addon.name}</dt>
+                      <dd className="mt-0.5 text-[14.45px] leading-snug text-kc-dark/55">
                         {addon.desc}
                       </dd>
                     </div>
-                    <span className="shrink-0 font-mono text-[13px] text-kc-dark/60">
+                    <span className="shrink-0 font-mono text-[13.91px] text-kc-dark/60">
                       +{formatDollars(addon.price)}
                     </span>
                   </div>
@@ -343,16 +343,16 @@ export function ServicePageContent({
       {/* ── FAQ ── */}
       <section className="band bg-kc-bg">
         <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
-          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
             {service.name} questions
           </h2>
           <Accordion className="border-t border-kc-dark/10">
             {service.faqs.map((faq, i) => (
               <AccordionItem key={i} value={`faq-${i}`} className="border-b border-kc-dark/10">
-                <AccordionTrigger className="py-5 text-left text-[16px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
+                <AccordionTrigger className="py-5 text-left text-[17.12px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="max-w-[62ch] pb-5 text-[15px] leading-relaxed text-kc-dark/65">
+                <AccordionContent className="max-w-[62ch] pb-5 text-[16.05px] leading-relaxed text-kc-dark/65">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
@@ -367,10 +367,10 @@ export function ServicePageContent({
         <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
           <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="display-tight max-w-xl text-3xl text-white sm:text-[2.5rem]">
+              <h2 className="display-tight max-w-xl text-3xl text-white sm:text-[2.68rem]">
                 Ready to order your {lower}?
               </h2>
-              <p className="mt-5 max-w-md text-[15.5px] leading-relaxed text-white/60">
+              <p className="mt-5 max-w-md text-[16.59px] leading-relaxed text-white/60">
                 Choose a package, share your brand details, and your first draft arrives in 1 to 3
                 business days.
               </p>
@@ -385,7 +385,7 @@ export function ServicePageContent({
                 asChild
                 size="lg"
                 variant="outline"
-                className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[15px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
+                className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[16.05px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
               >
                 <Link href="/contact">Contact us</Link>
               </Button>

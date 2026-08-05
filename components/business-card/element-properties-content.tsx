@@ -199,7 +199,7 @@ function QrProps({ el, patch }: { el: QrElement; patch: (p: Partial<QrElement>) 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <Label className="text-[11px] text-kc-muted">{label}</Label>
+      <Label className="text-[11.77px] text-kc-muted">{label}</Label>
       {children}
     </div>
   );

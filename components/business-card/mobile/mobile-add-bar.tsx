@@ -33,13 +33,13 @@ export function MobileAddBar() {
           <button
             key={tab.key}
             onClick={() => setActive(tab.key)}
-            className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[10px] font-medium text-kc-muted active:bg-kc-bg"
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[10.7px] font-medium text-kc-muted active:bg-kc-bg"
           >
             <tab.icon className="h-5 w-5" />
             {tab.label}
           </button>
         ))}
-        <button onClick={() => setQrOpen(true)} className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[10px] font-medium text-kc-muted active:bg-kc-bg">
+        <button onClick={() => setQrOpen(true)} className="flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[10.7px] font-medium text-kc-muted active:bg-kc-bg">
           <QrCode className="h-5 w-5" />
           QR
         </button>

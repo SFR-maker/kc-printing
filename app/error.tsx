@@ -28,13 +28,13 @@ export default function GlobalError({
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-4 py-20">
       <div className="max-w-md text-center">
-        <p className="font-mono text-[13px] uppercase tracking-widest text-kc-dark/40">
+        <p className="font-mono text-[13.91px] uppercase tracking-widest text-kc-dark/40">
           Something went wrong
         </p>
         <h1 className="mt-3 text-3xl font-black tracking-tight text-kc-dark">
           We hit a problem loading this page
         </h1>
-        <p className="mt-4 text-[15px] leading-relaxed text-kc-muted">
+        <p className="mt-4 text-[16.05px] leading-relaxed text-kc-muted">
           This is our fault, not yours. Nothing you were doing has been lost — try again, and if it
           keeps happening please get in touch.
         </p>
@@ -42,13 +42,13 @@ export default function GlobalError({
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <button
             onClick={reset}
-            className="edge inline-flex h-12 items-center justify-center bg-kc-dark px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-dark/90"
+            className="edge inline-flex h-12 items-center justify-center bg-kc-dark px-7 text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-dark/90"
           >
             Try again
           </button>
           <Link
             href="/"
-            className="edge inline-flex h-12 items-center justify-center border border-kc-dark/20 px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+            className="edge inline-flex h-12 items-center justify-center border border-kc-dark/20 px-7 text-[16.05px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
           >
             Back to the homepage
           </Link>
@@ -67,7 +67,7 @@ export default function GlobalError({
         </p>
 
         {error.digest && (
-          <p className="mt-6 font-mono text-[11px] text-kc-dark/30">Reference: {error.digest}</p>
+          <p className="mt-6 font-mono text-[11.77px] text-kc-dark/30">Reference: {error.digest}</p>
         )}
       </div>
     </main>

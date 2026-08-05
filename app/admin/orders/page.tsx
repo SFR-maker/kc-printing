@@ -146,7 +146,7 @@ function Stat({ label, value, alert = false }: { label: string; value: string; a
   return (
     <div className="text-right">
       <div className={cn("text-xl font-black", alert ? "text-kc-magenta-deep" : "text-kc-dark")}>{value}</div>
-      <div className="text-[11px] uppercase tracking-wide text-kc-muted">{label}</div>
+      <div className="text-[11.77px] uppercase tracking-wide text-kc-muted">{label}</div>
     </div>
   );
 }

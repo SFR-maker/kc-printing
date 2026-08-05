@@ -108,8 +108,8 @@ export default async function PortfolioPage() {
         <div className="reg-bar" />
         <div className="container-tight px-4 pb-12 pt-16 sm:px-6 lg:px-8 lg:pb-16 lg:pt-24">
           <Reveal className="max-w-2xl">
-            <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl">Design examples</h1>
-            <p className="mt-5 text-[17px] leading-relaxed text-kc-dark/65">
+            <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">Design examples</h1>
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">
               Real designs pulled from our template library. Pick one to customize as your own, or
               we will build something new for your business.
             </p>
@@ -131,10 +131,10 @@ export default async function PortfolioPage() {
         <div className="container-tight px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="flex flex-col items-start justify-between gap-7 border-t border-kc-dark/12 pt-10 sm:flex-row sm:items-end">
             <div>
-              <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem]">
+              <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
                 Want something custom?
               </h2>
-              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-kc-dark/60">
+              <p className="mt-3 max-w-md text-[16.05px] leading-relaxed text-kc-dark/60">
                 Ask and we will share examples relevant to your industry, or start from a blank file
                 with a designer.
               </p>
@@ -143,7 +143,7 @@ export default async function PortfolioPage() {
               <Button
                 asChild
                 size="lg"
-                className="edge h-12 bg-kc-coral px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
+                className="edge h-12 bg-kc-coral px-7 text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
               >
                 <Link href="/contact">Contact us</Link>
               </Button>
@@ -151,7 +151,7 @@ export default async function PortfolioPage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+                className="edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[16.05px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
               >
                 <Link href="/services/business-cards/design">Start designing</Link>
               </Button>

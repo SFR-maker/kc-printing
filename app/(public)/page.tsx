@@ -97,9 +97,9 @@ const FAQS = [
 /* Shared button treatments. Magenta is the page's only interactive accent; cyan and gold appear
    solely in the photography and the registration bar. */
 const BTN_PRIMARY =
-  "edge h-12 bg-kc-coral px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep";
+  "edge h-12 bg-kc-coral px-7 text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep";
 const BTN_SECONDARY =
-  "edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5";
+  "edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[16.05px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5";
 
 export default async function HomePage() {
   // Real customer testimonials only, moderated via /admin/testimonials. No fallback fake
@@ -122,13 +122,13 @@ export default async function HomePage() {
         <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[520px] lg:px-8 lg:py-16">
           <div className="lg:max-w-[52%]">
             <Reveal y={16}>
-              <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl lg:text-[3.5rem] xl:text-[4.25rem]">
+              <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl lg:text-[3.75rem] xl:text-[4.55rem]">
                 Print, done properly.
               </h1>
             </Reveal>
 
             <Reveal y={16} delay={0.08}>
-              <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-kc-dark/65">
+              <p className="mt-6 max-w-[46ch] text-[18.19px] leading-relaxed text-kc-dark/65">
                 Business cards, postcards, banners, and rigid signs, built into print-ready files
                 by a real designer.
               </p>
@@ -177,7 +177,7 @@ export default async function HomePage() {
                 className="flex items-start gap-3 py-7 sm:px-7 sm:first:pl-0 sm:last:pr-0"
               >
                 <Icon className="mt-0.5 h-4 w-4 shrink-0 text-kc-coral" strokeWidth={1.75} />
-                <span className="text-[14.5px] leading-snug text-kc-dark/75">{text}</span>
+                <span className="text-[15.52px] leading-snug text-kc-dark/75">{text}</span>
               </RevealItem>
             ))}
           </RevealGroup>
@@ -188,10 +188,10 @@ export default async function HomePage() {
       <section className="band bg-kc-paper">
         <div className="container-tight">
           <Reveal className="mb-12 max-w-xl">
-            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
               Four products. Done well.
             </h2>
-            <p className="mt-4 text-[16.5px] leading-relaxed text-kc-dark/60">
+            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/60">
               We keep the catalog focused so every order gets real attention from a designer who
               knows the format.
             </p>
@@ -234,8 +234,8 @@ export default async function HomePage() {
       <section className="band bg-kc-bg">
         <div className="container-tight grid grid-cols-1 gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
           <div className="lg:sticky lg:top-28 lg:self-start">
-            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">How it works</h2>
-            <p className="mt-4 max-w-sm text-[16.5px] leading-relaxed text-kc-dark/60">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">How it works</h2>
+            <p className="mt-4 max-w-sm text-[17.66px] leading-relaxed text-kc-dark/60">
               From a rough idea to files you can send to any press, in three steps.
             </p>
           </div>
@@ -243,10 +243,10 @@ export default async function HomePage() {
           <RevealGroup className="divide-y divide-kc-dark/10 border-t border-kc-dark/10">
             {PROCESS.map((item) => (
               <RevealItem key={item.title} className="py-9 first:pt-9">
-                <h3 className="display-tight text-[1.6rem] text-kc-dark sm:text-[1.85rem]">
+                <h3 className="display-tight text-[1.71rem] text-kc-dark sm:text-[1.98rem]">
                   {item.title}
                 </h3>
-                <p className="mt-3 max-w-[58ch] text-[15.5px] leading-relaxed text-kc-dark/60">
+                <p className="mt-3 max-w-[58ch] text-[16.59px] leading-relaxed text-kc-dark/60">
                   {item.desc}
                 </p>
               </RevealItem>
@@ -269,10 +269,10 @@ export default async function HomePage() {
 
         <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-32">
           <Reveal className="max-w-lg">
-            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.5rem]">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">
               Have the idea, not the file?
             </h2>
-            <p className="mt-4 text-[16.5px] leading-relaxed text-kc-dark/70">
+            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/70">
               You don&apos;t need to be a designer to order from us. Tell us what you&apos;re
               picturing, upload a logo or a few references, and a real person builds the layout.
             </p>
@@ -293,7 +293,7 @@ export default async function HomePage() {
                   <Star key={i} className="h-4 w-4 fill-kc-yellow text-kc-yellow" />
                 ))}
               </div>
-              <blockquote className="display-tight text-[1.75rem] leading-[1.25] text-kc-dark sm:text-[2.25rem]">
+              <blockquote className="display-tight text-[1.87rem] leading-[1.25] text-kc-dark sm:text-[2.41rem]">
                 &ldquo;{lead.text}&rdquo;
               </blockquote>
               <div className="mt-6 text-sm text-kc-dark/55">
@@ -306,7 +306,7 @@ export default async function HomePage() {
               <RevealGroup className="mt-14 grid grid-cols-1 gap-8 border-t border-kc-dark/10 pt-10 sm:grid-cols-2">
                 {rest.map((t) => (
                   <RevealItem key={t.id}>
-                    <p className="line-clamp-3 text-[15px] leading-relaxed text-kc-dark/80">
+                    <p className="line-clamp-3 text-[16.05px] leading-relaxed text-kc-dark/80">
                       &ldquo;{t.text}&rdquo;
                     </p>
                     <div className="mt-3 text-xs text-kc-dark/50">
@@ -324,7 +324,7 @@ export default async function HomePage() {
       {/* ── FAQ ── */}
       <section className="band bg-kc-bg">
         <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
-          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.75rem]">
+          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
             Frequently asked questions
           </h2>
 
@@ -332,10 +332,10 @@ export default async function HomePage() {
             <Accordion className="border-t border-kc-dark/10">
               {FAQS.map((faq, i) => (
                 <AccordionItem key={i} value={`faq-${i}`} className="border-b border-kc-dark/10">
-                  <AccordionTrigger className="py-5 text-left text-[16px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
+                  <AccordionTrigger className="py-5 text-left text-[17.12px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
                     {faq.q}
                   </AccordionTrigger>
-                  <AccordionContent className="max-w-[62ch] pb-5 text-[15px] leading-relaxed text-kc-dark/65">
+                  <AccordionContent className="max-w-[62ch] pb-5 text-[16.05px] leading-relaxed text-kc-dark/65">
                     {faq.a}
                   </AccordionContent>
                 </AccordionItem>
@@ -354,19 +354,19 @@ export default async function HomePage() {
         <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
           <div className="flex flex-col gap-12 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h2 className="display-tight max-w-2xl text-3xl text-white sm:text-[2.75rem]">
+              <h2 className="display-tight max-w-2xl text-3xl text-white sm:text-[2.94rem]">
                 Ready to order? Pick a product and let&apos;s get started.
               </h2>
               <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-3">
                 <a
                   href="tel:+18165210462"
-                  className="flex items-center gap-2.5 font-mono text-[13.5px] text-white/70 transition-colors hover:text-white"
+                  className="flex items-center gap-2.5 font-mono text-[14.45px] text-white/70 transition-colors hover:text-white"
                 >
                   <Phone className="h-4 w-4" strokeWidth={1.75} /> (816) 521-0462
                 </a>
                 <a
                   href="mailto:kansasdesigners@gmail.com"
-                  className="flex items-center gap-2.5 text-[13.5px] text-white/70 transition-colors hover:text-white"
+                  className="flex items-center gap-2.5 text-[14.45px] text-white/70 transition-colors hover:text-white"
                 >
                   <Mail className="h-4 w-4" strokeWidth={1.75} /> kansasdesigners@gmail.com
                 </a>
@@ -381,7 +381,7 @@ export default async function HomePage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[15px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
+                className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[16.05px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
               >
                 <Link href="/contact">Contact us</Link>
               </Button>
@@ -471,18 +471,18 @@ function ProductTile({ service, wide = false }: { service: Service; wide?: boole
           <Link href={service.href}>
             <h3
               className={`display-tight text-kc-dark transition-colors group-hover:text-kc-magenta-deep ${
-                wide ? "text-2xl lg:text-[1.9rem]" : "text-xl"
+                wide ? "text-2xl lg:text-[2.03rem]" : "text-xl"
               }`}
             >
               {service.name}
             </h3>
           </Link>
-          <span className="shrink-0 font-mono text-[12.5px] text-kc-dark/50">{service.price}</span>
+          <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/50">{service.price}</span>
         </div>
 
         <dl
           className={`space-y-1.5 leading-snug text-kc-dark/60 ${
-            wide ? "text-[14.5px]" : "text-[13.5px]"
+            wide ? "text-[15.52px]" : "text-[14.45px]"
           }`}
         >
           <div className="flex gap-1.5">
@@ -498,7 +498,7 @@ function ProductTile({ service, wide = false }: { service: Service; wide?: boole
         <div className="mt-auto pt-6">
           <Link
             href={service.orderHref}
-            className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+            className="inline-flex items-center gap-1.5 text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
           >
             Order
             <ArrowRight

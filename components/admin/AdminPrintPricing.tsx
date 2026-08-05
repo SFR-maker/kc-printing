@@ -273,7 +273,7 @@ export function AdminPrintPricing({ settings }: { settings: PricingSettings }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <Label className="text-[11px] uppercase tracking-wide text-kc-muted">{label}</Label>
+      <Label className="text-[11.77px] uppercase tracking-wide text-kc-muted">{label}</Label>
       {children}
     </div>
   );

@@ -30,7 +30,7 @@ const SERVICES = [
 ];
 
 const FIELD =
-  "edge h-11 border-kc-dark/20 text-[15px] text-kc-dark placeholder:text-kc-dark/45 focus-visible:border-kc-dark/40";
+  "edge h-11 border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/45 focus-visible:border-kc-dark/40";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
@@ -79,10 +79,10 @@ export default function ContactPage() {
         <div className="reg-bar" />
         <div className="container-tight px-4 pb-10 pt-16 sm:px-6 lg:px-8 lg:pb-12 lg:pt-24">
           <div className="max-w-2xl">
-            <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl">
+            <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">
               Let&apos;s talk about your project
             </h1>
-            <p className="mt-5 text-[17px] leading-relaxed text-kc-dark/65">
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">
               Call, text, or fill out the form. We respond to all enquiries within a few hours
               during business days.
             </p>
@@ -117,17 +117,17 @@ export default function ContactPage() {
                 <div key={item.label} className="flex items-start gap-3 py-4">
                   <span className="mt-0.5 shrink-0">{item.icon}</span>
                   <div>
-                    <dt className="text-[13px] text-kc-dark/50">{item.label}</dt>
+                    <dt className="text-[13.91px] text-kc-dark/50">{item.label}</dt>
                     <dd className="mt-0.5">
                       {item.href ? (
                         <a
                           href={item.href}
-                          className="text-[15px] font-medium text-kc-dark transition-colors hover:text-kc-magenta-deep"
+                          className="text-[16.05px] font-medium text-kc-dark transition-colors hover:text-kc-magenta-deep"
                         >
                           {item.value}
                         </a>
                       ) : (
-                        <span className="text-[15px] font-medium text-kc-dark">{item.value}</span>
+                        <span className="text-[16.05px] font-medium text-kc-dark">{item.value}</span>
                       )}
                     </dd>
                   </div>
@@ -136,8 +136,8 @@ export default function ContactPage() {
             </dl>
 
             <div className="mt-10">
-              <h2 className="text-[13px] font-semibold text-kc-dark">Service areas</h2>
-              <ul className="mt-3 space-y-1.5 text-[14px] text-kc-dark/60">
+              <h2 className="text-[13.91px] font-semibold text-kc-dark">Service areas</h2>
+              <ul className="mt-3 space-y-1.5 text-[14.98px] text-kc-dark/60">
                 {["Kansas City, MO", "Johnson County, KS", "Dallas-Fort Worth, TX", "Nationwide Online"].map((city) => (
                   <li key={city}>{city}</li>
                 ))}
@@ -149,10 +149,10 @@ export default function ContactPage() {
             {sent ? (
               <div className="edge border border-kc-dark/12 bg-white p-8 sm:p-12">
                 <CheckCircle2 className="h-9 w-9 text-kc-coral" strokeWidth={1.5} />
-                <h2 className="display-tight mt-5 text-2xl text-kc-dark sm:text-[1.9rem]">
+                <h2 className="display-tight mt-5 text-2xl text-kc-dark sm:text-[2.03rem]">
                   Message sent
                 </h2>
-                <p className="mt-3 max-w-sm text-[15.5px] leading-relaxed text-kc-dark/65">
+                <p className="mt-3 max-w-sm text-[16.59px] leading-relaxed text-kc-dark/65">
                   We received your message and will get back to you within a few hours. You can also
                   call or text us at (816) 521-0462.
                 </p>
@@ -165,7 +165,7 @@ export default function ContactPage() {
                 {submitError && (
                   <div
                     role="alert"
-                    className="edge flex items-start gap-2.5 border border-red-300 bg-red-50 p-3.5 text-[14px] leading-snug text-red-800"
+                    className="edge flex items-start gap-2.5 border border-red-300 bg-red-50 p-3.5 text-[14.98px] leading-snug text-red-800"
                   >
                     <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
                     <span>{submitError}</span>
@@ -174,30 +174,30 @@ export default function ContactPage() {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-[13.5px] font-medium text-kc-dark">
+                    <Label htmlFor="name" className="text-[14.45px] font-medium text-kc-dark">
                       Name
                     </Label>
                     <Input id="name" placeholder="Your full name" className={FIELD} {...register("name")} />
-                    {errors.name && <p className="text-[12.5px] text-red-700">{errors.name.message}</p>}
+                    {errors.name && <p className="text-[13.38px] text-red-700">{errors.name.message}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-[13.5px] font-medium text-kc-dark">
+                    <Label htmlFor="email" className="text-[14.45px] font-medium text-kc-dark">
                       Email
                     </Label>
                     <Input id="email" type="email" placeholder="you@example.com" className={FIELD} {...register("email")} />
-                    {errors.email && <p className="text-[12.5px] text-red-700">{errors.email.message}</p>}
+                    {errors.email && <p className="text-[13.38px] text-red-700">{errors.email.message}</p>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-[13.5px] font-medium text-kc-dark">
+                    <Label htmlFor="phone" className="text-[14.45px] font-medium text-kc-dark">
                       Phone (optional)
                     </Label>
                     <Input id="phone" type="tel" placeholder="(816) 555-0000" className={FIELD} {...register("phone")} />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[13.5px] font-medium text-kc-dark">Service needed</Label>
+                    <Label className="text-[14.45px] font-medium text-kc-dark">Service needed</Label>
                     <Select onValueChange={(v) => { if (v) setValue("service", v as string); }}>
                       <SelectTrigger className={FIELD}>
                         <SelectValue placeholder="Select a service" />
@@ -208,28 +208,28 @@ export default function ContactPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {errors.service && <p className="text-[12.5px] text-red-700">{errors.service.message}</p>}
+                    {errors.service && <p className="text-[13.38px] text-red-700">{errors.service.message}</p>}
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message" className="text-[13.5px] font-medium text-kc-dark">
+                  <Label htmlFor="message" className="text-[14.45px] font-medium text-kc-dark">
                     Message
                   </Label>
                   <Textarea
                     id="message"
                     placeholder="Tell us about your project, timeline, and any specific requirements"
                     rows={6}
-                    className="edge border-kc-dark/20 text-[15px] text-kc-dark placeholder:text-kc-dark/45 focus-visible:border-kc-dark/40"
+                    className="edge border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/45 focus-visible:border-kc-dark/40"
                     {...register("message")}
                   />
-                  {errors.message && <p className="text-[12.5px] text-red-700">{errors.message.message}</p>}
+                  {errors.message && <p className="text-[13.38px] text-red-700">{errors.message.message}</p>}
                 </div>
 
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="edge h-12 w-full bg-kc-coral text-[15px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep disabled:opacity-60"
+                  className="edge h-12 w-full bg-kc-coral text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep disabled:opacity-60"
                 >
                   {loading ? "Sending..." : "Send message"}
                 </Button>

@@ -138,7 +138,7 @@ export function ArtworkStep({
               roundCorners={roundCorners}
               spec={spec}
             />
-            <p className="text-[13.5px] leading-relaxed text-kc-dark/60">
+            <p className="text-[14.45px] leading-relaxed text-kc-dark/60">
               Each face needs its own file and its own approval. The back prints on the same sheet, so
               it uses the same {doc.widthIn} × {doc.heightIn} in document as the front.
             </p>
@@ -148,7 +148,7 @@ export function ArtworkStep({
         <button
           type="button"
           onClick={() => onChange({ ...EMPTY_ARTWORK })}
-          className="text-[13.5px] font-semibold text-kc-magenta-deep hover:text-kc-dark"
+          className="text-[14.45px] font-semibold text-kc-magenta-deep hover:text-kc-dark"
         >
           Start over, or have us design it instead
         </button>
@@ -255,9 +255,9 @@ function SideUploader({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-[15px] font-bold text-kc-dark">{heading}</h3>
+        <h3 className="text-[16.05px] font-bold text-kc-dark">{heading}</h3>
         {sideComplete(side) && (
-          <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-emerald-700">
+          <span className="inline-flex items-center gap-1 text-[13.91px] font-semibold text-emerald-700">
             <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> Approved
           </span>
         )}
@@ -276,7 +276,7 @@ function SideUploader({
 
       {side.inspection && side.fileUrl && side.fileName && side.placement ? (
         <>
-          <div className="flex items-center gap-2 text-[14px] text-kc-dark/70">
+          <div className="flex items-center gap-2 text-[14.98px] text-kc-dark/70">
             <FileCheck2 className="h-4 w-4 text-kc-coral" strokeWidth={1.75} />
             <span className="truncate font-medium text-kc-dark">{side.fileName}</span>
           </div>
@@ -297,7 +297,7 @@ function SideUploader({
         </>
       ) : (
         <div className="edge border border-kc-dark/12 bg-white p-5">
-          <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-[13.5px] sm:grid-cols-3">
+          <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-[14.45px] sm:grid-cols-3">
             <SpecFact label="Upload at">
               {doc.widthIn} × {doc.heightIn} in
             </SpecFact>
@@ -306,13 +306,13 @@ function SideUploader({
             </SpecFact>
             <SpecFact label="Keep text inside">{spec.safeZoneInsetIn} in of the cut</SpecFact>
           </dl>
-          <p className="mt-4 text-[13.5px] leading-relaxed text-kc-dark/60">
+          <p className="mt-4 text-[14.45px] leading-relaxed text-kc-dark/60">
             Extend backgrounds and edge-to-edge images all the way to {doc.widthIn} ×{" "}
             {doc.heightIn} in. PDF, PNG, JPG or TIFF, {spec.recommendedDpi} DPI or better, up to {spec.maxFileMb}MB.
             {roundCorners && spec.product === "business-cards" && " Rounded corners need the larger document, since the die has more play than a straight cut."}
           </p>
           {spec.note && (
-            <p className="mt-2 text-[13.5px] leading-relaxed text-kc-dark/60">{spec.note}</p>
+            <p className="mt-2 text-[14.45px] leading-relaxed text-kc-dark/60">{spec.note}</p>
           )}
 
           <button
@@ -324,12 +324,12 @@ function SideUploader({
             {busy === "idle" ? (
               <>
                 <Upload className="h-5 w-5 text-kc-dark/50" strokeWidth={1.75} />
-                <span className="text-[14.5px] font-medium text-kc-dark">Choose your file</span>
+                <span className="text-[15.52px] font-medium text-kc-dark">Choose your file</span>
               </>
             ) : (
               <>
                 <Loader2 className="h-5 w-5 animate-spin text-kc-dark/50" />
-                <span className="text-[14.5px] font-medium text-kc-dark">
+                <span className="text-[15.52px] font-medium text-kc-dark">
                   {busy === "uploading" ? "Uploading..." : "Checking your file..."}
                 </span>
               </>
@@ -337,7 +337,7 @@ function SideUploader({
           </button>
 
           {error && (
-            <p role="alert" className="mt-3 text-[13.5px] leading-snug text-red-700">
+            <p role="alert" className="mt-3 text-[14.45px] leading-snug text-red-700">
               {error}
             </p>
           )}
@@ -373,8 +373,8 @@ function Choice({
       )}
     >
       <span className={selected ? "text-kc-coral" : "text-kc-dark/50"}>{icon}</span>
-      <span className="text-[15.5px] font-semibold text-kc-dark">{title}</span>
-      <span className="text-[13.5px] leading-relaxed text-kc-dark/60">{body}</span>
+      <span className="text-[16.59px] font-semibold text-kc-dark">{title}</span>
+      <span className="text-[14.45px] leading-relaxed text-kc-dark/60">{body}</span>
     </button>
   );
 }
@@ -382,7 +382,7 @@ function Choice({
 function SpecFact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[12.5px] text-kc-dark/50">{label}</dt>
+      <dt className="text-[13.38px] text-kc-dark/50">{label}</dt>
       <dd className="mt-0.5 font-mono text-kc-dark">{children}</dd>
     </div>
   );

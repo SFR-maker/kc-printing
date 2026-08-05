@@ -63,7 +63,7 @@ export default function FaqPage() {
               key={section.category}
               className="grid grid-cols-1 gap-6 lg:grid-cols-[0.55fr_1.45fr] lg:gap-16"
             >
-              <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem] lg:sticky lg:top-28 lg:self-start">
+              <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem] lg:sticky lg:top-28 lg:self-start">
                 {section.category}
               </h2>
 
@@ -74,10 +74,10 @@ export default function FaqPage() {
                     value={`${section.category}-${i}`}
                     className="border-b border-kc-dark/12"
                   >
-                    <AccordionTrigger className="py-5 text-left text-[16px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
+                    <AccordionTrigger className="py-5 text-left text-[17.12px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
                       {item.q}
                     </AccordionTrigger>
-                    <AccordionContent className="max-w-[62ch] pb-5 text-[15px] leading-relaxed text-kc-dark/65">
+                    <AccordionContent className="max-w-[62ch] pb-5 text-[16.05px] leading-relaxed text-kc-dark/65">
                       {item.a}
                     </AccordionContent>
                   </AccordionItem>

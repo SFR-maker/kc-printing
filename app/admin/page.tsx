@@ -93,7 +93,7 @@ export default async function AdminDashboard() {
                           <span className="font-mono text-xs font-semibold text-kc-teal">#{order.id.slice(-8)}</span>
                           {order.artworkPath === "UPLOAD" && <FileUp className="h-3.5 w-3.5 text-kc-muted" strokeWidth={1.75} />}
                           {order.artworkPath === "UPLOAD" && !order.proofApprovedAt && (
-                            <span className="text-[11px] font-bold uppercase text-amber-700">proof not approved</span>
+                            <span className="text-[11.77px] font-bold uppercase text-amber-700">proof not approved</span>
                           )}
                         </div>
                         <div className="truncate text-sm text-kc-dark">
@@ -165,7 +165,7 @@ function Stat({
       <Icon className={cn("mb-2 h-5 w-5", alert ? "text-kc-magenta-deep" : "text-kc-muted")} strokeWidth={1.75} />
       <div className={cn("text-xl font-black", alert ? "text-kc-magenta-deep" : "text-kc-dark")}>{value}</div>
       <div className="text-xs font-medium text-kc-dark">{label}</div>
-      <div className="text-[11px] text-kc-muted">{sub}</div>
+      <div className="text-[11.77px] text-kc-muted">{sub}</div>
     </CardContent>
   );
   return href ? (

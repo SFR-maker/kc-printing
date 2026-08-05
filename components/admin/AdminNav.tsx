@@ -64,7 +64,7 @@ export function AdminNav() {
     <nav className="flex-1 space-y-4 overflow-y-auto p-2">
       {GROUPS.map((group) => (
         <div key={group.heading}>
-          <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-white/30">{group.heading}</p>
+          <p className="px-3 pb-1 text-[10.7px] font-bold uppercase tracking-widest text-white/30">{group.heading}</p>
           <div className="space-y-0.5">
             {group.items.map((item) => {
               // Exact match for the dashboard, prefix match elsewhere, so an order detail page still

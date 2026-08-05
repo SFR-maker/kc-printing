@@ -49,21 +49,21 @@ export function Footer() {
             <div className="space-y-2.5">
               <a
                 href="tel:+18165210462"
-                className="flex items-center gap-2.5 font-mono text-[13px] text-white/70 transition-colors hover:text-white"
+                className="flex items-center gap-2.5 font-mono text-[13.91px] text-white/70 transition-colors hover:text-white"
               >
                 <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                 (816) 521-0462
               </a>
               <a
                 href="mailto:kansasdesigners@gmail.com"
-                className="flex items-center gap-2.5 text-[13px] text-white/70 transition-colors hover:text-white"
+                className="flex items-center gap-2.5 text-[13.91px] text-white/70 transition-colors hover:text-white"
               >
                 <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                 kansasdesigners@gmail.com
               </a>
               <a
                 href="https://611printing.com"
-                className="flex items-center gap-2.5 text-[13px] text-white/70 transition-colors hover:text-white"
+                className="flex items-center gap-2.5 text-[13.91px] text-white/70 transition-colors hover:text-white"
               >
                 <Globe className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
                 611printing.com
@@ -74,7 +74,7 @@ export function Footer() {
           <FooterColumn title="Services">
             {SERVICES.map((s) => (
               <li key={s.href}>
-                <Link href={s.href} className="text-[13px] text-white/60 transition-colors hover:text-white">
+                <Link href={s.href} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
                   {s.label}
                 </Link>
               </li>
@@ -84,7 +84,7 @@ export function Footer() {
           <FooterColumn title="Company">
             {COMPANY.map((c) => (
               <li key={c.href}>
-                <Link href={c.href} className="text-[13px] text-white/60 transition-colors hover:text-white">
+                <Link href={c.href} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
                   {c.label}
                 </Link>
               </li>
@@ -93,7 +93,7 @@ export function Footer() {
 
           <FooterColumn title="Service Areas">
             {AREAS.map((city) => (
-              <li key={city} className="text-[13px] text-white/60">
+              <li key={city} className="text-[13.91px] text-white/60">
                 {city}
               </li>
             ))}
@@ -126,7 +126,7 @@ function FooterColumn({ title, children }: { title: string; children: React.Reac
     <div>
       {/* h2, not h3: these sit directly under the page <h1>, and skipping a level breaks
           heading-based navigation for screen reader users on any page without an <h2>. */}
-      <h2 className="mb-4 text-[13px] font-semibold text-white">{title}</h2>
+      <h2 className="mb-4 text-[13.91px] font-semibold text-white">{title}</h2>
       <ul className="space-y-2.5">{children}</ul>
     </div>
   );

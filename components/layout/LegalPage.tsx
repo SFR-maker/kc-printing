@@ -23,7 +23,7 @@ export function LegalPage({
   return (
     <>
       <PageHeader title={title}>
-        <p className="mt-5 font-mono text-[13px] text-kc-dark/50">Last updated: {updated}</p>
+        <p className="mt-5 font-mono text-[13.91px] text-kc-dark/50">Last updated: {updated}</p>
       </PageHeader>
 
       <section className="band-tight bg-kc-paper">
@@ -31,12 +31,12 @@ export function LegalPage({
           <div className="max-w-[68ch] divide-y divide-kc-dark/12 border-t border-kc-dark/12">
             {sections.map((section, i) => (
               <section key={section.heading} className="grid grid-cols-1 gap-3 py-8 sm:grid-cols-[3rem_1fr] sm:gap-6">
-                <span className="font-mono text-[13px] text-kc-dark/40">
+                <span className="font-mono text-[13.91px] text-kc-dark/40">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <h2 className="display-tight text-[1.35rem] text-kc-dark">{section.heading}</h2>
-                  <div className="mt-3 space-y-4 text-[15.5px] leading-relaxed text-kc-dark/70">
+                  <h2 className="display-tight text-[1.44rem] text-kc-dark">{section.heading}</h2>
+                  <div className="mt-3 space-y-4 text-[16.59px] leading-relaxed text-kc-dark/70">
                     {section.body.map((para) => (
                       <p key={para}>{para}</p>
                     ))}

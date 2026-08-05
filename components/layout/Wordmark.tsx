@@ -34,7 +34,7 @@ export function Wordmark({
           <span className="sr-only">611 Printing</span>
           <span
             aria-hidden
-            className={cn("display-tight text-[20px]", inverse ? "text-white" : "text-kc-dark")}
+            className={cn("display-tight text-[21.4px]", inverse ? "text-white" : "text-kc-dark")}
           >
             Printing
           </span>

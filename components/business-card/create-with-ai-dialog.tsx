@@ -246,23 +246,23 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
                 <div className="space-y-1">
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="(816) 555-0100" className={!form.phone.trim() ? "border-kc-orange/40" : ""} />
-                  <span className="pl-0.5 text-[11px] text-kc-muted">Phone *</span>
+                  <span className="pl-0.5 text-[11.77px] text-kc-muted">Phone *</span>
                 </div>
                 <div className="space-y-1">
                   <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@business.com" />
-                  <span className="pl-0.5 text-[11px] text-kc-muted">Email</span>
+                  <span className="pl-0.5 text-[11.77px] text-kc-muted">Email</span>
                 </div>
                 <div className="space-y-1">
                   <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="yourbusiness.com" />
-                  <span className="pl-0.5 text-[11px] text-kc-muted">Website</span>
+                  <span className="pl-0.5 text-[11.77px] text-kc-muted">Website</span>
                 </div>
                 <div className="space-y-1">
                   <Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} placeholder="linkedin.com/in/you" />
-                  <span className="pl-0.5 text-[11px] text-kc-muted">LinkedIn (optional)</span>
+                  <span className="pl-0.5 text-[11.77px] text-kc-muted">LinkedIn (optional)</span>
                 </div>
                 <div className="col-span-2 space-y-1">
                   <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St, Kansas City, MO" />
-                  <span className="pl-0.5 text-[11px] text-kc-muted">Address (optional)</span>
+                  <span className="pl-0.5 text-[11.77px] text-kc-muted">Address (optional)</span>
                 </div>
               </div>
             </div>

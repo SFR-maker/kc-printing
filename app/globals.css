@@ -72,6 +72,27 @@
   --font-mono:    var(--font-geist-mono);
   --font-heading: var(--font-geist-sans);
 
+  /* Type scale, 7% above Tailwind's default.
+     Written as calc() against the stock values so the multiplier stays visible and the whole scale
+     can be retuned from one number rather than thirteen magic decimals.
+     Only the sizes are overridden: Tailwind v4 expresses each --text-*--line-height as a unitless
+     ratio (calc(1.25 / 0.875) and friends), so leading tracks the new sizes on its own and the
+     vertical rhythm is unchanged. Spacing, containers and radii are untouched, so this enlarges the
+     text rather than zooming the layout. */
+  --text-xs:   calc(0.75rem  * 1.07);
+  --text-sm:   calc(0.875rem * 1.07);
+  --text-base: calc(1rem     * 1.07);
+  --text-lg:   calc(1.125rem * 1.07);
+  --text-xl:   calc(1.25rem  * 1.07);
+  --text-2xl:  calc(1.5rem   * 1.07);
+  --text-3xl:  calc(1.875rem * 1.07);
+  --text-4xl:  calc(2.25rem  * 1.07);
+  --text-5xl:  calc(3rem     * 1.07);
+  --text-6xl:  calc(3.75rem  * 1.07);
+  --text-7xl:  calc(4.5rem   * 1.07);
+  --text-8xl:  calc(6rem     * 1.07);
+  --text-9xl:  calc(8rem     * 1.07);
+
   --radius-sm:  calc(var(--radius) * 0.6);
   --radius-md:  calc(var(--radius) * 0.8);
   --radius-lg:  var(--radius);

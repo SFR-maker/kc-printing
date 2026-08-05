@@ -57,8 +57,8 @@ export default function ServicesPage() {
         <div className="reg-bar" />
         <div className="container-tight px-4 pb-12 pt-16 sm:px-6 lg:px-8 lg:pb-16 lg:pt-24">
           <Reveal className="max-w-2xl">
-            <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl">All services</h1>
-            <p className="mt-5 text-[17px] leading-relaxed text-kc-dark/65">
+            <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">All services</h1>
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">
               Four products, each built around a designer who knows the format, not a template
               engine.
             </p>
@@ -89,11 +89,11 @@ export default function ServicesPage() {
                       <h2 className="display-tight text-xl text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
                         {s.name}
                       </h2>
-                      <span className="shrink-0 font-mono text-[12.5px] text-kc-dark/50">
+                      <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/50">
                         {s.price}
                       </span>
                     </div>
-                    <p className="mb-5 flex-1 text-[13.5px] leading-relaxed text-kc-dark/60">
+                    <p className="mb-5 flex-1 text-[14.45px] leading-relaxed text-kc-dark/60">
                       {s.description}
                     </p>
                     <ul className="mb-5 space-y-1.5 border-t border-kc-dark/10 pt-4">
@@ -103,7 +103,7 @@ export default function ServicesPage() {
                         </li>
                       ))}
                     </ul>
-                    <div className="mt-auto flex items-center gap-1.5 text-[14px] font-semibold text-kc-magenta-deep">
+                    <div className="mt-auto flex items-center gap-1.5 text-[14.98px] font-semibold text-kc-magenta-deep">
                       View {s.name}
                       <ArrowRight
                         className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
@@ -122,10 +122,10 @@ export default function ServicesPage() {
         <div className="container-tight px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
           <div className="flex flex-col items-start justify-between gap-7 border-t border-kc-dark/12 pt-10 sm:flex-row sm:items-end">
             <div>
-              <h2 className="display-tight text-2xl text-kc-dark sm:text-[1.9rem]">
+              <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
                 Not sure where to start?
               </h2>
-              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-kc-dark/60">
+              <p className="mt-3 max-w-md text-[16.05px] leading-relaxed text-kc-dark/60">
                 Call or text (816) 521-0462 and we&apos;ll help you pick the right product and
                 package.
               </p>
@@ -134,7 +134,7 @@ export default function ServicesPage() {
               <Button
                 asChild
                 size="lg"
-                className="edge h-12 bg-kc-coral px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
+                className="edge h-12 bg-kc-coral px-7 text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
               >
                 <Link href="/contact">Contact us</Link>
               </Button>
@@ -142,7 +142,7 @@ export default function ServicesPage() {
                 asChild
                 size="lg"
                 variant="outline"
-                className="edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+                className="edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[16.05px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
               >
                 <Link href="/pricing">Compare pricing</Link>
               </Button>

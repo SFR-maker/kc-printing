@@ -191,14 +191,14 @@ export function ArtworkProof({
       <div className="edge border border-kc-dark/12 bg-kc-paper p-5 sm:p-8">
         <div className="mx-auto max-w-xl">
           {/* Width ruler */}
-          <div className="mb-2 flex items-center gap-2 text-[11px] text-kc-dark/45">
+          <div className="mb-2 flex items-center gap-2 text-[11.77px] text-kc-dark/45">
             <span className="h-px flex-1 bg-kc-dark/20" />
             <span className="font-mono">{inspection.requiredWidthIn - bleedIn * 2} in</span>
             <span className="h-px flex-1 bg-kc-dark/20" />
           </div>
 
           <div className="flex gap-2">
-            <div className="flex flex-col items-center justify-center gap-2 text-[11px] text-kc-dark/45">
+            <div className="flex flex-col items-center justify-center gap-2 text-[11.77px] text-kc-dark/45">
               <span className="w-px flex-1 bg-kc-dark/20" />
               <span className="font-mono [writing-mode:vertical-rl]">
                 {inspection.requiredHeightIn - bleedIn * 2} in
@@ -311,7 +311,7 @@ export function ArtworkProof({
 
       <div className="edge border border-kc-dark/12 bg-white p-5">
         {blocking ? (
-          <p className="text-[14.5px] leading-relaxed text-kc-dark/70">
+          <p className="text-[15.52px] leading-relaxed text-kc-dark/70">
             This file can&apos;t be approved for print as it is.{" "}
             <button type="button" onClick={onReplace} className="font-semibold text-kc-magenta-deep hover:text-kc-dark">
               Upload a different file
@@ -327,13 +327,13 @@ export function ArtworkProof({
                 onChange={(e) => onApprovedChange(e.target.checked)}
                 className="mt-0.5 h-4 w-4 shrink-0 accent-kc-coral"
               />
-              <span className="text-[14.5px] leading-relaxed text-kc-dark">
+              <span className="text-[15.52px] leading-relaxed text-kc-dark">
                 I approve this design for print. I understand it is cut at the dashed line,
                 that cutting can shift by up to 1/16 in, and that anything outside the dotted safe
                 zone may be trimmed off.
               </span>
             </label>
-            <button type="button" onClick={onReplace} className="mt-4 text-[13.5px] font-semibold text-kc-magenta-deep hover:text-kc-dark">
+            <button type="button" onClick={onReplace} className="mt-4 text-[14.45px] font-semibold text-kc-magenta-deep hover:text-kc-dark">
               Upload a different file instead
             </button>
           </>
@@ -381,7 +381,7 @@ function Warnings({
         <li
           key={w.code}
           className={cn(
-            "edge flex items-start gap-2.5 border p-3.5 text-[14px] leading-snug",
+            "edge flex items-start gap-2.5 border p-3.5 text-[14.98px] leading-snug",
             w.level === "block" ? "border-red-300 bg-red-50 text-red-800"
               : w.level === "warn" ? "border-amber-300 bg-amber-50 text-amber-900"
                 : "border-kc-dark/12 bg-white text-kc-dark/75"
@@ -403,7 +403,7 @@ function Tool({ icon, label, onClick }: { icon: React.ReactNode; label: string; 
       type="button"
       onClick={onClick}
       title={label}
-      className="edge flex flex-col items-center gap-1 border border-kc-dark/12 px-3 py-2 text-[11px] text-kc-dark/70 transition-colors hover:border-kc-dark/35 hover:text-kc-dark"
+      className="edge flex flex-col items-center gap-1 border border-kc-dark/12 px-3 py-2 text-[11.77px] text-kc-dark/70 transition-colors hover:border-kc-dark/35 hover:text-kc-dark"
     >
       {icon}
       {label}
@@ -413,7 +413,7 @@ function Tool({ icon, label, onClick }: { icon: React.ReactNode; label: string; 
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-[13px] text-kc-dark/75">
+    <label className="flex cursor-pointer items-center gap-2 text-[13.91px] text-kc-dark/75">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-kc-coral" />
       {label}
     </label>
@@ -422,7 +422,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 
 function Legend() {
   return (
-    <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[12.5px] text-kc-dark/60">
+    <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[13.38px] text-kc-dark/60">
       <span className="flex items-center gap-2">
         <span className="inline-block h-0 w-5 border-t border-solid border-kc-dark/30" /> Document edge
       </span>
@@ -439,8 +439,8 @@ function Legend() {
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[12.5px] text-kc-dark/50">{label}</dt>
-      <dd className="mt-0.5 font-mono text-[13.5px] text-kc-dark">{children}</dd>
+      <dt className="text-[13.38px] text-kc-dark/50">{label}</dt>
+      <dd className="mt-0.5 font-mono text-[14.45px] text-kc-dark">{children}</dd>
     </div>
   );
 }
@@ -490,7 +490,7 @@ function PdfPage({ url }: { url: string }) {
     <div className="relative h-full w-full">
       <canvas ref={canvasRef} className="h-full w-full" />
       {state !== "ready" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white text-[13px] text-kc-dark/55">
+        <div className="absolute inset-0 flex items-center justify-center bg-white text-[13.91px] text-kc-dark/55">
           {state === "loading" ? (
             <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Rendering your PDF</span>
           ) : (

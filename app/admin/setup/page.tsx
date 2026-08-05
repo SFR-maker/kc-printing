@@ -83,9 +83,9 @@ function Row({ check }: { check: SetupCheck }) {
       <span className="mt-0.5 shrink-0">{icon}</span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-kc-dark">{check.label}</p>
-        <p className="text-[13px] leading-relaxed text-kc-muted">{check.detail}</p>
+        <p className="text-[13.91px] leading-relaxed text-kc-muted">{check.detail}</p>
         {check.action && (
-          <p className="mt-1 text-[13px]">
+          <p className="mt-1 text-[13.91px]">
             {check.href ? (
               <Link
                 href={check.href}

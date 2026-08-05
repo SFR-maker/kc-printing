@@ -83,7 +83,7 @@ export function TemplateSwitcher({ onSelected }: { onSelected?: () => void }) {
                 <img src={t.thumbnailFront} alt={t.title} className="h-full w-full object-cover" loading="lazy" />
               ) : null}
             </div>
-            <div className="truncate p-1.5 text-[11px] font-medium text-kc-dark">{t.title}</div>
+            <div className="truncate p-1.5 text-[11.77px] font-medium text-kc-dark">{t.title}</div>
           </button>
         ))}
       </div>

@@ -199,7 +199,7 @@ function TemplateGrid({ templates, product, routeSegment, thumbAspect }: { templ
           <div className="p-3">
             <h3 className="truncate text-sm font-semibold text-kc-dark group-hover:text-kc-teal">{t.title}</h3>
             <div className="mt-1.5 flex items-center gap-1.5">
-              <Badge variant="secondary" className="border-0 bg-kc-bg text-[10px] text-kc-muted">{t.style}</Badge>
+              <Badge variant="secondary" className="border-0 bg-kc-bg text-[10.7px] text-kc-muted">{t.style}</Badge>
               <div className="flex gap-1">
                 {t.palette.slice(0, 3).map((c, i) => (
                   <span key={i} className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: c }} />

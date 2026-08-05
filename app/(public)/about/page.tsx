@@ -40,8 +40,8 @@ export default function AboutPage() {
           <RevealGroup className="grid grid-cols-2 divide-kc-dark/10 sm:grid-cols-4 sm:divide-x">
             {FACTS.map((fact) => (
               <RevealItem key={fact.label} className="py-8 sm:px-7 sm:first:pl-0 sm:last:pr-0">
-                <div className="display-tight text-[2.25rem] text-kc-dark">{fact.value}</div>
-                <div className="mt-2 text-[13.5px] leading-snug text-kc-dark/55">{fact.label}</div>
+                <div className="display-tight text-[2.41rem] text-kc-dark">{fact.value}</div>
+                <div className="mt-2 text-[14.45px] leading-snug text-kc-dark/55">{fact.label}</div>
               </RevealItem>
             ))}
           </RevealGroup>
@@ -52,8 +52,8 @@ export default function AboutPage() {
       <section className="band bg-kc-paper">
         <div className="container-tight grid grid-cols-1 gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
           <div>
-            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.5rem]">What we do</h2>
-            <div className="mt-6 space-y-5 text-[16.5px] leading-relaxed text-kc-dark/65">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">What we do</h2>
+            <div className="mt-6 space-y-5 text-[17.66px] leading-relaxed text-kc-dark/65">
               <p>
                 We specialize in four things and do them well: business cards, postcards, banners,
                 and rigid signs. Every order is handled by a real designer who cares about your
@@ -87,12 +87,12 @@ export default function AboutPage() {
       {/* Service areas */}
       <section className="band bg-kc-bg">
         <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
-          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.5rem]">Where we serve</h2>
+          <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">Where we serve</h2>
           <ul className="grid grid-cols-1 gap-x-12 sm:grid-cols-2">
             {AREAS.map((city) => (
               <li
                 key={city}
-                className="border-b border-kc-dark/10 py-4 text-[15.5px] text-kc-dark first:border-t sm:[&:nth-child(2)]:border-t"
+                className="border-b border-kc-dark/10 py-4 text-[16.59px] text-kc-dark first:border-t sm:[&:nth-child(2)]:border-t"
               >
                 {city}
               </li>

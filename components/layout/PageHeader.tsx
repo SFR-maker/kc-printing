@@ -19,9 +19,9 @@ export function PageHeader({
       <div className="reg-bar" />
       <div className="container-tight px-4 pb-12 pt-16 sm:px-6 lg:px-8 lg:pb-16 lg:pt-24">
         <Reveal className="max-w-2xl">
-          <h1 className="display-tight text-[2.75rem] text-kc-dark sm:text-6xl">{title}</h1>
+          <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">{title}</h1>
           {lead && (
-            <p className="mt-5 text-[17px] leading-relaxed text-kc-dark/65">{lead}</p>
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">{lead}</p>
           )}
           {children}
         </Reveal>

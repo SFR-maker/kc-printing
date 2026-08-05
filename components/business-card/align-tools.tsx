@@ -34,7 +34,7 @@ export function AlignTools({ compact = false }: { compact?: boolean }) {
   return (
     <div className="space-y-2">
       <div>
-        <div className="mb-1.5 text-[11px] font-medium text-kc-muted">
+        <div className="mb-1.5 text-[11.77px] font-medium text-kc-muted">
           {selectedIds.length > 1 ? "Align to selection" : "Align to card"}
         </div>
         <div className="grid grid-cols-6 gap-1">
@@ -55,7 +55,7 @@ export function AlignTools({ compact = false }: { compact?: boolean }) {
 
       {selectedIds.length >= 3 && (
         <div>
-          <div className="mb-1.5 text-[11px] font-medium text-kc-muted">Distribute</div>
+          <div className="mb-1.5 text-[11.77px] font-medium text-kc-muted">Distribute</div>
           <div className="grid grid-cols-6 gap-1">
             <button
               type="button"

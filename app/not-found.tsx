@@ -21,11 +21,11 @@ export default function NotFound() {
     <>
       <Header />
       <main className="section-pad container-tight max-w-xl text-center">
-        <p className="font-mono text-[13px] uppercase tracking-widest text-kc-dark/40">Error 404</p>
+        <p className="font-mono text-[13.91px] uppercase tracking-widest text-kc-dark/40">Error 404</p>
         <h1 className="mt-3 text-4xl font-black tracking-tight text-kc-dark">
           That page isn&apos;t here
         </h1>
-        <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-kc-muted">
+        <p className="mx-auto mt-4 max-w-md text-[16.05px] leading-relaxed text-kc-muted">
           The link may be out of date, or the address may have a typo in it. Everything we print is
           one click away below.
         </p>
@@ -33,13 +33,13 @@ export default function NotFound() {
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link
             href="/services"
-            className="edge inline-flex h-12 items-center justify-center bg-kc-dark px-7 text-[15px] font-semibold text-white transition-colors hover:bg-kc-dark/90"
+            className="edge inline-flex h-12 items-center justify-center bg-kc-dark px-7 text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-dark/90"
           >
             Browse what we print
           </Link>
           <Link
             href="/"
-            className="edge inline-flex h-12 items-center justify-center border border-kc-dark/20 px-7 text-[15px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+            className="edge inline-flex h-12 items-center justify-center border border-kc-dark/20 px-7 text-[16.05px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
           >
             Back to the homepage
           </Link>

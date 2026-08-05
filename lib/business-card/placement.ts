@@ -1,4 +1,5 @@
 import type { ArtworkInspection } from "./inspect-artwork";
+import type { PrintSpec } from "@/lib/print/spec";
 
 /**
  * Where the customer has positioned their artwork on the print document.
@@ -106,9 +107,15 @@ export function originalPlacement(
  * Snapping to the document edge is what makes a full-bleed placement reliable by hand - without it
  * customers leave a hairline gap that prints as a white sliver after trimming.
  */
-export function guideLines(inspection: ArtworkInspection): { x: number[]; y: number[] } {
-  const bleed = (inspection.requiredWidthIn - 3.5) / 2;
-  const safe = bleed + 0.125;
+export function guideLines(
+  inspection: ArtworkInspection,
+  spec: Pick<PrintSpec, "bleedIn" | "safeZoneInsetIn">
+): { x: number[]; y: number[] } {
+  // Read from the spec, not reverse-derived. This used to compute the bleed as
+  // (requiredWidthIn - 3.5) / 2, hardcoding the business card's trim width - which silently put
+  // every guide in the wrong place on any other product, with no error to notice.
+  const bleed = spec.bleedIn;
+  const safe = bleed + spec.safeZoneInsetIn;
   return {
     x: [0, bleed, safe, inspection.requiredWidthIn - safe, inspection.requiredWidthIn - bleed, inspection.requiredWidthIn],
     y: [0, bleed, safe, inspection.requiredHeightIn - safe, inspection.requiredHeightIn - bleed, inspection.requiredHeightIn],
@@ -120,10 +127,11 @@ const SNAP_THRESHOLD_IN = 0.03;
 /** Pulls a dragged placement onto nearby guides, matching either the leading or trailing edge. */
 export function snapPlacement(
   inspection: ArtworkInspection,
-  placement: ArtworkPlacement
+  placement: ArtworkPlacement,
+  spec: Pick<PrintSpec, "bleedIn" | "safeZoneInsetIn">
 ): ArtworkPlacement {
   const { widthIn, heightIn } = placedSize(inspection, placement);
-  const guides = guideLines(inspection);
+  const guides = guideLines(inspection, spec);
   return {
     ...placement,
     offsetXIn: snapAxis(placement.offsetXIn, widthIn, guides.x),

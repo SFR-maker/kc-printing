@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { Loader2, Upload, PenLine, FileCheck2, Check } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing-client";
-import { businessCardDocSpec } from "@/lib/business-card/print-spec";
+import { docSize, printSpec } from "@/lib/print/spec";
+import { BUSINESS_CARD_BLEED, PRINT_SPEC } from "@/lib/business-card/print-spec";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
 import { fitPlacement, type ArtworkPlacement } from "@/lib/business-card/placement";
 import { ArtworkProof } from "@/components/builder/ArtworkProof";
@@ -105,7 +106,15 @@ export function ArtworkStep({
   /** "Back (full colour)" or "Back (grayscale)", so the right file gets supplied. */
   backLabel: string;
 }) {
-  const spec = businessCardDocSpec(roundCorners);
+  // A rounded-corner card is die-cut rather than guillotined, and the die has more positional play,
+  // so that finish alone widens the bleed.
+  const spec = printSpec(
+    "business-cards",
+    PRINT_SPEC.trimWidthIn,
+    PRINT_SPEC.trimHeightIn,
+    roundCorners ? BUSINESS_CARD_BLEED.rounded : BUSINESS_CARD_BLEED.square
+  );
+  const doc = docSize(spec);
   const setSide = (which: "front" | "back", side: ArtworkSide) => onChange({ ...value, [which]: side });
 
   if (value.path === "UPLOAD") {
@@ -131,7 +140,7 @@ export function ArtworkStep({
             />
             <p className="text-[13.5px] leading-relaxed text-kc-dark/60">
               Each face needs its own file and its own approval. The back prints on the same sheet, so
-              it uses the same {spec.docWidthIn} × {spec.docHeightIn} in document as the front.
+              it uses the same {doc.widthIn} × {doc.heightIn} in document as the front.
             </p>
           </>
         )}
@@ -155,8 +164,8 @@ export function ArtworkStep({
         title="I have my own design"
         body={
           needsBack
-            ? `Upload a print-ready file for each side at ${spec.docWidthIn} × ${spec.docHeightIn} in. We'll proof both for you to approve.`
-            : `Upload a print-ready file at ${spec.docWidthIn} × ${spec.docHeightIn} in. We'll show you a proof to approve.`
+            ? `Upload a print-ready file for each side at ${doc.widthIn} × ${doc.heightIn} in. We'll proof both for you to approve.`
+            : `Upload a print-ready file at ${doc.widthIn} × ${doc.heightIn} in. We'll show you a proof to approve.`
         }
         onClick={() => onChange({ ...EMPTY_ARTWORK, path: "UPLOAD" })}
       />
@@ -188,11 +197,12 @@ function SideUploader({
   side: ArtworkSide;
   onChange: (next: ArtworkSide) => void;
   roundCorners: boolean;
-  spec: ReturnType<typeof businessCardDocSpec>;
+  spec: ReturnType<typeof printSpec>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<"idle" | "uploading" | "inspecting">("idle");
   const [error, setError] = useState<string | null>(null);
+  const doc = docSize(spec);
 
   const { startUpload } = useUploadThing("brandFile", {
     onUploadError: (e) =>
@@ -278,6 +288,7 @@ function SideUploader({
             onPlacementChange={(placement) => onChange({ ...side, placement })}
             approved={side.approved}
             onApprovedChange={(approved) => onChange({ ...side, approved })}
+            spec={spec}
             onReplace={() => {
               onChange({ ...EMPTY_SIDE });
               setError(null);
@@ -288,7 +299,7 @@ function SideUploader({
         <div className="edge border border-kc-dark/12 bg-white p-5">
           <dl className="grid grid-cols-2 gap-x-8 gap-y-2 text-[13.5px] sm:grid-cols-3">
             <SpecFact label="Upload at">
-              {spec.docWidthIn} × {spec.docHeightIn} in
+              {doc.widthIn} × {doc.heightIn} in
             </SpecFact>
             <SpecFact label="Cuts to">
               {spec.trimWidthIn} × {spec.trimHeightIn} in
@@ -296,8 +307,8 @@ function SideUploader({
             <SpecFact label="Keep text inside">{spec.safeZoneInsetIn} in of the cut</SpecFact>
           </dl>
           <p className="mt-4 text-[13.5px] leading-relaxed text-kc-dark/60">
-            Extend backgrounds and edge-to-edge images all the way to {spec.docWidthIn} ×{" "}
-            {spec.docHeightIn} in. PDF, PNG, JPG or TIFF, 300 DPI or better.
+            Extend backgrounds and edge-to-edge images all the way to {doc.widthIn} ×{" "}
+            {doc.heightIn} in. PDF, PNG, JPG or TIFF, 300 DPI or better.
             {roundCorners && " Rounded corners need the larger document, since the die has more play than a straight cut."}
           </p>
 

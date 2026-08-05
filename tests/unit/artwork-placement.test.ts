@@ -1,9 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
   baseSize, centred, coverScale, fitPlacement, hasUncoveredEdge, originalPlacement,
-  placedDpi, placedSize, placementFromBox, snapPlacement, type ArtworkPlacement,
+  guideLines, placedDpi, placedSize, placementFromBox, snapPlacement, type ArtworkPlacement,
 } from "@/lib/business-card/placement";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
+import { printSpec } from "@/lib/print/spec";
+
+/** Square-corner business card: the geometry these placements were written against. */
+const CARD_SPEC = printSpec("business-cards", 3.5, 2);
 
 /** A 3.6 x 2.1 raster at 300 DPI, already the right size for a square-corner card. */
 const exact: ArtworkInspection = {
@@ -91,27 +95,27 @@ describe("placement geometry", () => {
 
 describe("snapping", () => {
   it("pulls a near-miss onto the document edge so no white sliver prints", () => {
-    const p = snapPlacement(exact, { scaleX: 1, scaleY: 1, offsetXIn: 0.012, offsetYIn: -0.009, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 1, scaleY: 1, offsetXIn: 0.012, offsetYIn: -0.009, rotation: 0 }, CARD_SPEC);
     expect(p.offsetXIn).toBe(0);
     expect(p.offsetYIn).toBe(0);
   });
 
   it("snaps the trailing edge as well as the leading one", () => {
     // Artwork half the sheet wide, dragged so its right edge is just shy of the document edge.
-    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 1.79, offsetYIn: 0.5, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 1.79, offsetYIn: 0.5, rotation: 0 }, CARD_SPEC);
     const size = placedSize(exact, p);
     expect(p.offsetXIn + size.widthIn).toBeCloseTo(3.6, 4);
   });
 
   it("leaves a placement alone when nothing is within reach", () => {
-    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 0.9, offsetYIn: 0.7, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 0.9, offsetYIn: 0.7, rotation: 0 }, CARD_SPEC);
     expect(p.offsetXIn).toBeCloseTo(0.9, 4);
     expect(p.offsetYIn).toBeCloseTo(0.7, 4);
   });
 
   it("snaps to the trim line, not only the document edge", () => {
     // 0.05 is the square-corner bleed, so the trim line sits there.
-    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 0.06, offsetYIn: 0.5, rotation: 0 });
+    const p = snapPlacement(exact, { scaleX: 0.5, scaleY: 0.5, offsetXIn: 0.06, offsetYIn: 0.5, rotation: 0 }, CARD_SPEC);
     expect(p.offsetXIn).toBeCloseTo(0.05, 4);
   });
 });
@@ -135,5 +139,40 @@ describe("resolution follows the placement", () => {
   it("is null for vector artwork, which has no pixel ceiling", () => {
     const pdf = { ...exact, kind: "pdf" as const, pixelWidth: null, pixelHeight: null };
     expect(placedDpi(pdf, { scaleX: 4, scaleY: 4, offsetXIn: 0, offsetYIn: 0, rotation: 0 })).toBeNull();
+  });
+});
+
+describe("guides come from the spec, not from a hardcoded card", () => {
+  /**
+   * guideLines used to compute bleed as (requiredWidthIn - 3.5) / 2, baking in the business card's
+   * trim width. On a banner that produced guides in entirely the wrong place, with nothing to
+   * signal it - the proof simply drew its trim line somewhere arbitrary and the customer approved
+   * it. These pin the geometry to the spec instead.
+   */
+  const banner: ArtworkInspection = {
+    ...exact,
+    widthIn: 48.25, heightIn: 24.25,
+    requiredWidthIn: 48.25, requiredHeightIn: 24.25,
+    pixelWidth: 7238, pixelHeight: 3638,
+  };
+  const BANNER_SPEC = printSpec("banners", 48, 24);
+
+  it("puts a card's trim line at its own 0.05in bleed", () => {
+    const g = guideLines(exact, CARD_SPEC);
+    expect(g.x).toContain(0.05);
+    expect(g.x).toContain(3.6 - 0.05);
+  });
+
+  it("puts a banner's trim line at 0.125in, not at the card-derived figure", () => {
+    const g = guideLines(banner, BANNER_SPEC);
+    expect(g.x).toContain(0.125);
+    // The old formula would have given (48.25 - 3.5) / 2 = 22.375 - most of the way across the banner.
+    expect(g.x).not.toContain(22.375);
+  });
+
+  it("offsets the safe zone from the trim line by the product's own inset", () => {
+    // Banners keep text well clear because grommets sit along the edges.
+    expect(guideLines(banner, BANNER_SPEC).x).toContain(0.125 + 0.5);
+    expect(guideLines(exact, CARD_SPEC).x).toContain(0.05 + 0.125);
   });
 });

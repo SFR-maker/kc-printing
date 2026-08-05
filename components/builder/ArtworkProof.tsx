@@ -10,7 +10,7 @@ import {
   type ArtworkPlacement, baseSize, centred, coverScale, fitPlacement, guideLines,
   hasUncoveredEdge, originalPlacement, placedDpi, placedSize, placementFromBox, snapPlacement,
 } from "@/lib/business-card/placement";
-import { MIN_PRINT_DPI, RECOMMENDED_DPI } from "@/lib/business-card/print-spec";
+import type { PrintSpec } from "@/lib/print/spec";
 import { cn } from "@/lib/utils";
 
 interface ArtworkProofProps {
@@ -22,6 +22,8 @@ interface ArtworkProofProps {
   approved: boolean;
   onApprovedChange: (approved: boolean) => void;
   onReplace: () => void;
+  /** Geometry and resolution floors for the product being printed. */
+  spec: PrintSpec;
 }
 
 type Handle = "n" | "s" | "e" | "w" | "nw" | "ne" | "sw" | "se";
@@ -51,7 +53,7 @@ const MAX_SCALE = 20;
  */
 export function ArtworkProof({
   fileUrl, fileName, inspection, placement, onPlacementChange,
-  approved, onApprovedChange, onReplace,
+  approved, onApprovedChange, onReplace, spec,
 }: ArtworkProofProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [snapToGuides, setSnapToGuides] = useState(true);
@@ -59,7 +61,9 @@ export function ArtworkProof({
   const [dragging, setDragging] = useState(false);
 
   const { requiredWidthIn: docW, requiredHeightIn: docH } = inspection;
-  const bleedIn = (docW - 3.5) / 2;
+  // From the spec. Deriving it as (docW - 3.5) / 2 hardcoded the business card's trim width and
+  // drew the trim and safe-zone rectangles in the wrong place on every other product.
+  const bleedIn = spec.bleedIn;
   const size = placedSize(inspection, placement);
   const dpi = placedDpi(inspection, placement);
   const uncovered = hasUncoveredEdge(inspection, placement);
@@ -97,7 +101,7 @@ export function ArtworkProof({
         offsetXIn: origin.offsetXIn + (ev.clientX - startX) / ppi,
         offsetYIn: origin.offsetYIn + (ev.clientY - startY) / ppi,
       };
-      apply(snapToGuides ? snapPlacement(inspection, next) : next);
+      apply(snapToGuides ? snapPlacement(inspection, next, spec) : next);
     };
     const up = () => {
       setDragging(false);
@@ -161,7 +165,7 @@ export function ArtworkProof({
       const y = movesTop ? box0.y + box0.height - height : proportional && !movesBottom ? box0.y + (box0.height - height) / 2 : box0.y;
 
       const next = placementFromBox(inspection, origin.rotation, { x, y, width, height });
-      apply(snapToGuides ? snapPlacement(inspection, next) : next);
+      apply(snapToGuides ? snapPlacement(inspection, next, spec) : next);
     };
     const up = () => {
       window.removeEventListener("pointermove", move);
@@ -180,7 +184,7 @@ export function ArtworkProof({
 
   const blocking = inspection.warnings.find((w) => w.level === "block");
   const pct = (v: number, total: number) => `${(v / total) * 100}%`;
-  const guides = guideLines(inspection);
+  const guides = guideLines(inspection, spec);
 
   return (
     <div className="space-y-5">
@@ -300,10 +304,10 @@ export function ArtworkProof({
           {distorted && <span className="ml-1.5 text-kc-magenta-deep">stretched</span>}
         </Fact>
         <Fact label="Resolution">{dpi ? `${dpi} DPI` : "Vector"}</Fact>
-        <Fact label="Finished size">3.5 × 2 in</Fact>
+        <Fact label="Finished size">{spec.trimWidthIn} × {spec.trimHeightIn} in</Fact>
       </dl>
 
-      <Warnings inspection={inspection} dpi={dpi} uncovered={uncovered} distorted={distorted} />
+      <Warnings inspection={inspection} dpi={dpi} uncovered={uncovered} distorted={distorted} spec={spec} />
 
       <div className="edge border border-kc-dark/12 bg-white p-5">
         {blocking ? (
@@ -324,7 +328,7 @@ export function ArtworkProof({
                 className="mt-0.5 h-4 w-4 shrink-0 accent-kc-coral"
               />
               <span className="text-[14.5px] leading-relaxed text-kc-dark">
-                I approve this design for print. I understand the card is cut at the dashed line,
+                I approve this design for print. I understand it is cut at the dashed line,
                 that cutting can shift by up to 1/16 in, and that anything outside the dotted safe
                 zone may be trimmed off.
               </span>
@@ -340,8 +344,8 @@ export function ArtworkProof({
 }
 
 function Warnings({
-  inspection, dpi, uncovered, distorted,
-}: { inspection: ArtworkInspection; dpi: number | null; uncovered: boolean; distorted: boolean }) {
+  inspection, dpi, uncovered, distorted, spec,
+}: { inspection: ArtworkInspection; dpi: number | null; uncovered: boolean; distorted: boolean; spec: PrintSpec }) {
   const items: { level: "info" | "warn" | "block"; code: string; message: string }[] = [];
 
   if (uncovered) {
@@ -359,10 +363,10 @@ function Warnings({
     });
   }
   // Recomputed live rather than taken from the upload: scaling changes the effective resolution.
-  if (dpi !== null && dpi < MIN_PRINT_DPI) {
-    items.push({ level: "block", code: "dpi", message: `At this size your artwork works out to about ${dpi} DPI. Below ${MIN_PRINT_DPI} DPI it prints visibly soft. Scale it down, or upload a larger file.` });
-  } else if (dpi !== null && dpi < RECOMMENDED_DPI) {
-    items.push({ level: "warn", code: "dpi", message: `At this size your artwork is about ${dpi} DPI. ${RECOMMENDED_DPI} DPI is recommended for crisp small text.` });
+  if (dpi !== null && dpi < spec.minDpi) {
+    items.push({ level: "block", code: "dpi", message: `At this size your artwork works out to about ${dpi} DPI. Below ${spec.minDpi} DPI it prints visibly soft. Scale it down, or upload a larger file.` });
+  } else if (dpi !== null && dpi < spec.recommendedDpi) {
+    items.push({ level: "warn", code: "dpi", message: `At this size your artwork is about ${dpi} DPI. ${spec.recommendedDpi} DPI is recommended.` });
   }
   for (const w of inspection.warnings) {
     if (w.code.startsWith("dpi")) continue;

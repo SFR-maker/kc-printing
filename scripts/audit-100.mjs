@@ -192,7 +192,7 @@ for (const [slug, expectControls] of [
   const page = await (await browser.newContext({ viewport: { width: 1400, height: 1100 } })).newPage();
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e).slice(0, 80)));
-  await page.goto(`${BASE}/services/${slug}/order`, { waitUntil: "networkidle", timeout: 90000 });
+  await page.goto(`${BASE}/services/${slug}/order?cb=${Math.random()}`, { waitUntil: "networkidle", timeout: 90000 });
   await page.waitForTimeout(4500);
 
   const seen = await page.evaluate(() =>
@@ -214,7 +214,7 @@ for (const [slug, expectControls] of [
 /* accessibility */
 for (const p of ["/", "/services", "/pricing", "/contact", "/services/business-cards/order", "/services/banners/order", "/services/rigid-signs/order"]) {
   const page = await (await browser.newContext({ viewport: { width: 1400, height: 1000 } })).newPage();
-  await page.goto(BASE + p, { waitUntil: "networkidle", timeout: 90000 });
+  await page.goto(`${BASE}${p}?cb=${Math.random()}`, { waitUntil: "networkidle", timeout: 90000 });
   await page.waitForTimeout(2500);
   await page.addScriptTag({ content: AXE });
   const v = await page.evaluate(async () => {
@@ -229,7 +229,7 @@ for (const p of ["/", "/services", "/pricing", "/contact", "/services/business-c
 for (const [label, w] of [["mobile", 390], ["tablet", 768], ["desktop", 1440]]) {
   for (const p of ["/", "/pricing", "/services/banners/order"]) {
     const page = await (await browser.newContext({ viewport: { width: w, height: 900 } })).newPage();
-    await page.goto(BASE + p, { waitUntil: "networkidle", timeout: 90000 });
+    await page.goto(`${BASE}${p}?cb=${Math.random()}`, { waitUntil: "networkidle", timeout: 90000 });
     await page.waitForTimeout(2000);
     const over = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
     check("responsive", `${p} at ${label} does not scroll sideways`, !over);
@@ -240,7 +240,7 @@ for (const [label, w] of [["mobile", 390], ["tablet", 768], ["desktop", 1440]]) 
 /* imagery reflects the product sold */
 {
   const page = await (await browser.newContext({ viewport: { width: 1400, height: 1000 } })).newPage();
-  await page.goto(`${BASE}/services/banners`, { waitUntil: "networkidle", timeout: 90000 });
+  await page.goto(`${BASE}/services/banners?cb=${Math.random()}`, { waitUntil: "networkidle", timeout: 90000 });
   await page.waitForTimeout(2500);
   const alts = await page.evaluate(() => [...document.querySelectorAll("img")].map((i) => i.alt).join(" | "));
   check("content", "banner imagery describes a hung vinyl banner", /grommet|rope|hemmed/i.test(alts), alts.slice(0, 70));

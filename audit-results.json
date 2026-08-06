@@ -1,132 +1,132 @@
 {
   "base": "https://611printing.com",
-  "at": "2026-08-06T01:41:24.286Z",
+  "at": "2026-08-06T01:49:50.162Z",
   "results": [
     {
       "n": 1,
       "area": "pages",
       "name": "/ responds",
       "status": "PASS",
-      "detail": "200 in 406ms"
+      "detail": "200 in 208ms"
     },
     {
       "n": 2,
       "area": "pages",
       "name": "/services responds",
       "status": "PASS",
-      "detail": "200 in 356ms"
+      "detail": "200 in 347ms"
     },
     {
       "n": 3,
       "area": "pages",
       "name": "/services/business-cards responds",
       "status": "PASS",
-      "detail": "200 in 234ms"
+      "detail": "200 in 151ms"
     },
     {
       "n": 4,
       "area": "pages",
       "name": "/services/postcards responds",
       "status": "PASS",
-      "detail": "200 in 295ms"
+      "detail": "200 in 168ms"
     },
     {
       "n": 5,
       "area": "pages",
       "name": "/services/banners responds",
       "status": "PASS",
-      "detail": "200 in 240ms"
+      "detail": "200 in 188ms"
     },
     {
       "n": 6,
       "area": "pages",
       "name": "/services/rigid-signs responds",
       "status": "PASS",
-      "detail": "200 in 406ms"
+      "detail": "200 in 395ms"
     },
     {
       "n": 7,
       "area": "pages",
       "name": "/services/business-cards/order responds",
       "status": "PASS",
-      "detail": "200 in 1609ms"
+      "detail": "200 in 242ms"
     },
     {
       "n": 8,
       "area": "pages",
       "name": "/services/postcards/order responds",
       "status": "PASS",
-      "detail": "200 in 2059ms"
+      "detail": "200 in 254ms"
     },
     {
       "n": 9,
       "area": "pages",
       "name": "/services/banners/order responds",
       "status": "PASS",
-      "detail": "200 in 166ms"
+      "detail": "200 in 121ms"
     },
     {
       "n": 10,
       "area": "pages",
       "name": "/services/rigid-signs/order responds",
       "status": "PASS",
-      "detail": "200 in 187ms"
+      "detail": "200 in 141ms"
     },
     {
       "n": 11,
       "area": "pages",
       "name": "/pricing responds",
       "status": "PASS",
-      "detail": "200 in 155ms"
+      "detail": "200 in 68ms"
     },
     {
       "n": 12,
       "area": "pages",
       "name": "/portfolio responds",
       "status": "PASS",
-      "detail": "200 in 229ms"
+      "detail": "200 in 254ms"
     },
     {
       "n": 13,
       "area": "pages",
       "name": "/contact responds",
       "status": "PASS",
-      "detail": "200 in 206ms"
+      "detail": "200 in 200ms"
     },
     {
       "n": 14,
       "area": "pages",
       "name": "/faq responds",
       "status": "PASS",
-      "detail": "200 in 308ms"
+      "detail": "200 in 266ms"
     },
     {
       "n": 15,
       "area": "pages",
       "name": "/about responds",
       "status": "PASS",
-      "detail": "200 in 147ms"
+      "detail": "200 in 154ms"
     },
     {
       "n": 16,
       "area": "pages",
       "name": "/terms responds",
       "status": "PASS",
-      "detail": "200 in 249ms"
+      "detail": "200 in 246ms"
     },
     {
       "n": 17,
       "area": "pages",
       "name": "/privacy responds",
       "status": "PASS",
-      "detail": "200 in 167ms"
+      "detail": "200 in 173ms"
     },
     {
       "n": 18,
       "area": "pages",
       "name": "/refund-policy responds",
       "status": "PASS",
-      "detail": "200 in 200ms"
+      "detail": "200 in 151ms"
     },
     {
       "n": 19,
@@ -659,8 +659,8 @@
       "n": 98,
       "area": "builder",
       "name": "business-cards: quantity is not preselected",
-      "status": "FAIL",
-      "detail": "0 cards▼"
+      "status": "PASS",
+      "detail": "Choose a quantity▼"
     },
     {
       "n": 99,
@@ -834,22 +834,22 @@
       "n": 123,
       "area": "a11y",
       "name": "/services/business-cards/order has no WCAG AA violations",
-      "status": "FAIL",
-      "detail": "color-contrast(1)"
+      "status": "PASS",
+      "detail": ""
     },
     {
       "n": 124,
       "area": "a11y",
       "name": "/services/banners/order has no WCAG AA violations",
-      "status": "FAIL",
-      "detail": "color-contrast(1)"
+      "status": "PASS",
+      "detail": ""
     },
     {
       "n": 125,
       "area": "a11y",
       "name": "/services/rigid-signs/order has no WCAG AA violations",
-      "status": "FAIL",
-      "detail": "color-contrast(1)"
+      "status": "PASS",
+      "detail": ""
     },
     {
       "n": 126,
@@ -916,14 +916,14 @@
       "n": 136,
       "area": "content",
       "name": "no roll-up language on the banner page",
-      "status": "FAIL"
+      "status": "PASS"
     },
     {
       "n": 137,
       "area": "perf",
       "name": "/ responds under 2s",
       "status": "PASS",
-      "detail": "204ms"
+      "detail": "173ms"
     },
     {
       "n": 138,
@@ -937,7 +937,7 @@
       "area": "perf",
       "name": "/pricing responds under 2s",
       "status": "PASS",
-      "detail": "75ms"
+      "detail": "70ms"
     },
     {
       "n": 140,
@@ -951,7 +951,7 @@
       "area": "perf",
       "name": "/services/business-cards/order responds under 2s",
       "status": "PASS",
-      "detail": "141ms"
+      "detail": "240ms"
     },
     {
       "n": 142,

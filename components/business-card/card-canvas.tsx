@@ -53,6 +53,7 @@ export function CardCanvas() {
   const [editingTextId, setEditingTextId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [editingRect, setEditingRect] = useState<{ x: number; y: number; width: number; height: number; fontSizePx: number; el: TextElement } | null>(null);
+  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   useKeyboardShortcuts(editingTextId === null);
 
@@ -279,11 +280,30 @@ export function CardCanvas() {
     [side.elements, zoom]
   );
 
+  /**
+   * Saves the edited text and refits the box to it.
+   *
+   * Only `text` was written before, so the element kept whatever height it had when the design was
+   * built: replacing a short line with a long one left the text overflowing its box, and replacing a
+   * long one with a short one left a gap that pushed everything else out of alignment. The textarea
+   * is laid out with the same font, size and line height as the element, so its own content height
+   * is the measurement to use - taken in screen pixels and divided back out through the zoom.
+   */
   const commitTextEdit = useCallback(() => {
-    if (editingTextId) updateElement(activeSide, editingTextId, { text: editingValue } as never);
+    if (editingTextId) {
+      const patch: { text: string; height?: number } = { text: editingValue };
+      const measured = editorRef.current?.scrollHeight;
+      if (measured && zoom > 0) {
+        const heightIn = measured / zoom / PX_PER_IN;
+        // One line's worth is the floor, so an emptied box stays selectable rather than collapsing.
+        const minIn = (editingRect?.fontSizePx ?? 0) / zoom / PX_PER_IN || 0.1;
+        patch.height = Math.max(heightIn, minIn);
+      }
+      updateElement(activeSide, editingTextId, patch as never);
+    }
     setEditingTextId(null);
     setEditingRect(null);
-  }, [editingTextId, editingValue, updateElement, activeSide]);
+  }, [editingTextId, editingValue, updateElement, activeSide, zoom, editingRect]);
 
   const bleedIn = side.bleedIn;
   const safeInset = side.bleedIn + side.safeZoneInsetIn;
@@ -384,6 +404,7 @@ export function CardCanvas() {
 
       {editingRect && (
         <textarea
+          ref={editorRef}
           autoFocus
           value={editingValue}
           onChange={(e) => setEditingValue(e.target.value)}

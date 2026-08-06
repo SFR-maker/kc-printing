@@ -115,7 +115,7 @@ export default function PricingPage() {
                           <li
                             key={f}
                             className={`text-[14.45px] leading-snug ${
-                              pkg.popular ? "text-white/70" : "text-kc-dark/65"
+                              pkg.popular ? "text-white/70" : "text-kc-dark/75"
                             }`}
                           >
                             {f}

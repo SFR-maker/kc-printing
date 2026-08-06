@@ -23,7 +23,7 @@ export function LegalPage({
   return (
     <>
       <PageHeader title={title}>
-        <p className="mt-5 font-mono text-[13.91px] text-kc-dark/60">Last updated: {updated}</p>
+        <p className="mt-5 font-mono text-[13.91px] text-kc-dark/70">Last updated: {updated}</p>
       </PageHeader>
 
       <section className="band-tight bg-kc-paper">
@@ -31,7 +31,7 @@ export function LegalPage({
           <div className="max-w-[68ch] divide-y divide-kc-dark/12 border-t border-kc-dark/12">
             {sections.map((section, i) => (
               <section key={section.heading} className="grid grid-cols-1 gap-3 py-8 sm:grid-cols-[3rem_1fr] sm:gap-6">
-                <span className="font-mono text-[13.91px] text-kc-dark/60">
+                <span className="font-mono text-[13.91px] text-kc-dark/70">
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>

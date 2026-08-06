@@ -109,7 +109,7 @@ export default async function PortfolioPage() {
         <div className="container-tight px-4 pb-12 pt-16 sm:px-6 lg:px-8 lg:pb-16 lg:pt-24">
           <Reveal className="max-w-2xl">
             <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">Design examples</h1>
-            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/75">
               Real designs pulled from our template library. Pick one to customize as your own, or
               we will build something new for your business.
             </p>
@@ -134,7 +134,7 @@ export default async function PortfolioPage() {
               <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
                 Want something custom?
               </h2>
-              <p className="mt-3 max-w-md text-[16.05px] leading-relaxed text-kc-dark/60">
+              <p className="mt-3 max-w-md text-[16.05px] leading-relaxed text-kc-dark/70">
                 Ask and we will share examples relevant to your industry, or start from a blank file
                 with a designer.
               </p>

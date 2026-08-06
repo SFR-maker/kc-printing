@@ -66,7 +66,7 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
               <span
                 className={cn(
                   "ml-2 font-mono text-[12.31px]",
-                  selected ? "text-white/70" : "text-kc-dark/60"
+                  selected ? "text-white/70" : "text-kc-dark/70"
                 )}
               >
                 {count}
@@ -78,7 +78,7 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
 
       {visible.length === 0 ? (
         <div className="edge border border-dashed border-kc-dark/20 bg-white px-6 py-16 text-center">
-          <p className="text-[16.05px] text-kc-dark/60">
+          <p className="text-[16.05px] text-kc-dark/70">
             No {active.toLowerCase()} examples are published yet.
           </p>
           <Link
@@ -122,7 +122,7 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
                   <h3 className="line-clamp-2 min-h-[2.6em] text-[14.98px] font-semibold leading-snug text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
                     {sample.title}
                   </h3>
-                  <p className="mt-1 text-[13.38px] text-kc-dark/60">
+                  <p className="mt-1 text-[13.38px] text-kc-dark/70">
                     {sample.industry ? `${sample.industry} · ${sample.category}` : sample.category}
                   </p>
                 </div>

@@ -145,7 +145,7 @@ export function ArtworkStep({
               roundCorners={roundCorners}
               spec={spec}
             />
-            <p className="text-[14.45px] leading-relaxed text-kc-dark/60">
+            <p className="text-[14.45px] leading-relaxed text-kc-dark/70">
               Each face needs its own file and its own approval. The back prints on the same sheet, so
               it uses the same {doc.widthIn} × {doc.heightIn} in document as the front.
             </p>
@@ -313,13 +313,13 @@ function SideUploader({
             </SpecFact>
             <SpecFact label="Keep text inside">{spec.safeZoneInsetIn} in of the cut</SpecFact>
           </dl>
-          <p className="mt-4 text-[14.45px] leading-relaxed text-kc-dark/60">
+          <p className="mt-4 text-[14.45px] leading-relaxed text-kc-dark/70">
             Extend backgrounds and edge-to-edge images all the way to {doc.widthIn} ×{" "}
             {doc.heightIn} in. PDF, PNG, JPG or TIFF, {spec.recommendedDpi} DPI or better, up to {spec.maxFileMb}MB.
             {roundCorners && spec.product === "business-cards" && " Rounded corners need the larger document, since the die has more play than a straight cut."}
           </p>
           {spec.note && (
-            <p className="mt-2 text-[14.45px] leading-relaxed text-kc-dark/60">{spec.note}</p>
+            <p className="mt-2 text-[14.45px] leading-relaxed text-kc-dark/70">{spec.note}</p>
           )}
 
           <button
@@ -330,12 +330,12 @@ function SideUploader({
           >
             {busy === "idle" ? (
               <>
-                <Upload className="h-5 w-5 text-kc-dark/60" strokeWidth={1.75} />
+                <Upload className="h-5 w-5 text-kc-dark/70" strokeWidth={1.75} />
                 <span className="text-[15.52px] font-medium text-kc-dark">Choose your file</span>
               </>
             ) : (
               <>
-                <Loader2 className="h-5 w-5 animate-spin text-kc-dark/60" />
+                <Loader2 className="h-5 w-5 animate-spin text-kc-dark/70" />
                 <span className="text-[15.52px] font-medium text-kc-dark">
                   {busy === "uploading" ? "Uploading..." : "Checking your file..."}
                 </span>
@@ -379,9 +379,9 @@ function Choice({
           : "border-kc-dark/15 bg-white hover:border-kc-dark/35"
       )}
     >
-      <span className={selected ? "text-kc-coral" : "text-kc-dark/60"}>{icon}</span>
+      <span className={selected ? "text-kc-coral" : "text-kc-dark/70"}>{icon}</span>
       <span className="text-[16.59px] font-semibold text-kc-dark">{title}</span>
-      <span className="text-[14.45px] leading-relaxed text-kc-dark/60">{body}</span>
+      <span className="text-[14.45px] leading-relaxed text-kc-dark/70">{body}</span>
     </button>
   );
 }
@@ -389,7 +389,7 @@ function Choice({
 function SpecFact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[13.38px] text-kc-dark/60">{label}</dt>
+      <dt className="text-[13.38px] text-kc-dark/70">{label}</dt>
       <dd className="mt-0.5 font-mono text-kc-dark">{children}</dd>
     </div>
   );

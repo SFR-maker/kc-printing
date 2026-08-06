@@ -28,7 +28,7 @@ export default function GlobalError({
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-4 py-20">
       <div className="max-w-md text-center">
-        <p className="font-mono text-[13.91px] uppercase tracking-widest text-kc-dark/60">
+        <p className="font-mono text-[13.91px] uppercase tracking-widest text-kc-dark/70">
           Something went wrong
         </p>
         <h1 className="mt-3 text-3xl font-black tracking-tight text-kc-dark">
@@ -67,7 +67,7 @@ export default function GlobalError({
         </p>
 
         {error.digest && (
-          <p className="mt-6 font-mono text-[11.77px] text-kc-dark/60">Reference: {error.digest}</p>
+          <p className="mt-6 font-mono text-[11.77px] text-kc-dark/70">Reference: {error.digest}</p>
         )}
       </div>
     </main>

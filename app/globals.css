@@ -17,7 +17,7 @@
   --color-kc-sage:        #10B981;   /* emerald — success, live indicators (kept for semantic clarity) */
   --color-kc-dark:        #0C0A09;   /* near-black — TEXT only (not backgrounds) */
   --color-kc-border:      #E5E5E5;   /* neutral zinc border */
-  --color-kc-muted:       #737373;   /* muted gray text */
+  --color-kc-muted:       #575757;   /* secondary text — 6.91:1 on kc-bg; was #737373 at 4.54:1 */
   --color-kc-violet-tint: #EFF6FF;   /* very light blue — alt section bg */
   --color-kc-orange-tint: #FDF2F8;   /* very light pink — warm section bg */
 

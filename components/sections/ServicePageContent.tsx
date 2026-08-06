@@ -66,7 +66,7 @@ export function ServicePageContent({
               </h1>
             </Reveal>
             <Reveal y={16} delay={0.08}>
-              <p className="mt-6 max-w-[46ch] text-[18.19px] leading-relaxed text-kc-dark/65">
+              <p className="mt-6 max-w-[46ch] text-[18.19px] leading-relaxed text-kc-dark/75">
                 {service.tagline}
               </p>
             </Reveal>
@@ -150,7 +150,7 @@ export function ServicePageContent({
                 <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
                   Start from a design
                 </h2>
-                <p className="mt-3 text-[16.59px] leading-relaxed text-kc-dark/60">
+                <p className="mt-3 text-[16.59px] leading-relaxed text-kc-dark/70">
                   Open any of these in the editor and make it yours, or start from a blank file.
                 </p>
               </div>
@@ -192,7 +192,7 @@ export function ServicePageContent({
             </RevealGroup>
 
             {aiDesignHref && (
-              <p className="mt-6 text-[15.52px] text-kc-dark/60">
+              <p className="mt-6 text-[15.52px] text-kc-dark/70">
                 Prefer to describe it?{" "}
                 <Link
                   href={aiDesignHref}
@@ -214,7 +214,7 @@ export function ServicePageContent({
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">
               Sizes, stock, and files
             </h2>
-            <p className="mt-4 max-w-sm text-[17.66px] leading-relaxed text-kc-dark/60">
+            <p className="mt-4 max-w-sm text-[17.66px] leading-relaxed text-kc-dark/70">
               {service.description}
             </p>
           </div>
@@ -222,7 +222,7 @@ export function ServicePageContent({
           <dl className="divide-y divide-kc-dark/10 border-t border-kc-dark/10">
             {service.specs.map((spec) => (
               <div key={spec.label} className="grid grid-cols-1 gap-1 py-4 sm:grid-cols-[minmax(0,0.6fr)_minmax(0,1fr)] sm:gap-6">
-                <dt className="text-[14.98px] font-medium text-kc-dark/60">{spec.label}</dt>
+                <dt className="text-[14.98px] font-medium text-kc-dark/70">{spec.label}</dt>
                 <dd className="text-[16.05px] leading-snug text-kc-dark">{spec.value}</dd>
               </div>
             ))}
@@ -237,7 +237,7 @@ export function ServicePageContent({
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
               Choose your package
             </h2>
-            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/60">
+            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/70">
               Every package includes print-ready file delivery and revisions.
             </p>
           </Reveal>
@@ -287,7 +287,7 @@ export function ServicePageContent({
                       <li
                         key={f}
                         className={`text-[14.98px] leading-snug ${
-                          pkg.popular ? "text-white/70" : "text-kc-dark/65"
+                          pkg.popular ? "text-white/70" : "text-kc-dark/75"
                         }`}
                       >
                         {f}
@@ -328,10 +328,10 @@ export function ServicePageContent({
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-6 border-b border-kc-dark/10 py-4"
                   >
                     <dt className="text-[16.05px] font-semibold text-kc-dark">{addon.name}</dt>
-                    <dd className="shrink-0 font-mono text-[13.91px] text-kc-dark/60">
+                    <dd className="shrink-0 font-mono text-[13.91px] text-kc-dark/70">
                       +{formatDollars(addon.price)}
                     </dd>
-                    <dd className="col-span-2 mt-0.5 text-[14.45px] leading-snug text-kc-dark/60">
+                    <dd className="col-span-2 mt-0.5 text-[14.45px] leading-snug text-kc-dark/70">
                       {addon.desc}
                     </dd>
                   </div>
@@ -354,7 +354,7 @@ export function ServicePageContent({
                 <AccordionTrigger className="py-5 text-left text-[17.12px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="max-w-[62ch] pb-5 text-[16.05px] leading-relaxed text-kc-dark/65">
+                <AccordionContent className="max-w-[62ch] pb-5 text-[16.05px] leading-relaxed text-kc-dark/75">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>

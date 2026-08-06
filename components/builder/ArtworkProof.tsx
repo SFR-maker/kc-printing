@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle, Info, Loader2, XCircle, RotateCcw, RotateCw,
-  Maximize2, Minimize2, Move, Scan,
+  Maximize2, Minimize2, Move, Scan, Trash2,
 } from "lucide-react";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
 import {
@@ -205,14 +205,14 @@ export function ArtworkProof({
       <div className="edge border border-kc-dark/12 bg-kc-paper p-5 sm:p-8">
         <div className="mx-auto max-w-xl">
           {/* Width ruler */}
-          <div className="mb-2 flex items-center gap-2 text-[11.77px] text-kc-dark/60">
+          <div className="mb-2 flex items-center gap-2 text-[11.77px] text-kc-dark/70">
             <span className="h-px flex-1 bg-kc-dark/20" />
             <span className="font-mono">{inspection.requiredWidthIn - bleedIn * 2} in</span>
             <span className="h-px flex-1 bg-kc-dark/20" />
           </div>
 
           <div className="flex gap-2">
-            <div className="flex flex-col items-center justify-center gap-2 text-[11.77px] text-kc-dark/60">
+            <div className="flex flex-col items-center justify-center gap-2 text-[11.77px] text-kc-dark/70">
               <span className="w-px flex-1 bg-kc-dark/20" />
               <span className="font-mono [writing-mode:vertical-rl]">
                 {inspection.requiredHeightIn - bleedIn * 2} in
@@ -274,14 +274,20 @@ export function ArtworkProof({
                   <span key={`gy${g}`} className="pointer-events-none absolute inset-x-0 h-px bg-kc-teal/25" style={{ top: pct(g, docH) }} />
                 ))}
 
+              {/*
+                Guides are drawn over the customer's own artwork, which can be any colour, so a hairline
+                at partial opacity disappeared against half of what people upload. Each line is now 2px
+                at full strength with a white ring behind it, which keeps it legible on dark and light
+                artwork alike - these are the lines the whole proof is asking them to check.
+              */}
               <div
-                className="pointer-events-none absolute border border-dashed border-kc-coral"
+                className="pointer-events-none absolute border-2 border-dashed border-kc-coral shadow-[0_0_0_1px_rgba(255,255,255,0.85)]"
                 style={{ left: pct(bleedIn, docW), right: pct(bleedIn, docW), top: pct(bleedIn, docH), bottom: pct(bleedIn, docH) }}
                 aria-hidden
               />
               <div
-                className="pointer-events-none absolute border border-dotted border-kc-teal/70"
-                style={{ left: pct(bleedIn + 0.125, docW), right: pct(bleedIn + 0.125, docW), top: pct(bleedIn + 0.125, docH), bottom: pct(bleedIn + 0.125, docH) }}
+                className="pointer-events-none absolute border-2 border-dotted border-kc-teal shadow-[0_0_0_1px_rgba(255,255,255,0.85)]"
+                style={{ left: pct(bleedIn + spec.safeZoneInsetIn, docW), right: pct(bleedIn + spec.safeZoneInsetIn, docW), top: pct(bleedIn + spec.safeZoneInsetIn, docH), bottom: pct(bleedIn + spec.safeZoneInsetIn, docH) }}
                 aria-hidden
               />
             </div>
@@ -304,6 +310,13 @@ export function ArtworkProof({
         }} />
         <Tool icon={<RotateCcw className="h-4 w-4" strokeWidth={1.75} />} label="Rotate left" onClick={() => rotate(-1)} />
         <Tool icon={<RotateCw className="h-4 w-4" strokeWidth={1.75} />} label="Rotate right" onClick={() => rotate(1)} />
+        {/* Starting over needed a rejected file before: the only way back was the link that appears
+            when the check fails, so a file that merely looked wrong could not be swapped out here. */}
+        <Tool
+          icon={<Trash2 className="h-4 w-4" strokeWidth={1.75} />}
+          label="Remove and upload another"
+          onClick={onReplace}
+        />
 
         <div className="ml-auto flex flex-wrap items-center gap-x-5 gap-y-2">
           <Toggle checked={proportional} onChange={setProportional} label="Scale proportionally" />
@@ -451,15 +464,15 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 
 function Legend() {
   return (
-    <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[13.38px] text-kc-dark/60">
+    <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[14.45px] font-medium text-kc-dark/75">
       <span className="flex items-center gap-2">
-        <span className="inline-block h-0 w-5 border-t border-solid border-kc-dark/30" /> Document edge
+        <span className="inline-block h-0 w-6 border-t-2 border-solid border-kc-dark/45" /> Document edge
       </span>
       <span className="flex items-center gap-2">
-        <span className="inline-block h-0 w-5 border-t border-dashed border-kc-coral" /> Trim line, where it&apos;s cut
+        <span className="inline-block h-0 w-6 border-t-2 border-dashed border-kc-coral" /> Trim line, where it&apos;s cut
       </span>
       <span className="flex items-center gap-2">
-        <span className="inline-block h-0 w-5 border-t border-dotted border-kc-teal/70" /> Safe zone, keep text inside
+        <span className="inline-block h-0 w-6 border-t-2 border-dotted border-kc-teal" /> Safe zone, keep text inside
       </span>
     </div>
   );
@@ -468,7 +481,7 @@ function Legend() {
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[13.38px] text-kc-dark/60">{label}</dt>
+      <dt className="text-[13.38px] text-kc-dark/70">{label}</dt>
       <dd className="mt-0.5 font-mono text-[14.45px] text-kc-dark">{children}</dd>
     </div>
   );
@@ -519,7 +532,7 @@ function PdfPage({ url }: { url: string }) {
     <div className="relative h-full w-full">
       <canvas ref={canvasRef} className="h-full w-full" />
       {state !== "ready" && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white text-[13.91px] text-kc-dark/60">
+        <div className="absolute inset-0 flex items-center justify-center bg-white text-[13.91px] text-kc-dark/70">
           {state === "loading" ? (
             <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Rendering your PDF</span>
           ) : (

@@ -116,7 +116,7 @@ export function ImageUploadButton({ onInserted }: { onInserted?: () => void }) {
       </button>
       {/* Paste and drag-and-drop both work anywhere over the canvas, but nobody discovers an
           invisible affordance - so the button says so. */}
-      <p className="text-center text-[11.77px] leading-snug text-kc-dark/60">
+      <p className="text-center text-[11.77px] leading-snug text-kc-dark/70">
         or paste with Ctrl+V, or drag a file onto the card
       </p>
 

@@ -41,7 +41,7 @@ export default function AboutPage() {
             {FACTS.map((fact) => (
               <RevealItem key={fact.label} className="py-8 sm:px-7 sm:first:pl-0 sm:last:pr-0">
                 <div className="display-tight text-[2.41rem] text-kc-dark">{fact.value}</div>
-                <div className="mt-2 text-[14.45px] leading-snug text-kc-dark/60">{fact.label}</div>
+                <div className="mt-2 text-[14.45px] leading-snug text-kc-dark/70">{fact.label}</div>
               </RevealItem>
             ))}
           </RevealGroup>
@@ -53,7 +53,7 @@ export default function AboutPage() {
         <div className="container-tight grid grid-cols-1 gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
           <div>
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">What we do</h2>
-            <div className="mt-6 space-y-5 text-[17.66px] leading-relaxed text-kc-dark/65">
+            <div className="mt-6 space-y-5 text-[17.66px] leading-relaxed text-kc-dark/75">
               <p>
                 We specialize in four things and do them well: business cards, postcards, banners,
                 and rigid signs. Every order is handled by a real designer who cares about your

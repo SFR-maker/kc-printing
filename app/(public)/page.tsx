@@ -132,7 +132,7 @@ export default async function HomePage() {
             </Reveal>
 
             <Reveal y={16} delay={0.08}>
-              <p className="mt-6 max-w-[46ch] text-[18.19px] leading-relaxed text-kc-dark/65">
+              <p className="mt-6 max-w-[46ch] text-[18.19px] leading-relaxed text-kc-dark/75">
                 Business cards, postcards, banners, and rigid signs, built into print-ready files
                 by a real designer.
               </p>
@@ -195,7 +195,7 @@ export default async function HomePage() {
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
               Four products. Done well.
             </h2>
-            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/60">
+            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/70">
               We keep the catalog focused so every order gets real attention from a designer who
               knows the format.
             </p>
@@ -239,7 +239,7 @@ export default async function HomePage() {
         <div className="container-tight grid grid-cols-1 gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
           <div className="lg:sticky lg:top-28 lg:self-start">
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">How it works</h2>
-            <p className="mt-4 max-w-sm text-[17.66px] leading-relaxed text-kc-dark/60">
+            <p className="mt-4 max-w-sm text-[17.66px] leading-relaxed text-kc-dark/70">
               From a rough idea to files you can send to any press, in three steps.
             </p>
           </div>
@@ -250,7 +250,7 @@ export default async function HomePage() {
                 <h3 className="display-tight text-[1.71rem] text-kc-dark sm:text-[1.98rem]">
                   {item.title}
                 </h3>
-                <p className="mt-3 max-w-[58ch] text-[16.59px] leading-relaxed text-kc-dark/60">
+                <p className="mt-3 max-w-[58ch] text-[16.59px] leading-relaxed text-kc-dark/70">
                   {item.desc}
                 </p>
               </RevealItem>
@@ -300,7 +300,7 @@ export default async function HomePage() {
               <blockquote className="display-tight text-[1.87rem] leading-[1.25] text-kc-dark sm:text-[2.41rem]">
                 &ldquo;{lead.text}&rdquo;
               </blockquote>
-              <div className="mt-6 text-sm text-kc-dark/60">
+              <div className="mt-6 text-sm text-kc-dark/70">
                 <span className="font-semibold text-kc-dark">{lead.name}</span>
                 {lead.company ? `, ${lead.company}` : ""}
               </div>
@@ -313,7 +313,7 @@ export default async function HomePage() {
                     <p className="line-clamp-3 text-[16.05px] leading-relaxed text-kc-dark/80">
                       &ldquo;{t.text}&rdquo;
                     </p>
-                    <div className="mt-3 text-xs text-kc-dark/60">
+                    <div className="mt-3 text-xs text-kc-dark/70">
                       {t.name}
                       {t.company ? `, ${t.company}` : ""}
                     </div>
@@ -339,7 +339,7 @@ export default async function HomePage() {
                   <AccordionTrigger className="py-5 text-left text-[17.12px] font-semibold text-kc-dark hover:text-kc-magenta-deep hover:no-underline">
                     {faq.q}
                   </AccordionTrigger>
-                  <AccordionContent className="max-w-[62ch] pb-5 text-[16.05px] leading-relaxed text-kc-dark/65">
+                  <AccordionContent className="max-w-[62ch] pb-5 text-[16.05px] leading-relaxed text-kc-dark/75">
                     {faq.a}
                   </AccordionContent>
                 </AccordionItem>
@@ -481,11 +481,11 @@ function ProductTile({ service, wide = false }: { service: Service; wide?: boole
               {service.name}
             </h3>
           </Link>
-          <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/60">{service.price}</span>
+          <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/70">{service.price}</span>
         </div>
 
         <dl
-          className={`space-y-1.5 leading-snug text-kc-dark/60 ${
+          className={`space-y-1.5 leading-snug text-kc-dark/70 ${
             wide ? "text-[15.52px]" : "text-[14.45px]"
           }`}
         >

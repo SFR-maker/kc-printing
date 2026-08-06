@@ -21,7 +21,7 @@ export function PageHeader({
         <Reveal className="max-w-2xl">
           <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">{title}</h1>
           {lead && (
-            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">{lead}</p>
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/75">{lead}</p>
           )}
           {children}
         </Reveal>

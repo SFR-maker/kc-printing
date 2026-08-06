@@ -30,7 +30,7 @@ const SERVICES = [
 ];
 
 const FIELD =
-  "edge h-11 border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/60 focus-visible:border-kc-dark/40";
+  "edge h-11 border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/70 focus-visible:border-kc-dark/40";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
@@ -82,7 +82,7 @@ export default function ContactPage() {
             <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">
               Let&apos;s talk about your project
             </h1>
-            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/75">
               Call, text, or fill out the form. We respond to all enquiries within a few hours
               during business days.
             </p>
@@ -119,7 +119,7 @@ export default function ContactPage() {
                 // as assistive tech was concerned; moving the icon into the dt fixes the structure
                 // and reads better too, since it labels the term rather than floating beside it.
                 <div key={item.label} className="py-4">
-                  <dt className="flex items-center gap-2 text-[13.91px] text-kc-dark/60">
+                  <dt className="flex items-center gap-2 text-[13.91px] text-kc-dark/70">
                     <span className="shrink-0">{item.icon}</span>
                     {item.label}
                   </dt>
@@ -141,7 +141,7 @@ export default function ContactPage() {
 
             <div className="mt-10">
               <h2 className="text-[13.91px] font-semibold text-kc-dark">Service areas</h2>
-              <ul className="mt-3 space-y-1.5 text-[14.98px] text-kc-dark/60">
+              <ul className="mt-3 space-y-1.5 text-[14.98px] text-kc-dark/70">
                 {["Kansas City, MO", "Johnson County, KS", "Dallas-Fort Worth, TX", "Nationwide Online"].map((city) => (
                   <li key={city}>{city}</li>
                 ))}
@@ -156,7 +156,7 @@ export default function ContactPage() {
                 <h2 className="display-tight mt-5 text-2xl text-kc-dark sm:text-[2.03rem]">
                   Message sent
                 </h2>
-                <p className="mt-3 max-w-sm text-[16.59px] leading-relaxed text-kc-dark/65">
+                <p className="mt-3 max-w-sm text-[16.59px] leading-relaxed text-kc-dark/75">
                   We received your message and will get back to you within a few hours. You can also
                   call or text us at (816) 521-0462.
                 </p>
@@ -224,7 +224,7 @@ export default function ContactPage() {
                     id="message"
                     placeholder="Tell us about your project, timeline, and any specific requirements"
                     rows={6}
-                    className="edge border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/60 focus-visible:border-kc-dark/40"
+                    className="edge border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/70 focus-visible:border-kc-dark/40"
                     {...register("message")}
                   />
                   {errors.message && <p className="text-[13.38px] text-red-700">{errors.message.message}</p>}

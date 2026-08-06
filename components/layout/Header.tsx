@@ -94,7 +94,7 @@ export function Header() {
                 href={link.href}
                 className={cn(
                   "relative py-1 text-[14.45px] font-medium tracking-tight transition-colors hover:text-kc-magenta-deep",
-                  active ? "text-kc-dark" : "text-kc-dark/60"
+                  active ? "text-kc-dark" : "text-kc-dark/70"
                 )}
               >
                 {link.label}
@@ -109,7 +109,7 @@ export function Header() {
         <div className="hidden items-center gap-3 lg:flex">
           <a
             href="tel:+18165210462"
-            className="flex items-center gap-1.5 font-mono text-[13.38px] text-kc-dark/60 transition-colors hover:text-kc-magenta-deep"
+            className="flex items-center gap-1.5 font-mono text-[13.38px] text-kc-dark/70 transition-colors hover:text-kc-magenta-deep"
           >
             <Phone className="h-3.5 w-3.5" strokeWidth={1.75} />
             (816) 521-0462
@@ -162,7 +162,7 @@ export function Header() {
           <div className="mt-4 flex flex-col gap-2">
             <a
               href="tel:+18165210462"
-              className="flex items-center gap-2 py-1 font-mono text-[13.91px] text-kc-dark/60"
+              className="flex items-center gap-2 py-1 font-mono text-[13.91px] text-kc-dark/70"
             >
               <Phone className="h-4 w-4" strokeWidth={1.75} />
               (816) 521-0462

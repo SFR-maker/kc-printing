@@ -82,7 +82,7 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
             className={`rounded-lg px-5 py-2 text-sm font-bold capitalize transition-colors ${
               activeSide === side
                 ? "bg-kc-magenta-deep text-white shadow-sm"
-                : "text-kc-dark/60 hover:text-kc-dark"
+                : "text-kc-dark/70 hover:text-kc-dark"
             }`}
           >
             {side}

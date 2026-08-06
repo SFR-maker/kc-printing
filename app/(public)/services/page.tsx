@@ -58,7 +58,7 @@ export default function ServicesPage() {
         <div className="container-tight px-4 pb-12 pt-16 sm:px-6 lg:px-8 lg:pb-16 lg:pt-24">
           <Reveal className="max-w-2xl">
             <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">All services</h1>
-            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/65">
+            <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/75">
               Four products, each built around a designer who knows the format, not a template
               engine.
             </p>
@@ -89,16 +89,16 @@ export default function ServicesPage() {
                       <h2 className="display-tight text-xl text-kc-dark transition-colors group-hover:text-kc-magenta-deep">
                         {s.name}
                       </h2>
-                      <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/60">
+                      <span className="shrink-0 font-mono text-[13.38px] text-kc-dark/70">
                         {s.price}
                       </span>
                     </div>
-                    <p className="mb-5 flex-1 text-[14.45px] leading-relaxed text-kc-dark/60">
+                    <p className="mb-5 flex-1 text-[14.45px] leading-relaxed text-kc-dark/70">
                       {s.description}
                     </p>
                     <ul className="mb-5 space-y-1.5 border-t border-kc-dark/10 pt-4">
                       {s.highlights.map((h) => (
-                        <li key={h} className="text-xs leading-snug text-kc-dark/60">
+                        <li key={h} className="text-xs leading-snug text-kc-dark/70">
                           {h}
                         </li>
                       ))}
@@ -125,7 +125,7 @@ export default function ServicesPage() {
               <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
                 Not sure where to start?
               </h2>
-              <p className="mt-3 max-w-md text-[16.05px] leading-relaxed text-kc-dark/60">
+              <p className="mt-3 max-w-md text-[16.05px] leading-relaxed text-kc-dark/70">
                 Call or text (816) 521-0462 and we&apos;ll help you pick the right product and
                 package.
               </p>

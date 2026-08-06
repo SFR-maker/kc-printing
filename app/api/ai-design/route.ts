@@ -145,6 +145,9 @@ export async function POST(req: Request) {
 
   // The size the customer actually picked, falling back to the product's usual shape.
   const fallback = DEFAULT_TRIM_IN[product];
+  // Roll-ups are not sold at the moment, so an unspecified banner falls back to the vinyl shape
+  // rather than a 33 x 79in stand nobody can order. The format is still accepted for when they
+  // return.
   const trimW = data.trimWidthIn ?? (isRollup ? 33 : fallback.w);
   const trimH = data.trimHeightIn ?? (isRollup ? 79 : fallback.h);
 

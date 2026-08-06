@@ -165,8 +165,8 @@ export function RigidSignPrintSpec({
 
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
-          <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue>{spec.quantity === 1 ? "1 sign" : `${spec.quantity.toLocaleString("en-US")} signs`}</SelectValue></SelectTrigger>
+          <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
+            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue placeholder="Choose a quantity">{spec.quantity ? (spec.quantity === 1 ? "1 sign" : `${spec.quantity.toLocaleString("en-US")} signs`) : undefined}</SelectValue></SelectTrigger>
             <SelectContent>
               {quantities.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q === 1 ? "1 sign" : `${q.toLocaleString("en-US")} signs`}</SelectItem>

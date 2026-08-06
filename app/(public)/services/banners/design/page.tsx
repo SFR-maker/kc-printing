@@ -3,7 +3,7 @@ import { TemplateGallery } from "@/components/business-card/template-gallery";
 
 export const metadata: Metadata = {
   title: "Design Your Banner Online",
-  description: "Choose from professionally designed roll-up stand and vinyl banner templates or start from a blank canvas. Customize every detail and get a print-ready file in minutes.",
+  description: "Choose from professionally designed vinyl banner templates or start from a blank canvas. Customize every detail and get a print-ready file in minutes.",
 };
 
 export default function BannerDesignPage() {

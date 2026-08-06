@@ -7,7 +7,7 @@ import { getPricingSettings } from "@/lib/pricing/settings-server";
 export const metadata: Metadata = {
   title: "Order Banners",
   description:
-    "Order custom banner design from 611 Printing. Roll-up stands and large-format vinyl, delivered print-ready.",
+    "Order custom banner design from 611 Printing. Hemmed large-format vinyl and mesh, finished with grommets, delivered print-ready.",
 };
 const service = SERVICES["banners"];
 

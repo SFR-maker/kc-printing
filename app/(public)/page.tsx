@@ -52,9 +52,9 @@ const SERVICES = [
     href: "/services/banners",
     orderHref: "/services/banners/order",
     image: "/images/print/banners.webp",
-    alt: "A retractable roll-up banner stand printed with cyan, magenta, and gold bands",
+    alt: "A hemmed vinyl banner with metal grommets, rope-tied to a garden fence",
     price: "from $79",
-    sizes: "Roll-up stands or vinyl, 24″ up to 10 ft",
+    sizes: "Hemmed vinyl and mesh, 1 ft up to 12 ft",
     bestFor: "Storefronts, trade shows, events",
   },
   {

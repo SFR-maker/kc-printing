@@ -119,8 +119,8 @@ export function BusinessCardPrintSpec({
 
           <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
             <Label>Quantity</Label>
-            <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))} disabled={quantities.length === 0}>
-              <SelectTrigger aria-label="Quantity" className="bg-white"><SelectValue>{(v: string) => `${formatQuantity(Number(v))} cards`}</SelectValue></SelectTrigger>
+            <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))} disabled={quantities.length === 0}>
+              <SelectTrigger aria-label="Quantity" className="bg-white"><SelectValue placeholder="Choose a quantity">{(v: string) => `${formatQuantity(Number(v))} cards`}</SelectValue></SelectTrigger>
               <SelectContent>
                 {quantities.map((q) => (
                   <SelectItem key={q} value={String(q)}>{formatQuantity(q)} cards</SelectItem>

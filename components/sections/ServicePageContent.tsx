@@ -34,7 +34,7 @@ const HERO_PHOTO: Record<string, { src: string; alt: string }> = {
   },
   banners: {
     src: "/images/print/banners.webp",
-    alt: "A printed retractable roll-up banner stand beside its aluminium cassette",
+    alt: "A hemmed vinyl banner with metal grommets, rope-tied to a garden fence",
   },
   "rigid-signs": {
     src: "/images/print/rigid-signs.webp",

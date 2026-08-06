@@ -232,7 +232,18 @@ function SideUploader({
       const res = await fetch("/api/artwork/inspect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: first.url, fileName: first.name, roundCorners }),
+        // The product and its finished size have to travel with the file. Without them the server
+        // falls back to its business-card default, so every postcard, banner and rigid sign was
+        // measured against a 3.6 x 2.1in document: the proof drew the wrong trim, the fit placed the
+        // artwork against the wrong geometry, and the resolution check ran on the wrong placed size.
+        body: JSON.stringify({
+          url: first.url,
+          fileName: first.name,
+          roundCorners,
+          product: spec.product,
+          trimWidthIn: spec.trimWidthIn,
+          trimHeightIn: spec.trimHeightIn,
+        }),
       });
       const payload = await res.json();
 

@@ -22,7 +22,8 @@ export const DEFAULT_BANNER_SPEC: BannerSpec = {
   // The commonest storefront banner, on the standard scrim.
   size: "3 ft x 6 ft",
   material: "13 oz. Premium Scrim Glossy Vinyl",
-  quantity: 1,
+  // 0 means not chosen: quantity is a required choice, not a default run length.
+  quantity: 0,
   // What most people actually want on an outdoor banner, and what the old copy silently promised.
   grommets: DEFAULT_GROMMETS,
 };
@@ -100,8 +101,8 @@ export function BannerPrintSpec({
 
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
-          <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue /></SelectTrigger>
+          <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
+            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue placeholder="Choose a quantity" /></SelectTrigger>
             <SelectContent>
               {BANNER_QUANTITIES.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q === 1 ? "1 banner" : `${q} banners`}</SelectItem>

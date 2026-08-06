@@ -157,7 +157,8 @@ export function defaultRigidSpec(m: RigidMaterialId = "yard-signs"): RigidSignSp
     thickness: e.thicknesses[0]?.value ?? "-",
     type: e.types[0]?.value ?? "",
     color: e.colors[0]?.value ?? "1",
-    quantity: 25,
+    // 0 means not chosen: quantity is a required choice, not a default run length.
+    quantity: 0,
   });
 }
 
@@ -203,7 +204,9 @@ export function repairRigidSpec(next: RigidSignSpec, prev?: RigidSignSpec): Rigi
 
   // Quantity last, because which breaks exist depends on everything repaired above.
   const qs = quantitiesFor(out);
-  if (qs.length && !qs.includes(out.quantity)) {
+  // 0 is "not chosen" and must survive repair, or changing any other control would silently pick a
+  // run length for the customer.
+  if (out.quantity !== 0 && qs.length && !qs.includes(out.quantity)) {
     out.quantity = qs.reduce((a, b) => (Math.abs(b - out.quantity) < Math.abs(a - out.quantity) ? b : a), qs[0]);
   }
   return out;

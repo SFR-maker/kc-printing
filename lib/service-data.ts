@@ -100,7 +100,7 @@ export const SERVICES: Record<string, ServiceDef> = {
     name: "Banners",
     tagline: "Professional banner designs for trade shows, storefronts, and outdoor promotions. Print-ready, to spec, and delivered fast.",
     description:
-      "Custom banner designs for retractable roll-up stands and large format vinyl banners. Files include proper bleed, safe zone, and grommet placement guides for professional printing.",
+      "Custom designs for large-format vinyl and wind-through mesh banners, hemmed on all four sides and finished with grommets. Files include proper bleed, safe zone, and grommet placement guides for professional printing.",
     icon: "🎯",
     specs: [
       { label: "Banner Type", value: "Roll-Up Stand or Vinyl Banner" },
@@ -109,7 +109,7 @@ export const SERVICES: Record<string, ServiceDef> = {
       { label: "Vinyl Materials", value: "8oz Mesh, 13oz Scrim Gloss, 13oz Scrim Matte" },
       { label: "Bleed", value: "0.125 in on all sides" },
       { label: "Safe Zone", value: "0.5 in from all edges (roll-up stands)" },
-      { label: "Grommets", value: "Placement spec included (vinyl banners)" },
+      { label: "Finishing", value: "Hemmed four sides, included. Grommets every 2 ft or four corners." },
       { label: "Delivery", value: "Print-ready PDF with guides, high-res JPG" },
     ],
     packages: [
@@ -121,12 +121,12 @@ export const SERVICES: Record<string, ServiceDef> = {
       { name: "Rush Delivery", price: 79, desc: "Completed within 24 hours" },
       { name: "Extra Concept", price: 49, desc: "One additional layout concept" },
       { name: "Matching Business Card", price: 39, desc: "Business card design that matches your banner" },
-      { name: "Grommet Spec Sheet", price: 15, desc: "Print-ready grommet placement diagram (vinyl banners)" },
-      { name: "Double Sided Design", price: 79, desc: "Full design for both sides (vinyl banners)" },
+      { name: "Grommet Spec Sheet", price: 15, desc: "Print-ready grommet placement diagram" },
+      { name: "Double Sided Design", price: 79, desc: "Full design for both sides" },
     ],
     faqs: [
-      { q: "Should I choose a roll-up stand or a vinyl banner?", a: "Roll-up stands are ideal for indoor trade shows, storefronts, and offices where you need something reusable and easy to set up. Vinyl banners are better for outdoor events, storefronts, and large-format displays that get hung or mounted. Let us know your use case and we will recommend the right format." },
-      { q: "What is the most common banner size?", a: "For roll-up stands, 33 x 81 in is the industry standard for trade shows. For vinyl banners, 3x8 or 4x8 ft are common for storefronts and events. We also offer table-top and custom sizes." },
+      { q: "Should I choose vinyl or mesh?", a: "Scrim vinyl is the general-purpose choice and what most people want, indoors or out. Mesh is perforated so wind passes through it, which is what you need on a fence, a scaffold, or any exposed wall - a solid vinyl banner in that position acts like a sail and tears at the grommets." },
+      { q: "What is the most common banner size?", a: "3 x 6 ft and 4 x 8 ft cover most storefronts and events. We print from 1 x 2 ft up to 4 x 12 ft, all hemmed on four sides, with grommets every 2 ft or in the four corners." },
       { q: "What bleed and safe zone do I need?", a: "We design with 0.125 in bleed on all sides. Roll-up stands keep important content at least 0.5 in from the edges to account for the retractable base. Vinyl banners include grommet placement guides on request." },
       { q: "What file format does the printer need?", a: "Most printers accept high-resolution PDF or JPG files. We deliver both, with crop marks and bleed guides included for professional printing services." },
       { q: "Can I use my existing brand colors and logo?", a: "Yes. Upload your existing logo and brand guidelines in the order. If you do not have a style guide, fill out the brand questionnaire and our designer will match your colors as closely as possible." },

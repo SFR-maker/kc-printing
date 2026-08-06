@@ -101,15 +101,31 @@ export const POSTCARD_SIZES: SizePreset[] = [
 // Real sizes from lib/service-data.ts's Banners spec ("Roll-Up Sizes" / "Vinyl Sizes"). Roll-up
 // stands print at a much lower viewing-distance DPI than small format, but the editor still works
 // in inches, so only the safe zone differs (roll-ups need a bigger inset for the stand's clamp bar).
+/**
+ * Banner sizes you can design on, which are exactly the sizes you can buy.
+ *
+ * These used to include four roll-up and table-top stands that have no price behind them: a customer
+ * could design a "Roll-Up Stand 24 x 81 in", reach the order page and find no way to order it. Eight
+ * of the twelve sizes that are actually priced had no preset at all, so anyone wanting one had to
+ * pick a different size and hope.
+ *
+ * Roll-ups are a different product - a printed panel plus hardware - and go back in when they have
+ * prices of their own. The labels match lib/pricing/banners exactly so the two cannot drift; a test
+ * asserts every preset here is sellable and every sellable size has one.
+ */
 export const BANNER_SIZES: SizePreset[] = [
-  { key: "rollup-24x81", label: "Roll-Up Stand 24 x 81 in", trimWidthIn: 24, trimHeightIn: 81, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
-  { key: "rollup-33x81", label: "Roll-Up Stand 33 x 81 in", trimWidthIn: 33, trimHeightIn: 81, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
-  { key: "rollup-36x81", label: "Roll-Up Stand 36 x 81 in", trimWidthIn: 36, trimHeightIn: 81, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
-  { key: "tabletop-24x63", label: "Table-Top Stand 24 x 63 in", trimWidthIn: 24, trimHeightIn: 63, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
-  { key: "vinyl-2x4", label: "Vinyl Banner 2 x 4 ft", trimWidthIn: 48, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
-  { key: "vinyl-3x6", label: "Vinyl Banner 3 x 6 ft", trimWidthIn: 72, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
-  { key: "vinyl-4x8", label: "Vinyl Banner 4 x 8 ft", trimWidthIn: 96, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
-  { key: "vinyl-4x10", label: "Vinyl Banner 4 x 10 ft", trimWidthIn: 120, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x2", label: "Vinyl Banner 1 ft x 2 ft", trimWidthIn: 24, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x3", label: "Vinyl Banner 2 ft x 3 ft", trimWidthIn: 36, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x4", label: "Vinyl Banner 2 ft x 4 ft", trimWidthIn: 48, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2_5x6", label: "Vinyl Banner 2.5 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 30, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x5", label: "Vinyl Banner 3 ft x 5 ft", trimWidthIn: 60, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x4", label: "Vinyl Banner 4 ft x 4 ft", trimWidthIn: 48, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x6", label: "Vinyl Banner 3 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x8", label: "Vinyl Banner 3 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x6", label: "Vinyl Banner 4 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x8", label: "Vinyl Banner 4 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x10", label: "Vinyl Banner 4 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x12", label: "Vinyl Banner 4 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
 ];
 
 // Bounding-box size per shape — the live editor designs on a plain rectangle of this size (see

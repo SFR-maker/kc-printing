@@ -54,7 +54,9 @@ const bcSpecSchema = z.object({
 // Cheapest real combo (100 lb. Matte Cover, 250 cards, single-sided) so the order flow opens on
 // its lowest-friction, lowest-price starting point rather than nudging toward a bigger order.
 // paperId 1 is 14 pt. Gloss - the house default, and what most people picture as a business card.
-const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 250, rush: false, roundCorners: false, manualProof: false };
+// quantity 0 means not chosen: it is a required choice rather than a default run length, so nobody
+// reaches checkout having silently accepted 250 cards.
+const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 0, rush: false, roundCorners: false, manualProof: false };
 
 const schema = z.object({
   selectedOption: z.record(z.string(), z.string()).optional(),

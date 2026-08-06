@@ -30,6 +30,17 @@ const TABLES: Record<RigidMaterialId, { prices: Record<string, number> }> = {
 
 const ALL = RIGID_MATERIALS.map((m) => m.id);
 
+/**
+ * A spec with a quantity chosen.
+ *
+ * defaultRigidSpec deliberately leaves quantity at 0 - it is a required choice, not a default run
+ * length - so anything asserting a price has to make that choice first, exactly as the customer does.
+ */
+function withQuantity(spec: RigidSignSpec): RigidSignSpec {
+  const qs = quantitiesFor(spec);
+  return { ...spec, quantity: qs[0] ?? 0 };
+}
+
 describe("catalogue", () => {
   it("offers all five rigid-sign products", () => {
     expect(ALL).toEqual([
@@ -121,7 +132,7 @@ describe("die-cut shapes are priced as their own products", () => {
 describe("materials are priced independently", () => {
   it("charges more for aluminium than corrugated plastic", () => {
     const at = (m: RigidMaterialId) => {
-      const s = defaultRigidSpec(m);
+      const s = withQuantity(defaultRigidSpec(m));
       return TABLES[m].prices[rigidPriceKey(s)];
     };
     expect(at("corrugated-boards")).toBeLessThan(at("aluminum-boards"));
@@ -144,7 +155,10 @@ describe("repair keeps the form on something orderable", () => {
   it("produces a valid default for every material", () => {
     for (const m of ALL) {
       const spec = defaultRigidSpec(m);
-      expect(TABLES[m].prices[rigidPriceKey(spec)], `${m} default is unpriceable`).toBeGreaterThan(0);
+      // The default itself carries no quantity on purpose.
+      expect(spec.quantity, `${m} should not preselect a quantity`).toBe(0);
+      const chosen = withQuantity(spec);
+      expect(TABLES[m].prices[rigidPriceKey(chosen)], `${m} is unpriceable once a quantity is picked`).toBeGreaterThan(0);
     }
   });
 
@@ -153,7 +167,9 @@ describe("repair keeps the form on something orderable", () => {
     for (const m of ALL) {
       const prev = spec;
       spec = repairRigidSpec({ ...spec, material: m }, prev);
-      expect(TABLES[m].prices[rigidPriceKey(spec)], `after switching to ${m}`).toBeGreaterThan(0);
+      // An unchosen quantity must survive a material change rather than being filled in silently.
+      expect(spec.quantity, `${m} should not gain a quantity from repair`).toBe(0);
+      expect(TABLES[m].prices[rigidPriceKey(withQuantity(spec))], `after switching to ${m}`).toBeGreaterThan(0);
     }
   });
 
@@ -203,7 +219,7 @@ describe("repair keeps the form on something orderable", () => {
       const areaOf = (s: { widthIn: number; heightIn: number }) => s.widthIn * s.heightIn;
       expect(areaOf(movedSize)).toBeGreaterThanOrEqual(Math.min(areaOf(smallest), areaOf(movedSize)));
     }
-    expect(TABLES[m].prices[rigidPriceKey(moved)]).toBeGreaterThan(0);
+    expect(TABLES[m].prices[rigidPriceKey(withQuantity(moved))]).toBeGreaterThan(0);
   });
 });
 

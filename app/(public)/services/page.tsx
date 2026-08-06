@@ -8,7 +8,7 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 export const metadata: Metadata = {
   title: "Design Services - Business Cards, Postcards, Banners, Rigid Signs",
   description:
-    "Browse all 611 Printing services: business cards, postcards, banners (roll-up stands and vinyl), and die-cut rigid signs.",
+    "Browse all 611 Printing services: business cards, postcards, hemmed vinyl and mesh banners, and die-cut rigid signs.",
 };
 
 const SERVICES = [
@@ -34,10 +34,10 @@ const SERVICES = [
     slug: "banners",
     name: "Banners",
     image: "/images/print/banners.webp",
-    alt: "A retractable roll-up banner stand printed with cyan, magenta, and gold bands",
+    alt: "A hemmed vinyl banner with metal grommets, rope-tied to a garden fence",
     price: "from $79",
-    description: "Retractable roll-up stands for trade shows and offices, or large-format vinyl for storefronts and outdoor events.",
-    highlights: ["Roll-up stands and vinyl, 24″ to 10 ft", "Bleed, safe zone, and grommet specs included", "Up to 8 revisions included"],
+    description: "Large-format vinyl and wind-through mesh for storefronts, fences, and outdoor events. Hemmed on all four sides, with grommets where you need them.",
+    highlights: ["Vinyl and mesh, 1 ft to 12 ft", "Hemmed four sides, grommets optional", "Up to 8 revisions included"],
   },
   {
     slug: "rigid-signs",

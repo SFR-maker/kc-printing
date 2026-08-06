@@ -19,7 +19,8 @@ export const DEFAULT_POSTCARD_SPEC: PostcardSpec = {
   size: '4" x 6" (Standard)',
   paper: "14 pt. Gloss",
   color: "Full Color Front, No Back",
-  quantity: 100,
+  // 0 means not chosen: quantity is a required choice, not a default run length.
+  quantity: 0,
 };
 
 /**
@@ -108,8 +109,8 @@ export function PostcardPrintSpec({
 
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
-          <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue /></SelectTrigger>
+          <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
+            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue placeholder="Choose a quantity" /></SelectTrigger>
             <SelectContent>
               {quantities.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q.toLocaleString("en-US")} postcards</SelectItem>

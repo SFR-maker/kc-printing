@@ -182,7 +182,21 @@ export function ArtworkProof({
     apply(centred(inspection, { ...placement, rotation: next, scaleX: scale, scaleY: scale }));
   }
 
-  const blocking = inspection.warnings.find((w) => w.level === "block");
+  /**
+   * Whether the piece can be approved, judged against where the artwork is now.
+   *
+   * This used to read the upload-time inspection, which never changes. Resolution depends on how
+   * large the artwork is placed, so the warning panel recomputed it live and told the customer to
+   * "scale it down or upload a larger file" - and scaling it down cleared the warning while leaving
+   * the approval blocked, because the block was still reading the original measurement. Following
+   * the instruction fixed the file and changed nothing, with no way forward.
+   *
+   * Resolution is therefore judged live, and any other blocking finding from the upload still
+   * counts.
+   */
+  const dpiBlocks = dpi !== null && dpi < spec.minDpi;
+  const otherBlock = inspection.warnings.find((w) => w.level === "block" && !w.code.startsWith("dpi"));
+  const blocking = dpiBlocks || Boolean(otherBlock);
   const pct = (v: number, total: number) => `${(v / total) * 100}%`;
   const guides = guideLines(inspection, spec);
 
@@ -311,13 +325,28 @@ export function ArtworkProof({
 
       <div className="edge border border-kc-dark/12 bg-white p-5">
         {blocking ? (
-          <p className="text-[15.52px] leading-relaxed text-kc-dark/70">
-            This file can&apos;t be approved for print as it is.{" "}
-            <button type="button" onClick={onReplace} className="font-semibold text-kc-magenta-deep hover:text-kc-dark">
-              Upload a different file
-            </button>{" "}
-            and we&apos;ll re-check it.
-          </p>
+          // Says which problem, and offers the remedy that actually applies. "Can't be approved"
+          // alone left people re-uploading the same file, when scaling it down often clears it.
+          <div className="space-y-2 text-[15.52px] leading-relaxed text-kc-dark/70">
+            <p className="font-semibold text-kc-dark">
+              {dpiBlocks
+                ? `This artwork is about ${dpi} DPI at the size it is placed, and we print at ${spec.minDpi} DPI or better.`
+                : (otherBlock?.message ?? "This file can't be approved for print as it is.")}
+            </p>
+            {dpiBlocks && (
+              <p>
+                Drag a corner inwards to place it smaller and the resolution rises — the check updates
+                as you go. If it needs to stay this size, supply a file of at least{" "}
+                {Math.ceil(size.widthIn * spec.minDpi)} × {Math.ceil(size.heightIn * spec.minDpi)} px.
+              </p>
+            )}
+            <p>
+              <button type="button" onClick={onReplace} className="font-semibold text-kc-magenta-deep hover:text-kc-dark">
+                Upload a different file
+              </button>{" "}
+              and we&apos;ll re-check it.
+            </p>
+          </div>
         ) : (
           <>
             <label className="flex cursor-pointer items-start gap-3">

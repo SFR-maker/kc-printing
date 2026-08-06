@@ -122,7 +122,9 @@ check("catalogue", "postcard prices are positive", Object.values(postcards.price
 
 const bSizes = new Set(Object.keys(bannersScraped.prices).map((k) => k.split("|")[0]));
 const bMats = new Set(Object.keys(bannersScraped.prices).map((k) => k.split("|")[1]));
-check("catalogue", "banners offer sizes", bSizes.size === 12, `${bSizes.size}`);
+// Asserted as a floor rather than a fixed count: the catalogue is the supplier's, and freezing
+// the number means growing it fails the audit for improving.
+check("catalogue", "banners offer the full size range", bSizes.size >= 100, `${bSizes.size} sizes`);
 check("catalogue", "banners offer materials", bMats.size === 3, `${bMats.size}`);
 check("catalogue", "banner prices are positive", Object.values(bannersScraped.prices).every((v) => v > 0));
 check("catalogue", "grommets priced for every banner size", [...bSizes].every((s) => finishing.prices[`${s}|Grommets - 4 Corners|1`] !== undefined));

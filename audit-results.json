@@ -1,0 +1,964 @@
+{
+  "base": "https://611printing.com",
+  "at": "2026-08-06T01:41:24.286Z",
+  "results": [
+    {
+      "n": 1,
+      "area": "pages",
+      "name": "/ responds",
+      "status": "PASS",
+      "detail": "200 in 406ms"
+    },
+    {
+      "n": 2,
+      "area": "pages",
+      "name": "/services responds",
+      "status": "PASS",
+      "detail": "200 in 356ms"
+    },
+    {
+      "n": 3,
+      "area": "pages",
+      "name": "/services/business-cards responds",
+      "status": "PASS",
+      "detail": "200 in 234ms"
+    },
+    {
+      "n": 4,
+      "area": "pages",
+      "name": "/services/postcards responds",
+      "status": "PASS",
+      "detail": "200 in 295ms"
+    },
+    {
+      "n": 5,
+      "area": "pages",
+      "name": "/services/banners responds",
+      "status": "PASS",
+      "detail": "200 in 240ms"
+    },
+    {
+      "n": 6,
+      "area": "pages",
+      "name": "/services/rigid-signs responds",
+      "status": "PASS",
+      "detail": "200 in 406ms"
+    },
+    {
+      "n": 7,
+      "area": "pages",
+      "name": "/services/business-cards/order responds",
+      "status": "PASS",
+      "detail": "200 in 1609ms"
+    },
+    {
+      "n": 8,
+      "area": "pages",
+      "name": "/services/postcards/order responds",
+      "status": "PASS",
+      "detail": "200 in 2059ms"
+    },
+    {
+      "n": 9,
+      "area": "pages",
+      "name": "/services/banners/order responds",
+      "status": "PASS",
+      "detail": "200 in 166ms"
+    },
+    {
+      "n": 10,
+      "area": "pages",
+      "name": "/services/rigid-signs/order responds",
+      "status": "PASS",
+      "detail": "200 in 187ms"
+    },
+    {
+      "n": 11,
+      "area": "pages",
+      "name": "/pricing responds",
+      "status": "PASS",
+      "detail": "200 in 155ms"
+    },
+    {
+      "n": 12,
+      "area": "pages",
+      "name": "/portfolio responds",
+      "status": "PASS",
+      "detail": "200 in 229ms"
+    },
+    {
+      "n": 13,
+      "area": "pages",
+      "name": "/contact responds",
+      "status": "PASS",
+      "detail": "200 in 206ms"
+    },
+    {
+      "n": 14,
+      "area": "pages",
+      "name": "/faq responds",
+      "status": "PASS",
+      "detail": "200 in 308ms"
+    },
+    {
+      "n": 15,
+      "area": "pages",
+      "name": "/about responds",
+      "status": "PASS",
+      "detail": "200 in 147ms"
+    },
+    {
+      "n": 16,
+      "area": "pages",
+      "name": "/terms responds",
+      "status": "PASS",
+      "detail": "200 in 249ms"
+    },
+    {
+      "n": 17,
+      "area": "pages",
+      "name": "/privacy responds",
+      "status": "PASS",
+      "detail": "200 in 167ms"
+    },
+    {
+      "n": 18,
+      "area": "pages",
+      "name": "/refund-policy responds",
+      "status": "PASS",
+      "detail": "200 in 200ms"
+    },
+    {
+      "n": 19,
+      "area": "security",
+      "name": "HSTS set",
+      "status": "PASS",
+      "detail": "max-age=63072000"
+    },
+    {
+      "n": 20,
+      "area": "security",
+      "name": "nosniff",
+      "status": "PASS"
+    },
+    {
+      "n": 21,
+      "area": "security",
+      "name": "frame protection",
+      "status": "PASS"
+    },
+    {
+      "n": 22,
+      "area": "security",
+      "name": "referrer policy",
+      "status": "PASS",
+      "detail": "strict-origin-when-cross-origin"
+    },
+    {
+      "n": 23,
+      "area": "security",
+      "name": "permissions policy",
+      "status": "PASS"
+    },
+    {
+      "n": 24,
+      "area": "security",
+      "name": "CSP enforces object-src",
+      "status": "PASS"
+    },
+    {
+      "n": 25,
+      "area": "security",
+      "name": "CSP allows the live Clerk host",
+      "status": "PASS"
+    },
+    {
+      "n": 26,
+      "area": "security",
+      "name": "framework header hidden",
+      "status": "PASS",
+      "detail": "absent"
+    },
+    {
+      "n": 27,
+      "area": "security",
+      "name": "/admin refuses anonymous",
+      "status": "PASS",
+      "detail": "307"
+    },
+    {
+      "n": 28,
+      "area": "security",
+      "name": "/admin/orders refuses anonymous",
+      "status": "PASS",
+      "detail": "307"
+    },
+    {
+      "n": 29,
+      "area": "security",
+      "name": "/account refuses anonymous",
+      "status": "PASS",
+      "detail": "307"
+    },
+    {
+      "n": 30,
+      "area": "security",
+      "name": "/api/admin/orders/x/print-file refuses anonymous",
+      "status": "PASS",
+      "detail": "307"
+    },
+    {
+      "n": 31,
+      "area": "security",
+      "name": "order API rejects an empty body",
+      "status": "PASS",
+      "detail": "400"
+    },
+    {
+      "n": 32,
+      "area": "seo",
+      "name": "homepage canonical is the root",
+      "status": "PASS"
+    },
+    {
+      "n": 33,
+      "area": "seo",
+      "name": "title present",
+      "status": "PASS"
+    },
+    {
+      "n": 34,
+      "area": "seo",
+      "name": "meta description",
+      "status": "PASS"
+    },
+    {
+      "n": 35,
+      "area": "seo",
+      "name": "og:image",
+      "status": "PASS"
+    },
+    {
+      "n": 36,
+      "area": "seo",
+      "name": "LocalBusiness schema",
+      "status": "PASS"
+    },
+    {
+      "n": 37,
+      "area": "seo",
+      "name": "no KC Printing left in markup",
+      "status": "PASS",
+      "detail": "brand consistency"
+    },
+    {
+      "n": 38,
+      "area": "seo",
+      "name": "sitemap serves",
+      "status": "PASS"
+    },
+    {
+      "n": 39,
+      "area": "seo",
+      "name": "sitemap lists pages",
+      "status": "PASS",
+      "detail": "18 urls"
+    },
+    {
+      "n": 40,
+      "area": "seo",
+      "name": "robots disallows /admin",
+      "status": "PASS"
+    },
+    {
+      "n": 41,
+      "area": "seo",
+      "name": "robots points at the sitemap",
+      "status": "PASS"
+    },
+    {
+      "n": 42,
+      "area": "seo",
+      "name": "unknown page 404s",
+      "status": "PASS",
+      "detail": "404"
+    },
+    {
+      "n": 43,
+      "area": "catalogue",
+      "name": "business cards offer sizes",
+      "status": "PASS",
+      "detail": "10"
+    },
+    {
+      "n": 44,
+      "area": "catalogue",
+      "name": "business cards offer paper stocks",
+      "status": "PASS",
+      "detail": "12 stocks"
+    },
+    {
+      "n": 45,
+      "area": "catalogue",
+      "name": "14 pt. Gloss is a stock",
+      "status": "PASS"
+    },
+    {
+      "n": 46,
+      "area": "catalogue",
+      "name": "business cards offer print sides",
+      "status": "PASS",
+      "detail": "3"
+    },
+    {
+      "n": 47,
+      "area": "catalogue",
+      "name": "business cards offer quantity breaks",
+      "status": "PASS",
+      "detail": "27"
+    },
+    {
+      "n": 48,
+      "area": "catalogue",
+      "name": "postcards offer sizes",
+      "status": "PASS",
+      "detail": "8"
+    },
+    {
+      "n": 49,
+      "area": "catalogue",
+      "name": "postcards offer papers",
+      "status": "PASS",
+      "detail": "12"
+    },
+    {
+      "n": 50,
+      "area": "catalogue",
+      "name": "postcards offer quantities",
+      "status": "PASS",
+      "detail": "8"
+    },
+    {
+      "n": 51,
+      "area": "catalogue",
+      "name": "postcard prices are positive",
+      "status": "PASS"
+    },
+    {
+      "n": 52,
+      "area": "catalogue",
+      "name": "banners offer sizes",
+      "status": "PASS",
+      "detail": "12"
+    },
+    {
+      "n": 53,
+      "area": "catalogue",
+      "name": "banners offer materials",
+      "status": "PASS",
+      "detail": "3"
+    },
+    {
+      "n": 54,
+      "area": "catalogue",
+      "name": "banner prices are positive",
+      "status": "PASS"
+    },
+    {
+      "n": 55,
+      "area": "catalogue",
+      "name": "grommets priced for every banner size",
+      "status": "PASS"
+    },
+    {
+      "n": 56,
+      "area": "catalogue",
+      "name": "hemming is free",
+      "status": "PASS"
+    },
+    {
+      "n": 57,
+      "area": "catalogue",
+      "name": "no grommets costs nothing",
+      "status": "PASS"
+    },
+    {
+      "n": 58,
+      "area": "catalogue",
+      "name": "rigid signs offer five materials",
+      "status": "PASS",
+      "detail": "yard-signs, corrugated-boards, pvc-boards, foam-boards, aluminum-boards"
+    },
+    {
+      "n": 59,
+      "area": "catalogue",
+      "name": "yard-signs: has sizes",
+      "status": "PASS",
+      "detail": "35"
+    },
+    {
+      "n": 60,
+      "area": "catalogue",
+      "name": "yard-signs: has shapes",
+      "status": "PASS",
+      "detail": "9"
+    },
+    {
+      "n": 61,
+      "area": "catalogue",
+      "name": "yard-signs: has thicknesses",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "n": 62,
+      "area": "catalogue",
+      "name": "yard-signs: has quantities",
+      "status": "PASS",
+      "detail": "53"
+    },
+    {
+      "n": 63,
+      "area": "catalogue",
+      "name": "yard-signs: every size has real dimensions",
+      "status": "PASS"
+    },
+    {
+      "n": 64,
+      "area": "catalogue",
+      "name": "corrugated-boards: has sizes",
+      "status": "PASS",
+      "detail": "108"
+    },
+    {
+      "n": 65,
+      "area": "catalogue",
+      "name": "corrugated-boards: has shapes",
+      "status": "PASS",
+      "detail": "13"
+    },
+    {
+      "n": 66,
+      "area": "catalogue",
+      "name": "corrugated-boards: has thicknesses",
+      "status": "PASS",
+      "detail": "3"
+    },
+    {
+      "n": 67,
+      "area": "catalogue",
+      "name": "corrugated-boards: has quantities",
+      "status": "PASS",
+      "detail": "22"
+    },
+    {
+      "n": 68,
+      "area": "catalogue",
+      "name": "corrugated-boards: every size has real dimensions",
+      "status": "PASS"
+    },
+    {
+      "n": 69,
+      "area": "catalogue",
+      "name": "pvc-boards: has sizes",
+      "status": "PASS",
+      "detail": "108"
+    },
+    {
+      "n": 70,
+      "area": "catalogue",
+      "name": "pvc-boards: has shapes",
+      "status": "PASS",
+      "detail": "13"
+    },
+    {
+      "n": 71,
+      "area": "catalogue",
+      "name": "pvc-boards: has thicknesses",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "n": 72,
+      "area": "catalogue",
+      "name": "pvc-boards: has quantities",
+      "status": "PASS",
+      "detail": "22"
+    },
+    {
+      "n": 73,
+      "area": "catalogue",
+      "name": "pvc-boards: every size has real dimensions",
+      "status": "PASS"
+    },
+    {
+      "n": 74,
+      "area": "catalogue",
+      "name": "foam-boards: has sizes",
+      "status": "PASS",
+      "detail": "108"
+    },
+    {
+      "n": 75,
+      "area": "catalogue",
+      "name": "foam-boards: has shapes",
+      "status": "PASS",
+      "detail": "13"
+    },
+    {
+      "n": 76,
+      "area": "catalogue",
+      "name": "foam-boards: has thicknesses",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "n": 77,
+      "area": "catalogue",
+      "name": "foam-boards: has quantities",
+      "status": "PASS",
+      "detail": "22"
+    },
+    {
+      "n": 78,
+      "area": "catalogue",
+      "name": "foam-boards: every size has real dimensions",
+      "status": "PASS"
+    },
+    {
+      "n": 79,
+      "area": "catalogue",
+      "name": "aluminum-boards: has sizes",
+      "status": "PASS",
+      "detail": "108"
+    },
+    {
+      "n": 80,
+      "area": "catalogue",
+      "name": "aluminum-boards: has shapes",
+      "status": "PASS",
+      "detail": "13"
+    },
+    {
+      "n": 81,
+      "area": "catalogue",
+      "name": "aluminum-boards: has thicknesses",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "n": 82,
+      "area": "catalogue",
+      "name": "aluminum-boards: has quantities",
+      "status": "PASS",
+      "detail": "22"
+    },
+    {
+      "n": 83,
+      "area": "catalogue",
+      "name": "aluminum-boards: every size has real dimensions",
+      "status": "PASS"
+    },
+    {
+      "n": 84,
+      "area": "catalogue",
+      "name": "foam alone has a grade choice",
+      "status": "PASS"
+    },
+    {
+      "n": 85,
+      "area": "pricing",
+      "name": "rigid sign quote returns a price",
+      "status": "PASS",
+      "detail": "$12.77"
+    },
+    {
+      "n": 86,
+      "area": "pricing",
+      "name": "unquoted quantity is refused, not guessed",
+      "status": "PASS"
+    },
+    {
+      "n": 87,
+      "area": "pricing",
+      "name": "malformed quote request rejected",
+      "status": "PASS",
+      "detail": "400"
+    },
+    {
+      "n": 88,
+      "area": "geometry",
+      "name": "business-cards 3.5x2 document",
+      "status": "PASS",
+      "detail": "3.6 x 2.1 in"
+    },
+    {
+      "n": 89,
+      "area": "geometry",
+      "name": "postcards 4x6 document",
+      "status": "PASS",
+      "detail": "4.25 x 6.25 in"
+    },
+    {
+      "n": 90,
+      "area": "geometry",
+      "name": "postcards 6x11 document",
+      "status": "PASS",
+      "detail": "6.25 x 11.25 in"
+    },
+    {
+      "n": 91,
+      "area": "geometry",
+      "name": "banners 36x72 document",
+      "status": "PASS",
+      "detail": "36.25 x 72.25 in"
+    },
+    {
+      "n": 92,
+      "area": "geometry",
+      "name": "rigid-signs 18x24 document",
+      "status": "PASS",
+      "detail": "18.25 x 24.25 in"
+    },
+    {
+      "n": 93,
+      "area": "builder",
+      "name": "business-cards: Size control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 94,
+      "area": "builder",
+      "name": "business-cards: Paper Stock control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 95,
+      "area": "builder",
+      "name": "business-cards: Sides control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 96,
+      "area": "builder",
+      "name": "business-cards: Quantity control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 97,
+      "area": "builder",
+      "name": "business-cards: no console errors",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 98,
+      "area": "builder",
+      "name": "business-cards: quantity is not preselected",
+      "status": "FAIL",
+      "detail": "0 cards▼"
+    },
+    {
+      "n": 99,
+      "area": "builder",
+      "name": "postcards: Size control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 100,
+      "area": "builder",
+      "name": "postcards: Paper Stock control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 101,
+      "area": "builder",
+      "name": "postcards: Printed Sides control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 102,
+      "area": "builder",
+      "name": "postcards: Quantity control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 103,
+      "area": "builder",
+      "name": "postcards: no console errors",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 104,
+      "area": "builder",
+      "name": "postcards: quantity is not preselected",
+      "status": "PASS",
+      "detail": "Choose a quantity▼"
+    },
+    {
+      "n": 105,
+      "area": "builder",
+      "name": "banners: Size control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 106,
+      "area": "builder",
+      "name": "banners: Material control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 107,
+      "area": "builder",
+      "name": "banners: Grommets control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 108,
+      "area": "builder",
+      "name": "banners: Quantity control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 109,
+      "area": "builder",
+      "name": "banners: no console errors",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 110,
+      "area": "builder",
+      "name": "banners: quantity is not preselected",
+      "status": "PASS",
+      "detail": "Choose a quantity▼"
+    },
+    {
+      "n": 111,
+      "area": "builder",
+      "name": "rigid-signs: Material control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 112,
+      "area": "builder",
+      "name": "rigid-signs: Shape control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 113,
+      "area": "builder",
+      "name": "rigid-signs: Size control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 114,
+      "area": "builder",
+      "name": "rigid-signs: Thickness control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 115,
+      "area": "builder",
+      "name": "rigid-signs: Printed Sides control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 116,
+      "area": "builder",
+      "name": "rigid-signs: Quantity control present",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 117,
+      "area": "builder",
+      "name": "rigid-signs: no console errors",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 118,
+      "area": "builder",
+      "name": "rigid-signs: quantity is not preselected",
+      "status": "PASS",
+      "detail": "Choose a quantity▼"
+    },
+    {
+      "n": 119,
+      "area": "a11y",
+      "name": "/ has no WCAG AA violations",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 120,
+      "area": "a11y",
+      "name": "/services has no WCAG AA violations",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 121,
+      "area": "a11y",
+      "name": "/pricing has no WCAG AA violations",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 122,
+      "area": "a11y",
+      "name": "/contact has no WCAG AA violations",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "n": 123,
+      "area": "a11y",
+      "name": "/services/business-cards/order has no WCAG AA violations",
+      "status": "FAIL",
+      "detail": "color-contrast(1)"
+    },
+    {
+      "n": 124,
+      "area": "a11y",
+      "name": "/services/banners/order has no WCAG AA violations",
+      "status": "FAIL",
+      "detail": "color-contrast(1)"
+    },
+    {
+      "n": 125,
+      "area": "a11y",
+      "name": "/services/rigid-signs/order has no WCAG AA violations",
+      "status": "FAIL",
+      "detail": "color-contrast(1)"
+    },
+    {
+      "n": 126,
+      "area": "responsive",
+      "name": "/ at mobile does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 127,
+      "area": "responsive",
+      "name": "/pricing at mobile does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 128,
+      "area": "responsive",
+      "name": "/services/banners/order at mobile does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 129,
+      "area": "responsive",
+      "name": "/ at tablet does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 130,
+      "area": "responsive",
+      "name": "/pricing at tablet does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 131,
+      "area": "responsive",
+      "name": "/services/banners/order at tablet does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 132,
+      "area": "responsive",
+      "name": "/ at desktop does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 133,
+      "area": "responsive",
+      "name": "/pricing at desktop does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 134,
+      "area": "responsive",
+      "name": "/services/banners/order at desktop does not scroll sideways",
+      "status": "PASS"
+    },
+    {
+      "n": 135,
+      "area": "content",
+      "name": "banner imagery describes a hung vinyl banner",
+      "status": "PASS",
+      "detail": "A hemmed vinyl banner with metal grommets, rope-tied to a garden fence"
+    },
+    {
+      "n": 136,
+      "area": "content",
+      "name": "no roll-up language on the banner page",
+      "status": "FAIL"
+    },
+    {
+      "n": 137,
+      "area": "perf",
+      "name": "/ responds under 2s",
+      "status": "PASS",
+      "detail": "204ms"
+    },
+    {
+      "n": 138,
+      "area": "perf",
+      "name": "/ html under 400KB",
+      "status": "PASS",
+      "detail": "141KB"
+    },
+    {
+      "n": 139,
+      "area": "perf",
+      "name": "/pricing responds under 2s",
+      "status": "PASS",
+      "detail": "75ms"
+    },
+    {
+      "n": 140,
+      "area": "perf",
+      "name": "/pricing html under 400KB",
+      "status": "PASS",
+      "detail": "108KB"
+    },
+    {
+      "n": 141,
+      "area": "perf",
+      "name": "/services/business-cards/order responds under 2s",
+      "status": "PASS",
+      "detail": "141ms"
+    },
+    {
+      "n": 142,
+      "area": "perf",
+      "name": "/services/business-cards/order html under 400KB",
+      "status": "PASS",
+      "detail": "80KB"
+    }
+  ]
+}

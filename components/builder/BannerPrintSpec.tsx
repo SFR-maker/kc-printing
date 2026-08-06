@@ -137,7 +137,7 @@ export function BannerPrintSpec({
             )}
           </div>
         ) : (
-          <p className="max-w-xs text-right text-sm text-amber-600">{price.error}</p>
+          <p className="max-w-xs text-right text-sm text-amber-700">{price.error}</p>
         )}
       </div>
     </div>

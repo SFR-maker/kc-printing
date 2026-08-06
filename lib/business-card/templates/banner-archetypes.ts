@@ -183,13 +183,25 @@ export const aiTextureCorporateVinyl: BannerArchetype = (ctx) => {
   return { front, back: blankBack(VINYL_W, VINYL_H) };
 };
 
+/**
+ * Only the layouts you can actually buy.
+ *
+ * Four of the eight were roll-up shaped - 33 x 81in portrait - and roll-ups have no price behind
+ * them, so half the banner gallery led to a design that could not be ordered. Their layouts are
+ * vertical and do not survive being restretched to a landscape vinyl, so they are held back rather
+ * than reshaped; the functions stay put for when roll-ups are sold again.
+ */
 export const BANNER_ARCHETYPES: { name: string; style: string; fn: BannerArchetype }[] = [
-  { name: "rollup-bold", style: "bold", fn: rollupBold },
-  { name: "rollup-top-block", style: "corporate", fn: rollupTopBlock },
   { name: "vinyl-bold", style: "bold", fn: vinylBold },
   { name: "vinyl-split", style: "modern", fn: vinylSplit },
-  { name: "ai-texture-rollup", style: "luxury", fn: aiTextureRollup },
   { name: "ai-texture-vinyl", style: "elegant", fn: aiTextureVinyl },
-  { name: "ai-texture-corporate-rollup", style: "corporate", fn: aiTextureCorporateRollup },
   { name: "ai-texture-corporate-vinyl", style: "corporate", fn: aiTextureCorporateVinyl },
+];
+
+/** Held back until roll-ups are sold again. Referenced so the layouts are not dropped as dead code. */
+export const ROLLUP_ARCHETYPES: { name: string; style: string; fn: BannerArchetype }[] = [
+  { name: "rollup-bold", style: "bold", fn: rollupBold },
+  { name: "rollup-top-block", style: "corporate", fn: rollupTopBlock },
+  { name: "ai-texture-rollup", style: "luxury", fn: aiTextureRollup },
+  { name: "ai-texture-corporate-rollup", style: "corporate", fn: aiTextureCorporateRollup },
 ];

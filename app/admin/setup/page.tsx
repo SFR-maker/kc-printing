@@ -75,7 +75,7 @@ function Row({ check }: { check: SetupCheck }) {
   const icon =
     check.state === "ok" ? <Check className="h-4 w-4 text-emerald-600" strokeWidth={2.5} />
       : check.state === "blocked" ? <XCircle className="h-4 w-4 text-red-600" strokeWidth={2} />
-        : check.state === "warn" ? <AlertTriangle className="h-4 w-4 text-amber-600" strokeWidth={2} />
+        : check.state === "warn" ? <AlertTriangle className="h-4 w-4 text-amber-700" strokeWidth={2} />
           : <CircleDashed className="h-4 w-4 text-kc-muted" strokeWidth={2} />;
 
   return (

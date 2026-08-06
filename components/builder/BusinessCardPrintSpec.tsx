@@ -113,14 +113,14 @@ export function BusinessCardPrintSpec({
               </SelectContent>
             </Select>
             {!comboOk && (
-              <p className="text-xs text-amber-600">This paper doesn&apos;t support that side option. Pick a different paper or sides.</p>
+              <p className="text-xs text-amber-700">This paper doesn&apos;t support that side option. Pick a different paper or sides.</p>
             )}
           </div>
 
           <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
             <Label>Quantity</Label>
             <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))} disabled={quantities.length === 0}>
-              <SelectTrigger aria-label="Quantity" className="bg-white"><SelectValue placeholder="Choose a quantity">{(v: string) => `${formatQuantity(Number(v))} cards`}</SelectValue></SelectTrigger>
+              <SelectTrigger aria-label="Quantity" className="bg-white"><SelectValue placeholder="Choose a quantity">{(v: string) => (Number(v) ? `${formatQuantity(Number(v))} cards` : "Choose a quantity")}</SelectValue></SelectTrigger>
               <SelectContent>
                 {quantities.map((q) => (
                   <SelectItem key={q} value={String(q)}>{formatQuantity(q)} cards</SelectItem>
@@ -152,7 +152,7 @@ export function BusinessCardPrintSpec({
               )}
             </>
           ) : (
-            <p className="text-sm text-amber-600">{price.error ?? "Select a valid combination to see pricing."}</p>
+            <p className="text-sm text-amber-700">{price.error ?? "Select a valid combination to see pricing."}</p>
           )}
         </div>
       </div>

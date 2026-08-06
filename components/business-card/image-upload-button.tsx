@@ -135,7 +135,7 @@ export function ImageUploadButton({ onInserted }: { onInserted?: () => void }) {
         </div>
       )}
 
-      {warning && <p className="text-[11.77px] leading-snug text-amber-600">{warning}</p>}
+      {warning && <p className="text-[11.77px] leading-snug text-amber-700">{warning}</p>}
     </div>
   );
 }

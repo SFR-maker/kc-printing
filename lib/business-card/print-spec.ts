@@ -98,34 +98,128 @@ export const POSTCARD_SIZES: SizePreset[] = [
   { key: "6x11", label: "6 x 11 in", trimWidthIn: 11, trimHeightIn: 6, bleedIn: 0.125, safeZoneInsetIn: 0.125 },
 ];
 
-// Real sizes from lib/service-data.ts's Banners spec ("Roll-Up Sizes" / "Vinyl Sizes"). Roll-up
-// stands print at a much lower viewing-distance DPI than small format, but the editor still works
-// in inches, so only the safe zone differs (roll-ups need a bigger inset for the stand's clamp bar).
 /**
  * Banner sizes you can design on, which are exactly the sizes you can buy.
  *
- * These used to include four roll-up and table-top stands that have no price behind them: a customer
- * could design a "Roll-Up Stand 24 x 81 in", reach the order page and find no way to order it. Eight
- * of the twelve sizes that are actually priced had no preset at all, so anyone wanting one had to
- * pick a different size and hope.
+ * Generated from lib/pricing/banners by scripts/compile-banner-catalogue, so the two lists cannot
+ * drift; a test asserts every preset here is sellable and every sellable size has one.
  *
- * Roll-ups are a different product - a printed panel plus hardware - and go back in when they have
- * prices of their own. The labels match lib/pricing/banners exactly so the two cannot drift; a test
- * asserts every preset here is sellable and every sellable size has one.
+ * This was twelve hand-picked sizes plus four roll-up and table-top stands that had no price behind
+ * them - design a "Roll-Up Stand 24 x 81 in" and there was no way to order it - while eight of the
+ * twelve priced sizes had no preset at all. It is now the supplier's whole vinyl catalogue. Roll-ups
+ * are a different product, a printed panel plus hardware, and return when they have prices.
  */
 export const BANNER_SIZES: SizePreset[] = [
   { key: "vinyl-1x2", label: "Vinyl Banner 1 ft x 2 ft", trimWidthIn: 24, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x3", label: "Vinyl Banner 1 ft x 3 ft", trimWidthIn: 36, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x4", label: "Vinyl Banner 1 ft x 4 ft", trimWidthIn: 48, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x2", label: "Vinyl Banner 2 ft x 2 ft", trimWidthIn: 24, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x5", label: "Vinyl Banner 1 ft x 5 ft", trimWidthIn: 60, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1_7x3", label: "Vinyl Banner 1.7 ft x 3 ft", trimWidthIn: 36, trimHeightIn: 20.4, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x6", label: "Vinyl Banner 1 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-2x3", label: "Vinyl Banner 2 ft x 3 ft", trimWidthIn: 36, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x7", label: "Vinyl Banner 1 ft x 7 ft", trimWidthIn: 84, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x8", label: "Vinyl Banner 1 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-2x4", label: "Vinyl Banner 2 ft x 4 ft", trimWidthIn: 48, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x9", label: "Vinyl Banner 1 ft x 9 ft", trimWidthIn: 108, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x3", label: "Vinyl Banner 3 ft x 3 ft", trimWidthIn: 36, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2_4x4", label: "Vinyl Banner 2.4 ft x 4 ft", trimWidthIn: 48, trimHeightIn: 28.8, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x10", label: "Vinyl Banner 1 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x5", label: "Vinyl Banner 2 ft x 5 ft", trimWidthIn: 60, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x11", label: "Vinyl Banner 1 ft x 11 ft", trimWidthIn: 132, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x12", label: "Vinyl Banner 1 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x6", label: "Vinyl Banner 2 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x4", label: "Vinyl Banner 3 ft x 4 ft", trimWidthIn: 48, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x13", label: "Vinyl Banner 1 ft x 13 ft", trimWidthIn: 156, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x14", label: "Vinyl Banner 1 ft x 14 ft", trimWidthIn: 168, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x7", label: "Vinyl Banner 2 ft x 7 ft", trimWidthIn: 84, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x15", label: "Vinyl Banner 1 ft x 15 ft", trimWidthIn: 180, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-2_5x6", label: "Vinyl Banner 2.5 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 30, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-3x5", label: "Vinyl Banner 3 ft x 5 ft", trimWidthIn: 60, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x16", label: "Vinyl Banner 1 ft x 16 ft", trimWidthIn: 192, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x8", label: "Vinyl Banner 2 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-4x4", label: "Vinyl Banner 4 ft x 4 ft", trimWidthIn: 48, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x17", label: "Vinyl Banner 1 ft x 17 ft", trimWidthIn: 204, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x18", label: "Vinyl Banner 1 ft x 18 ft", trimWidthIn: 216, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x9", label: "Vinyl Banner 2 ft x 9 ft", trimWidthIn: 108, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-3x6", label: "Vinyl Banner 3 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x19", label: "Vinyl Banner 1 ft x 19 ft", trimWidthIn: 228, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-1x20", label: "Vinyl Banner 1 ft x 20 ft", trimWidthIn: 240, trimHeightIn: 12, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x10", label: "Vinyl Banner 2 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2_5x8", label: "Vinyl Banner 2.5 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 30, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x5", label: "Vinyl Banner 4 ft x 5 ft", trimWidthIn: 60, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x7", label: "Vinyl Banner 3 ft x 7 ft", trimWidthIn: 84, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x11", label: "Vinyl Banner 2 ft x 11 ft", trimWidthIn: 132, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x12", label: "Vinyl Banner 2 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-3x8", label: "Vinyl Banner 3 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-4x6", label: "Vinyl Banner 4 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2_5x10", label: "Vinyl Banner 2.5 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 30, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x5", label: "Vinyl Banner 5 ft x 5 ft", trimWidthIn: 60, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x13", label: "Vinyl Banner 2 ft x 13 ft", trimWidthIn: 156, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x9", label: "Vinyl Banner 3 ft x 9 ft", trimWidthIn: 108, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x14", label: "Vinyl Banner 2 ft x 14 ft", trimWidthIn: 168, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x7", label: "Vinyl Banner 4 ft x 7 ft", trimWidthIn: 84, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x15", label: "Vinyl Banner 2 ft x 15 ft", trimWidthIn: 180, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2_5x12", label: "Vinyl Banner 2.5 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 30, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x10", label: "Vinyl Banner 3 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x6", label: "Vinyl Banner 5 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x16", label: "Vinyl Banner 2 ft x 16 ft", trimWidthIn: 192, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-4x8", label: "Vinyl Banner 4 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x11", label: "Vinyl Banner 3 ft x 11 ft", trimWidthIn: 132, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x17", label: "Vinyl Banner 2 ft x 17 ft", trimWidthIn: 204, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x7", label: "Vinyl Banner 5 ft x 7 ft", trimWidthIn: 84, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x18", label: "Vinyl Banner 2 ft x 18 ft", trimWidthIn: 216, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x12", label: "Vinyl Banner 3 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x9", label: "Vinyl Banner 4 ft x 9 ft", trimWidthIn: 108, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x6", label: "Vinyl Banner 6 ft x 6 ft", trimWidthIn: 72, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x19", label: "Vinyl Banner 2 ft x 19 ft", trimWidthIn: 228, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x13", label: "Vinyl Banner 3 ft x 13 ft", trimWidthIn: 156, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-2x20", label: "Vinyl Banner 2 ft x 20 ft", trimWidthIn: 240, trimHeightIn: 24, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-4x10", label: "Vinyl Banner 4 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x8", label: "Vinyl Banner 5 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x14", label: "Vinyl Banner 3 ft x 14 ft", trimWidthIn: 168, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x7", label: "Vinyl Banner 6 ft x 7 ft", trimWidthIn: 84, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x11", label: "Vinyl Banner 4 ft x 11 ft", trimWidthIn: 132, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x15", label: "Vinyl Banner 3 ft x 15 ft", trimWidthIn: 180, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x9", label: "Vinyl Banner 5 ft x 9 ft", trimWidthIn: 108, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x16", label: "Vinyl Banner 3 ft x 16 ft", trimWidthIn: 192, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
   { key: "vinyl-4x12", label: "Vinyl Banner 4 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x8", label: "Vinyl Banner 6 ft x 8 ft", trimWidthIn: 96, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x10", label: "Vinyl Banner 5 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x17", label: "Vinyl Banner 3 ft x 17 ft", trimWidthIn: 204, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x13", label: "Vinyl Banner 4 ft x 13 ft", trimWidthIn: 156, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x18", label: "Vinyl Banner 3 ft x 18 ft", trimWidthIn: 216, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x9", label: "Vinyl Banner 6 ft x 9 ft", trimWidthIn: 108, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x11", label: "Vinyl Banner 5 ft x 11 ft", trimWidthIn: 132, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x14", label: "Vinyl Banner 4 ft x 14 ft", trimWidthIn: 168, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x19", label: "Vinyl Banner 3 ft x 19 ft", trimWidthIn: 228, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-3x20", label: "Vinyl Banner 3 ft x 20 ft", trimWidthIn: 240, trimHeightIn: 36, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x15", label: "Vinyl Banner 4 ft x 15 ft", trimWidthIn: 180, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x12", label: "Vinyl Banner 5 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x10", label: "Vinyl Banner 6 ft x 10 ft", trimWidthIn: 120, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x16", label: "Vinyl Banner 4 ft x 16 ft", trimWidthIn: 192, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x13", label: "Vinyl Banner 5 ft x 13 ft", trimWidthIn: 156, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x11", label: "Vinyl Banner 6 ft x 11 ft", trimWidthIn: 132, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x17", label: "Vinyl Banner 4 ft x 17 ft", trimWidthIn: 204, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x14", label: "Vinyl Banner 5 ft x 14 ft", trimWidthIn: 168, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x18", label: "Vinyl Banner 4 ft x 18 ft", trimWidthIn: 216, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x12", label: "Vinyl Banner 6 ft x 12 ft", trimWidthIn: 144, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x15", label: "Vinyl Banner 5 ft x 15 ft", trimWidthIn: 180, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x19", label: "Vinyl Banner 4 ft x 19 ft", trimWidthIn: 228, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x13", label: "Vinyl Banner 6 ft x 13 ft", trimWidthIn: 156, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-4x20", label: "Vinyl Banner 4 ft x 20 ft", trimWidthIn: 240, trimHeightIn: 48, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x16", label: "Vinyl Banner 5 ft x 16 ft", trimWidthIn: 192, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x14", label: "Vinyl Banner 6 ft x 14 ft", trimWidthIn: 168, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x17", label: "Vinyl Banner 5 ft x 17 ft", trimWidthIn: 204, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x18", label: "Vinyl Banner 5 ft x 18 ft", trimWidthIn: 216, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x15", label: "Vinyl Banner 6 ft x 15 ft", trimWidthIn: 180, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x19", label: "Vinyl Banner 5 ft x 19 ft", trimWidthIn: 228, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x16", label: "Vinyl Banner 6 ft x 16 ft", trimWidthIn: 192, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-5x20", label: "Vinyl Banner 5 ft x 20 ft", trimWidthIn: 240, trimHeightIn: 60, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x17", label: "Vinyl Banner 6 ft x 17 ft", trimWidthIn: 204, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x18", label: "Vinyl Banner 6 ft x 18 ft", trimWidthIn: 216, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x19", label: "Vinyl Banner 6 ft x 19 ft", trimWidthIn: 228, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
+  { key: "vinyl-6x20", label: "Vinyl Banner 6 ft x 20 ft", trimWidthIn: 240, trimHeightIn: 72, bleedIn: 0.125, safeZoneInsetIn: 0.25 },
 ];
 
 // Bounding-box size per shape — the live editor designs on a plain rectangle of this size (see

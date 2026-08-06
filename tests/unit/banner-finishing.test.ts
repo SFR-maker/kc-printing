@@ -1,9 +1,18 @@
 import { describe, it, expect } from "vitest";
-import {
-  GROMMET_OPTIONS, DEFAULT_GROMMETS, HEMMING_INCLUDED,
-  grommetPrice, isGrommetPriced,
-} from "@/lib/pricing/banner-finishing";
+import { GROMMET_OPTIONS, DEFAULT_GROMMETS, HEMMING_INCLUDED } from "@/lib/pricing/banner-finishing";
 import { BANNER_SIZES, BANNER_QUANTITIES } from "@/lib/pricing/banners";
+import rawFinishing from "@/lib/pricing/banner-finishing.json";
+
+/*
+ * Prices are imported straight from the table rather than through
+ * lib/pricing/banner-finishing-server, which is marked server-only and cannot load in a test
+ * process. The two read the same keys.
+ */
+const finishingPrices = (rawFinishing as unknown as { prices: Record<string, number> }).prices;
+const grommetPrice = (size: string, grommets: string, quantity: number) =>
+  finishingPrices[`${size}|${grommets}|${quantity}`] ?? 0;
+const isGrommetPriced = (size: string, grommets: string, quantity: number) =>
+  finishingPrices[`${size}|${grommets}|${quantity}`] !== undefined;
 
 /**
  * Grommets are quoted by the supplier as an extra on top of the size/material/quantity curve, and

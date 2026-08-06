@@ -27,6 +27,21 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
 );
 
+/**
+ * Parses a supplier price.
+ *
+ * markupPrice arrives as a formatted string and gains thousands separators above $999.99, so
+ * Number("1,035.24") is NaN. The guard that skipped non-finite values then dropped every price over
+ * a thousand dollars without a word, which silently truncated the higher quantities out of the
+ * catalogue - banners and yard signs both topped out at exactly $999.
+ */
+function parsePrice(value) {
+  const n = Number(String(value ?? "").replace(/,/g, "").trim());
+  // Zero is a real quote, not a missing one: "No Grommets" and "Hemming - 4 Sides" are free, and
+  // rejecting non-positive values dropped them from the table entirely.
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
 const browser = await chromium.launch();
 const ctx = await browser.newContext({
   storageState: fs.existsSync(path.join(SP, "gp-state.json")) ? path.join(SP, "gp-state.json") : undefined,
@@ -91,8 +106,8 @@ for (const size of sizes) {
     // storing quoted numbers keeps this honest if any size breaks the pattern.
     const pr = await api(`/service/rest/v1/products/${productId}/options/${o.id}/prices`);
     for (const item of pr?.items ?? []) {
-      const price = Number(item.markupPrice);
-      if (Number.isFinite(price)) out.prices[`${size.label}|${label}|${item.quantity}`] = price;
+      const price = parsePrice(item.markupPrice);
+      if (price !== null) out.prices[`${size.label}|${label}|${item.quantity}`] = price;
     }
     const one = pr?.items?.find((i) => i.quantity === 1)?.markupPrice;
     line.push(`${label}=$${one}`);

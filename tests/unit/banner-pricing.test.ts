@@ -1,88 +1,110 @@
 import { describe, it, expect } from "vitest";
 import {
-  BANNER_MATERIALS, BANNER_POINTS, BANNER_QUANTITIES, BANNER_SIZES,
-  areaSqFt, calculateBannerPrice,
+  BANNER_SIZES, BANNER_MATERIALS, BANNER_QUANTITIES, BANNER_COLOR,
+  areaSqFt, bannerQuantitiesFor, isBannerComboAvailable,
 } from "@/lib/pricing/banners";
+import raw from "@/lib/pricing/banners-scraped.json";
 
-const SIZE = "2 ft x 4 ft";
-const GLOSSY = "13 oz. Premium Scrim Glossy Vinyl";
+/**
+ * Banners are quoted from the supplier's whole catalogue - 110 sizes, 41 quantity breaks - and
+ * nothing is interpolated any more. The previous table held twelve hand-picked sizes with eight
+ * breaks each and filled the gaps by interpolating, which was measured underpricing real orders by
+ * up to 12%.
+ *
+ * The price table is imported directly here rather than through lib/pricing/banners-server, which is
+ * marked server-only and cannot load in a test process.
+ */
+
+const prices = (raw as unknown as { prices: Record<string, number> }).prices;
+const priceFor = (size: string, material: string, qty: number) =>
+  prices[`${size}|${material}|${BANNER_COLOR}|${qty}`];
 
 describe("catalogue", () => {
-  it("offers the sizes and materials that were actually priced", () => {
-    expect(BANNER_SIZES.length).toBe(12);
-    expect(BANNER_MATERIALS.map((m) => m.label)).toContain(GLOSSY);
+  it("offers the supplier's whole size range", () => {
+    expect(BANNER_SIZES.length).toBe(110);
   });
 
-  it("orders sizes by area, so the list reads small to large", () => {
+  it("offers all three materials", () => {
+    expect(BANNER_MATERIALS.map((m) => m.label)).toEqual([
+      "13 oz. Premium Scrim Glossy Vinyl",
+      "13 oz. Premium Scrim Matte Vinyl",
+      "8 oz. Premium Mesh Vinyl",
+    ]);
+  });
+
+  it("offers every quantity break the supplier quotes, not a hand-picked few", () => {
+    // This was [1, 2, 3, 5, 10, 25, 50, 100] while the supplier quotes 41 breaks, so most of the
+    // curve was unreachable - nobody could order 60 banners.
+    expect(BANNER_QUANTITIES.length).toBe(41);
+    expect(BANNER_QUANTITIES[0]).toBe(1);
+    expect(BANNER_QUANTITIES.at(-1)).toBe(150);
+  });
+
+  it("orders sizes smallest to largest", () => {
     const areas = BANNER_SIZES.map((s) => areaSqFt(s.label));
     expect([...areas].sort((a, b) => a - b)).toEqual(areas);
   });
 
-  it("has an exact scraped price for every offered quantity, on every size and material", () => {
-    // This is what lets the builder quote without interpolating. If a future re-scrape drops a
-    // break, this fails rather than the site quietly guessing a price.
+  it("gives every size a real area", () => {
+    for (const s of BANNER_SIZES) expect(areaSqFt(s.label), s.label).toBeGreaterThan(0);
+  });
+});
+
+describe("every combination the picker offers is quoted", () => {
+  it("prices all sizes, materials and quantities on offer", () => {
+    const missing: string[] = [];
+    let checked = 0;
     for (const size of BANNER_SIZES) {
       for (const material of BANNER_MATERIALS) {
-        for (const quantity of BANNER_QUANTITIES) {
-          const r = calculateBannerPrice({ size: size.label, material: material.label, quantity });
-          expect(r.valid, `${size.label} / ${material.label} / ${quantity}`).toBe(true);
-          expect(r.exact, `${size.label} / ${material.label} / ${quantity} was interpolated`).toBe(true);
+        if (!isBannerComboAvailable(size.label, material.label)) continue;
+        for (const q of bannerQuantitiesFor(size.label, material.label)) {
+          checked++;
+          if (priceFor(size.label, material.label, q) === undefined) {
+            missing.push(`${size.label} / ${material.label} / ${q}`);
+          }
         }
       }
     }
+    expect(missing.slice(0, 5)).toEqual([]);
+    expect(checked).toBeGreaterThan(13000);
+  });
+
+  it("has no zero or negative prices", () => {
+    expect(Object.values(prices).every((v) => v > 0)).toBe(true);
   });
 });
 
-describe("prices match what GotPrint charges", () => {
-  it("quotes the verified figures", () => {
-    // Cross-checked against the supplied spreadsheet as well as the live configurator.
-    expect(calculateBannerPrice({ size: SIZE, material: GLOSSY, quantity: 1 }).total).toBe(14.17);
-    expect(calculateBannerPrice({ size: "3 ft x 6 ft", material: GLOSSY, quantity: 1 }).total).toBe(24.46);
-    expect(calculateBannerPrice({ size: "4 ft x 8 ft", material: GLOSSY, quantity: 1 }).total).toBe(38.58);
+describe("prices behave the way a print quote should", () => {
+  const size = "3 ft x 6 ft";
+  const material = "13 oz. Premium Scrim Glossy Vinyl";
+
+  it("does not assume the per-unit rate falls with volume", () => {
+    /*
+     * It does not, and that is the supplier's pricing rather than bad data. A 3 x 6ft glossy runs
+     * $24.46 at one, $26.28 each at five, $21.03 each at twenty and $25.24 each at fifty. Verified
+     * against the live quotes - q1 $24.46, q5 $131.38, q20 $420.64, q50 $1,262.12, q150 $3,628.81 -
+     * all matching exactly. So the useful assertion is that a bigger run costs more in total, not
+     * less per unit.
+     */
+    // Nor is the total monotonic. Verified live: q14 $348.30, q15 $336.45, q16 $363.00 - fifteen
+    // banners cost $11.85 less than fourteen. So the only safe assertions are that every break is
+    // quoted, positive, and that a large run costs more than a small one.
+    for (const q of BANNER_QUANTITIES) {
+      expect(priceFor(size, material, q), `quantity ${q}`).toBeGreaterThan(0);
+    }
+    expect(priceFor(size, material, 150)).toBeGreaterThan(priceFor(size, material, 1));
   });
 
-  it("gets cheaper per unit as the run grows", () => {
-    const one = calculateBannerPrice({ size: SIZE, material: GLOSSY, quantity: 1 }).total;
-    const hundred = calculateBannerPrice({ size: SIZE, material: GLOSSY, quantity: 100 }).total;
-    expect(hundred / 100).toBeLessThan(one);
-  });
-});
-
-/**
- * Interpolation is measured, not assumed.
- *
- * 2 ft x 4 ft was captured with all 41 quantities before the run was scoped to 8 breaks, so it can
- * act as a control: withhold the 33 quantities that are not breaks, predict them from the breaks
- * alone, and compare against what the supplier actually charges.
- *
- * The answer is that interpolation is not good enough to quote from. Mean absolute error is about
- * 3%, but the worst case is 18.7% and eight of the 33 come out UNDER the real cost - at quantity 6
- * it predicts $82.36 against an actual $94.00. With print sold at cost, a 12% shortfall is a
- * straight loss on the order. Hence the test above: the builder only ever offers quantities that
- * have an exact price.
- */
-describe("why the builder does not interpolate", () => {
-  const breaks = new Set(BANNER_QUANTITIES);
-  const withheld = BANNER_POINTS.filter((p) => p.size === SIZE && p.material === GLOSSY && !breaks.has(p.quantity));
-  const training = BANNER_POINTS.filter((p) => !(p.size === SIZE && p.material === GLOSSY) || breaks.has(p.quantity));
-
-  it("has a control set to measure against", () => {
-    expect(withheld.length).toBeGreaterThan(30);
+  it("costs more for a bigger banner at the same quantity", () => {
+    expect(priceFor("4 ft x 12 ft", material, 1)).toBeGreaterThan(priceFor("1 ft x 2 ft", material, 1));
   });
 
-  it("would underprice real orders if it were used", () => {
-    const errors = withheld.map((p) => {
-      const predicted = calculateBannerPrice({ size: SIZE, material: GLOSSY, quantity: p.quantity }, training).total;
-      return ((predicted - p.price) / p.price) * 100;
-    });
-    // Documents the measured risk. If a future change makes interpolation safe, this fails and the
-    // decision above can be revisited on evidence rather than on feel.
-    expect(Math.min(...errors)).toBeLessThan(-5);
-    expect(Math.max(...errors.map(Math.abs))).toBeGreaterThan(10);
-  });
-
-  it("marks an interpolated figure as inexact so it can never pass for a quote", () => {
-    const r = calculateBannerPrice({ size: SIZE, material: GLOSSY, quantity: 6 }, training);
-    expect(r.exact).toBe(false);
+  it("keeps prices above a thousand dollars", () => {
+    // markupPrice arrives comma-formatted above $999.99, so Number("1,035.24") was NaN and every
+    // such price was silently dropped - the table used to top out at exactly $999.25, truncating
+    // the higher quantities out of the catalogue.
+    const values = Object.values(prices);
+    expect(values.filter((v) => v > 1000).length).toBeGreaterThan(1000);
+    expect(Math.max(...values)).toBeGreaterThan(10000);
   });
 });

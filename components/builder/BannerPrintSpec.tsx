@@ -1,14 +1,24 @@
 "use client";
 
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDollars } from "@/lib/utils";
 import {
-  BANNER_MATERIALS, BANNER_QUANTITIES, BANNER_SIZES, areaSqFt, calculateBannerPrice,
+  BANNER_MATERIALS, BANNER_SIZES, areaSqFt, bannerQuantitiesFor,
 } from "@/lib/pricing/banners";
 import { bannerParcel } from "@/lib/shipping/banner-parcel";
-import { GROMMET_OPTIONS, DEFAULT_GROMMETS, HEMMING_INCLUDED, grommetPrice, grommetNote } from "@/lib/pricing/banner-finishing";
+import { GROMMET_OPTIONS, DEFAULT_GROMMETS, HEMMING_INCLUDED, grommetNote } from "@/lib/pricing/banner-finishing";
+import { useEffect, useRef, useState } from "react";
 import { formatWeight } from "@/lib/shipping/parcel";
+
+export interface BannerPriceState {
+  valid: boolean;
+  total: number;
+  /** The grommet charge inside `total`, shown as its own line. */
+  finishing: number;
+  error?: string;
+  loading: boolean;
+}
 
 export interface BannerSpec {
   size: string;
@@ -35,16 +45,60 @@ export const DEFAULT_BANNER_SPEC: BannerSpec = {
  * measured against a full 41-point curve and came out up to 12% under the real cost, which with
  * print sold at cost is a straight loss on the order.
  */
+/**
+ * Sizes bucketed by their short edge, in the order the supplier lists them.
+ *
+ * Computed once at module load rather than per render: it only depends on the catalogue.
+ */
+const sizeGroups: [string, typeof BANNER_SIZES][] = (() => {
+  const groups = new Map<string, typeof BANNER_SIZES>();
+  for (const s of BANNER_SIZES) {
+    const short = s.label.match(/^([\d.]+)\s*ft/)?.[1] ?? "other";
+    const key = short === "other" ? "Other sizes" : `${short} ft tall`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(s);
+  }
+  return [...groups.entries()];
+})();
+
 export function BannerPrintSpec({
   spec,
   onChange,
+  onPriceChange,
 }: {
   spec: BannerSpec;
   onChange: (next: BannerSpec) => void;
+  onPriceChange?: (price: BannerPriceState) => void;
 }) {
-  const price = calculateBannerPrice(spec);
-  const finishing = grommetPrice(spec.size, spec.grommets, spec.quantity);
+  const [price, setPrice] = useState<BannerPriceState>({ valid: false, total: 0, finishing: 0, loading: true });
   const parcel = bannerParcel(spec.size, spec.material, spec.quantity);
+  const quantities = bannerQuantitiesFor(spec.size, spec.material);
+
+  const latest = useRef(0);
+  useEffect(() => {
+    // Each change supersedes the one before it, so a slow earlier reply cannot overwrite a newer
+    // price with a stale one.
+    const ticket = ++latest.current;
+    setPrice((p) => ({ ...p, loading: true }));
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/price/banners", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(spec),
+        });
+        const json = await res.json();
+        if (ticket !== latest.current) return;
+        setPrice({ valid: !!json.valid, total: Number(json.total) || 0, finishing: Number(json.finishing) || 0, error: json.error, loading: false });
+      } catch {
+        if (ticket !== latest.current) return;
+        setPrice({ valid: false, total: 0, finishing: 0, error: "Could not reach pricing - please try again.", loading: false });
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [spec.size, spec.material, spec.quantity, spec.grommets]);
+
+  useEffect(() => { onPriceChange?.(price); }, [price, onPriceChange]);
 
   function set<K extends keyof BannerSpec>(key: K, value: BannerSpec[K]) {
     onChange({ ...spec, [key]: value });
@@ -58,10 +112,17 @@ export function BannerPrintSpec({
           <Select value={spec.size} onValueChange={(v) => v && set("size", v)}>
             <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {BANNER_SIZES.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.label} <span className="text-kc-muted">· {areaSqFt(s.label)} sq ft</span>
-                </SelectItem>
+              {/* Grouped by the short edge. The supplier prints 110 sizes and a flat list of them is
+                  unreadable; "3 ft" then its lengths is how someone actually looks for one. */}
+              {sizeGroups.map(([group, sizes]) => (
+                <SelectGroup key={group}>
+                  <SelectLabel>{group}</SelectLabel>
+                  {sizes.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.label} <span className="text-kc-muted">· {areaSqFt(s.label)} sq ft</span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>
@@ -104,7 +165,7 @@ export function BannerPrintSpec({
           <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
             <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue placeholder="Choose a quantity" /></SelectTrigger>
             <SelectContent>
-              {BANNER_QUANTITIES.map((q) => (
+              {quantities.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q === 1 ? "1 banner" : `${q} banners`}</SelectItem>
               ))}
             </SelectContent>
@@ -127,12 +188,14 @@ export function BannerPrintSpec({
             {spec.quantity === 1 ? "1 banner" : `${spec.quantity} banners`}, {spec.size}
           </div>
         </div>
-        {price.valid ? (
+        {price.loading ? (
+          <div className="text-sm text-kc-muted">Pricing…</div>
+        ) : price.valid ? (
           <div className="text-right">
-            <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total + finishing)}</div>
-            {finishing > 0 && (
+            <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
+            {price.finishing > 0 && (
               <div className="text-xs text-kc-muted">
-                includes {formatDollars(finishing)} for {spec.grommets.toLowerCase()}
+                includes {formatDollars(price.finishing)} for {spec.grommets.toLowerCase()}
               </div>
             )}
           </div>

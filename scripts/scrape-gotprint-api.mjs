@@ -32,6 +32,11 @@ const SP = process.env.GP_SCRATCH
   ?? "C:/Users/User/AppData/Local/Temp/claude/C--Users-User/5a2dbf45-311b-44a1-a8e6-62c8a1f436f6/scratchpad";
 
 const PRODUCT_TYPES = {
+  // Banners resolve the same way yard signs do: sizes are a flat array, there are no shapes, and a
+  // product id resolves to a whole quantity curve in one request. Output goes to its own file and is
+  // folded into lib/pricing/banners-scraped.json by scripts/compile-banner-prices, which refuses to
+  // write if the new numbers disagree with what is already on sale.
+  "banners-api": 16,
   "yard-signs": 37,
   "corrugated-boards": 10015,
   "pvc-boards": 10014,
@@ -61,6 +66,21 @@ const env = Object.fromEntries(
   fs.readFileSync(path.join(SP, "gp.env"), "utf8").split("\n").filter(Boolean)
     .map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
 );
+
+/**
+ * Parses a supplier price.
+ *
+ * markupPrice arrives as a formatted string and gains thousands separators above $999.99, so
+ * Number("1,035.24") is NaN. The guard that skipped non-finite values then dropped every price over
+ * a thousand dollars without a word, which silently truncated the higher quantities out of the
+ * catalogue - banners and yard signs both topped out at exactly $999.
+ */
+function parsePrice(value) {
+  const n = Number(String(value ?? "").replace(/,/g, "").trim());
+  // Zero is a real quote, not a missing one: "No Grommets" and "Hemming - 4 Sides" are free, and
+  // rejecting non-positive values dropped them from the table entirely.
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({
@@ -196,8 +216,8 @@ for (const sizeLabel of bySizeLabel) {
         if (!items.length) { invalid.add(combo); continue; }
 
         for (const it of items) {
-          const price = Number(it.markupPrice ?? it.listPrice);
-          if (Number.isFinite(price) && price > 0) { data.prices[`${combo}|${it.quantity}`] = price; fresh++; }
+          const price = parsePrice(it.markupPrice ?? it.listPrice);
+          if (price !== null) { data.prices[`${combo}|${it.quantity}`] = price; fresh++; }
         }
         havePrefix.add(combo);
         valid++; sizeHits++;

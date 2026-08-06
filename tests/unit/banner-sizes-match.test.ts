@@ -42,8 +42,12 @@ describe("banner design presets and the price list agree", () => {
       const m = toSellableLabel(p.label).match(/([\d.]+)\s*ft\s*x\s*([\d.]+)\s*ft/i);
       expect(m, p.label).not.toBeNull();
       const [a, b] = [Number(m![1]) * 12, Number(m![2]) * 12];
-      // Whichever way round the label reads, the preset covers the same two edges.
-      expect([p.trimWidthIn, p.trimHeightIn].sort((x, y) => x - y)).toEqual([a, b].sort((x, y) => x - y));
+      // Whichever way round the label reads, the preset covers the same two edges. Compared with a
+      // tolerance because 2.4 ft x 12 is 28.799999999999997 in binary floating point.
+      const got = [p.trimWidthIn, p.trimHeightIn].sort((x, y) => x - y);
+      const want = [a, b].sort((x, y) => x - y);
+      expect(got[0], p.label).toBeCloseTo(want[0], 6);
+      expect(got[1], p.label).toBeCloseTo(want[1], 6);
     }
   });
 });

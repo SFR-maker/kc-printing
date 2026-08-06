@@ -23,7 +23,8 @@ import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
 } from "@/components/builder/PostcardPrintSpec";
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
-import { grommetPrice } from "@/lib/pricing/banner-finishing";
+import type { BannerPriceState } from "@/components/builder/BannerPrintSpec";
+
 import { CardSideSchema } from "@/lib/business-card/schema";
 import { renderSideToSvg } from "@/lib/business-card/render-svg";
 import {
@@ -31,7 +32,7 @@ import {
   type RigidMaterialId, type RigidSignSpec,
 } from "@/lib/pricing/rigid-signs";
 import { calculatePostcardPrice } from "@/lib/pricing/postcards";
-import { calculateBannerPrice } from "@/lib/pricing/banners";
+
 import { parseTrimSize, printSpec, type PrintSpec } from "@/lib/print/spec";
 import { BUSINESS_CARD_BLEED, PRINT_SPEC } from "@/lib/business-card/print-spec";
 import { BrandFileUpload, type BrandFile } from "@/components/builder/BrandFileUpload";
@@ -164,6 +165,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   const [step, setStep] = useState(0);
   /** Rigid signs are quoted by /api/price/rigid-signs; the picker reports the result up here. */
   const [rigidPrice, setRigidPrice] = useState<RigidSignPriceState>({ valid: false, total: 0, loading: true });
+  /** Banners moved server-side too: their table is 110 sizes and 1.1MB, far too much to bundle. */
+  const [bannerPriceState, setBannerPriceState] = useState<BannerPriceState>({ valid: false, total: 0, finishing: 0, loading: true });
   /**
    * Set only by "Upload a file instead".
    *
@@ -349,16 +352,12 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   });
 
   const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec, pricing) : null;
-  // Finishing is quoted separately by the supplier, so it is added here rather than folded into the
-  // base curve - the panel shows it as its own line.
-  const bannerSpecValue = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
-  const bannerPrice = isBanners && values.bannerSpec
-    ? (() => {
-        const base = calculateBannerPrice(values.bannerSpec);
-        if (!base.valid) return base;
-        return { ...base, total: round2(base.total + grommetPrice(bannerSpecValue.size, bannerSpecValue.grommets, bannerSpecValue.quantity)) };
-      })()
+  const bannerPrice = isBanners
+    ? (bannerPriceState.loading
+        ? null
+        : { valid: bannerPriceState.valid, total: bannerPriceState.total, error: bannerPriceState.error })
     : null;
+
   const postcardPrice = isPostcards && values.postcardSpec ? calculatePostcardPrice(values.postcardSpec) : null;
   /**
    * Rigid signs are quoted by the server, so their price arrives asynchronously rather than being
@@ -704,6 +703,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
               ) : isBanners ? (
                 <BannerPrintSpec
                   spec={values.bannerSpec ?? DEFAULT_BANNER_SPEC}
+                  onPriceChange={setBannerPriceState}
                   onChange={(next) => {
                     const prev = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
                     setValue("bannerSpec", next);

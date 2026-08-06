@@ -7,12 +7,15 @@ import {
   BANNER_MATERIALS, BANNER_QUANTITIES, BANNER_SIZES, areaSqFt, calculateBannerPrice,
 } from "@/lib/pricing/banners";
 import { bannerParcel } from "@/lib/shipping/banner-parcel";
+import { GROMMET_OPTIONS, DEFAULT_GROMMETS, HEMMING_INCLUDED, grommetPrice, grommetNote } from "@/lib/pricing/banner-finishing";
 import { formatWeight } from "@/lib/shipping/parcel";
 
 export interface BannerSpec {
   size: string;
   material: string;
   quantity: number;
+  /** Finishing. Hemming is included free on all four sides, so only grommets are chosen. */
+  grommets: string;
 }
 
 export const DEFAULT_BANNER_SPEC: BannerSpec = {
@@ -20,6 +23,8 @@ export const DEFAULT_BANNER_SPEC: BannerSpec = {
   size: "3 ft x 6 ft",
   material: "13 oz. Premium Scrim Glossy Vinyl",
   quantity: 1,
+  // What most people actually want on an outdoor banner, and what the old copy silently promised.
+  grommets: DEFAULT_GROMMETS,
 };
 
 /**
@@ -37,6 +42,7 @@ export function BannerPrintSpec({
   onChange: (next: BannerSpec) => void;
 }) {
   const price = calculateBannerPrice(spec);
+  const finishing = grommetPrice(spec.size, spec.grommets, spec.quantity);
   const parcel = bannerParcel(spec.size, spec.material, spec.quantity);
 
   function set<K extends keyof BannerSpec>(key: K, value: BannerSpec[K]) {
@@ -80,6 +86,19 @@ export function BannerPrintSpec({
         </div>
 
         <div className="rounded-lg border border-kc-border p-4">
+          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Grommets</Label>
+          <Select value={spec.grommets} onValueChange={(v) => v && set("grommets", v)}>
+            <SelectTrigger aria-label="Grommets" className="border-kc-border"><SelectValue>{spec.grommets}</SelectValue></SelectTrigger>
+            <SelectContent>
+              {GROMMET_OPTIONS.map((g) => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-2 text-xs leading-snug text-kc-muted">{grommetNote(spec.grommets)}</p>
+        </div>
+
+        <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
           <Select value={String(spec.quantity)} onValueChange={(v) => v && set("quantity", Number(v))}>
             <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue /></SelectTrigger>
@@ -96,7 +115,7 @@ export function BannerPrintSpec({
           <p className="mt-1 text-sm text-kc-dark">
             {parcel.lengthIn}″ tube, {parcel.widthIn}″ across
           </p>
-          <p className="text-xs text-kc-muted">{formatWeight(parcel.weightOz)} · hemmed with grommets</p>
+          <p className="text-xs text-kc-muted">{formatWeight(parcel.weightOz)} · {HEMMING_INCLUDED.toLowerCase()}, included</p>
         </div>
       </div>
 
@@ -108,7 +127,14 @@ export function BannerPrintSpec({
           </div>
         </div>
         {price.valid ? (
-          <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
+          <div className="text-right">
+            <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total + finishing)}</div>
+            {finishing > 0 && (
+              <div className="text-xs text-kc-muted">
+                includes {formatDollars(finishing)} for {spec.grommets.toLowerCase()}
+              </div>
+            )}
+          </div>
         ) : (
           <p className="max-w-xs text-right text-sm text-amber-600">{price.error}</p>
         )}

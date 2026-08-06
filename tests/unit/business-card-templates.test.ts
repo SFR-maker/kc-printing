@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateAllTemplates, TEMPLATE_COUNT_EXPECTED } from "@/lib/business-card/templates/generate";
+import { CATEGORIES } from "@/lib/business-card/templates/categories";
 import { CardTemplateSchema } from "@/lib/business-card/schema";
 import { validateDesign } from "@/lib/business-card/validate";
 import { renderSideToSvg } from "@/lib/business-card/render-svg";
@@ -7,9 +8,12 @@ import { renderSideToSvg } from "@/lib/business-card/render-svg";
 describe("generated business card template set", () => {
   const templates = generateAllTemplates();
 
-  it("produces exactly 100 templates", () => {
-    expect(templates.length).toBe(100);
-    expect(TEMPLATE_COUNT_EXPECTED).toBe(100);
+  // Derived from the catalogue rather than frozen at a number: the point is five layouts per
+  // category with none missing, and hardcoding the total meant every new industry failed the suite
+  // for growing it.
+  it("produces five layouts for every category", () => {
+    expect(templates.length).toBe(CATEGORIES.length * 5);
+    expect(TEMPLATE_COUNT_EXPECTED).toBe(CATEGORIES.length * 5);
   });
 
   it("has unique slugs and ids", () => {
@@ -19,11 +23,14 @@ describe("generated business card template set", () => {
     expect(ids.size).toBe(templates.length);
   });
 
-  it("covers all 20 categories with exactly 5 templates each", () => {
+  it("covers every category with exactly 5 templates each", () => {
     const byIndustry = new Map<string, number>();
     for (const t of templates) byIndustry.set(t.industry, (byIndustry.get(t.industry) ?? 0) + 1);
-    expect(byIndustry.size).toBe(20);
-    for (const count of byIndustry.values()) expect(count).toBe(5);
+    expect(byIndustry.size).toBe(CATEGORIES.length);
+    for (const [industry, count] of byIndustry) expect(count, industry).toBe(5);
+    // Every declared category actually produced templates - a typo in a key would otherwise just
+    // create a quietly empty industry.
+    for (const c of CATEGORIES) expect(byIndustry.get(c.key), `${c.key} produced nothing`).toBe(5);
   });
 
   it("uses 5 distinct archetypes within every category (no repeated layout per category)", () => {

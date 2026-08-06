@@ -23,6 +23,7 @@ import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
 } from "@/components/builder/PostcardPrintSpec";
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
+import { grommetPrice } from "@/lib/pricing/banner-finishing";
 import { CardSideSchema } from "@/lib/business-card/schema";
 import { renderSideToSvg } from "@/lib/business-card/render-svg";
 import {
@@ -75,7 +76,7 @@ const schema = z.object({
   quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
   bcSpec: bcSpecSchema.optional(),
   bannerSpec: z
-    .object({ size: z.string(), material: z.string(), quantity: z.number() })
+    .object({ size: z.string(), material: z.string(), quantity: z.number(), grommets: z.string() })
     .optional(),
   postcardSpec: z
     .object({ size: z.string(), paper: z.string(), color: z.string(), quantity: z.number() })
@@ -346,7 +347,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   });
 
   const bcPrice = isBusinessCards && values.bcSpec ? calculateBusinessCardPrice(values.bcSpec, pricing) : null;
-  const bannerPrice = isBanners && values.bannerSpec ? calculateBannerPrice(values.bannerSpec) : null;
+  // Finishing is quoted separately by the supplier, so it is added here rather than folded into the
+  // base curve - the panel shows it as its own line.
+  const bannerSpecValue = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
+  const bannerPrice = isBanners && values.bannerSpec
+    ? (() => {
+        const base = calculateBannerPrice(values.bannerSpec);
+        if (!base.valid) return base;
+        return { ...base, total: round2(base.total + grommetPrice(bannerSpecValue.size, bannerSpecValue.grommets, bannerSpecValue.quantity)) };
+      })()
+    : null;
   const postcardPrice = isPostcards && values.postcardSpec ? calculatePostcardPrice(values.postcardSpec) : null;
   /**
    * Rigid signs are quoted by the server, so their price arrives asynchronously rather than being

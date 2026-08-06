@@ -5,6 +5,7 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 import { db } from "@/lib/prisma";
 import { calculateBusinessCardPrice } from "@/lib/pricing/business-cards";
 import { calculateBannerPrice } from "@/lib/pricing/banners";
+import { grommetPrice, isGrommetPriced } from "@/lib/pricing/banner-finishing";
 import { calculatePostcardPrice } from "@/lib/pricing/postcards";
 import { calculateRigidSignPrice } from "@/lib/pricing/rigid-signs-server";
 import { isTestOrderCode } from "@/lib/pricing/test-order";
@@ -76,7 +77,12 @@ const schema = z.object({
   bcSpec: bcSpecSchema.optional(),
   /** Banners are described by label rather than numeric ids. */
   bannerSpec: z
-    .object({ size: z.string().max(60), material: z.string().max(80), quantity: z.number().int().positive() })
+    .object({
+      size: z.string().max(60),
+      material: z.string().max(80),
+      quantity: z.number().int().positive(),
+      grommets: z.string().max(60).optional(),
+    })
     .optional(),
   postcardSpec: z
     .object({
@@ -198,7 +204,14 @@ export async function POST(req: Request) {
     // choose its own figure.
     const priced = calculateBannerPrice(bannerSpec);
     if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid banner specification" }, { status: 400 });
-    printPrice = priced.total;
+    // Grommets are a supplier-quoted extra on top of the base curve. Priced here from the same
+    // table the builder quoted from; an unquoted choice is refused rather than silently free,
+    // since print sells at cost and a missed extra is a loss on the job.
+    const grommets = bannerSpec.grommets ?? "No Grommets";
+    if (grommets !== "No Grommets" && !isGrommetPriced(bannerSpec.size, grommets, bannerSpec.quantity)) {
+      return NextResponse.json({ error: "That grommet option isn't available for this banner size and quantity." }, { status: 400 });
+    }
+    printPrice = round2(priced.total + grommetPrice(bannerSpec.size, grommets, bannerSpec.quantity));
     orderQuantity = bannerSpec.quantity;
   } else if (service === "rigid-signs" && rigidSpec) {
     // Priced server-side from the same tables the builder quoted from. Those tables are two

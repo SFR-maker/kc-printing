@@ -179,8 +179,8 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
         </div>
       )}
 
-      {selectedIds.length > 0 && (
-        <ElementQuickToolbar variant={isMobile ? "mobile" : "desktop"} onOpenDetails={() => setPropertiesSheetOpen(true)} />
+      {!isMobile && selectedIds.length > 0 && (
+        <ElementQuickToolbar variant="desktop" onOpenDetails={() => setPropertiesSheetOpen(true)} />
       )}
 
       <div className="flex flex-1 overflow-hidden">
@@ -196,11 +196,24 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
           >
             <CardCanvas />
           </div>
+          {/*
+            Over the canvas on mobile, not above it in the flow.
+            
+            In the flow it changed the size of the canvas area the moment anything was selected, so
+            the design re-fitted and jumped about 112px under the user's finger - which made
+            double-tapping to edit text nearly impossible, because the second tap landed wherever the
+            artwork had moved to. Overlaying keeps the canvas box constant for the whole gesture.
+          */}
+          {isMobile && selectedIds.length > 0 && (
+            <div className="absolute inset-x-0 bottom-0 z-30">
+              <ElementQuickToolbar variant="mobile" onOpenDetails={() => setPropertiesSheetOpen(true)} />
+            </div>
+          )}
         </LogoDropZone>
         {!isMobile && <RightPropertiesPanel />}
       </div>
 
-      {isMobile && selectedIds.length === 0 && <MobileAddBar />}
+      {isMobile && <MobileAddBar />}
       {isMobile && <MobilePropertiesSheet open={propertiesSheetOpen} onClose={() => setPropertiesSheetOpen(false)} />}
     </div>
   );

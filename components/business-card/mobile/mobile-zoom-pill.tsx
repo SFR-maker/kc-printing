@@ -17,6 +17,7 @@ export function MobileZoomPill() {
   const zoom = useCardEditorStore((s) => s.zoom);
   const setZoom = useCardEditorStore((s) => s.setZoom);
   const requestFit = useCardEditorStore((s) => s.requestFit);
+  const selectedIds = useCardEditorStore((s) => s.selectedIds);
 
   // Multiplied, not added: a flat step is a nudge at 100% and nonsense at 1%.
   const STEP = 1.25;
@@ -25,7 +26,7 @@ export function MobileZoomPill() {
   const label = zoom < 0.1 ? `${(zoom * 100).toFixed(1)}%` : `${Math.round(zoom * 100)}%`;
 
   return (
-    <div className="pointer-events-auto absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-kc-border bg-white/95 px-1.5 py-1 shadow-lg backdrop-blur">
+    <div className={`pointer-events-auto absolute ${selectedIds.length > 0 ? "bottom-16" : "bottom-3"} left-1/2 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-kc-border bg-white/95 px-1.5 py-1 shadow-lg backdrop-blur`}>
       <button
         type="button"
         aria-label="Zoom out"

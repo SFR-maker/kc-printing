@@ -152,3 +152,153 @@ test.describe("Business card editor — mobile UX", () => {
     expect(box!.width).toBeLessThanOrEqual((page.viewportSize()?.width ?? 0) + 1);
   });
 });
+
+test.describe("Business card editor — editing text by touch", () => {
+  // Not the full iPhone descriptor: spreading it sets defaultBrowserType, which Playwright
+  // refuses inside a describe block.
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  // The editor is the heaviest route in the app; under a full parallel run the dev server needs the
+  // extra headroom.
+  test.slow();
+
+  /** Inserts a Heading and dismisses the sheet that inserted it. */
+  async function insertHeading(page: import("@playwright/test").Page, url: string) {
+    await page.goto(url, { waitUntil: "networkidle" });
+    // Waited on rather than slept through: under a loaded dev server the editor can take seconds to
+    // become interactive, and a fixed delay either flakes or wastes time on every run.
+    await expect(page.locator("canvas").first()).toBeVisible();
+    const textTab = page.locator("button", { hasText: "Text" }).last();
+    await expect(textTab).toBeVisible();
+    await textTab.tap();
+    const heading = page.getByRole("button", { name: "Heading", exact: true });
+    await expect(heading).toBeVisible();
+    await heading.tap();
+    // The element exists once Konva has a Text node to find.
+    await expect
+      .poll(() => page.evaluate(() =>
+        (window as never as { Konva?: { stages: { find: (s: string) => unknown[] }[] } }).Konva?.stages.at(-1)?.find("Text").length ?? 0
+      ))
+      .toBeGreaterThan(0);
+    await page.keyboard.press("Escape");
+    // The canvas re-fits when webfonts land, which moves the artwork; callers re-measure anyway.
+    await page.waitForTimeout(600);
+  }
+
+  /** Where the first text element sits on screen, right now. */
+  async function textPoint(page: import("@playwright/test").Page) {
+    return page.evaluate(() => {
+      const stage = (window as never as { Konva: { stages: never[] } }).Konva.stages.at(-1) as never as {
+        content: HTMLElement;
+        scaleX: () => number;
+        find: (s: string) => { getClientRect: (o: object) => { x: number; y: number; width: number; height: number } }[];
+      };
+      const rect = stage.content.getBoundingClientRect();
+      const zoom = stage.scaleX();
+      const box = stage.find("Text")[0].getClientRect({ relativeTo: stage });
+      return { x: rect.left + (box.x + box.width / 2) * zoom, y: rect.top + (box.y + box.height / 2) * zoom };
+    });
+  }
+
+  /**
+   * Taps the text until it is selected, and reports where it was tapped.
+   *
+   * Retried because the canvas re-fits whenever a webfont or the layout settles, which moves the
+   * artwork away from a point measured a moment earlier - a race in the test, not in the editor.
+   */
+  async function selectText(page: import("@playwright/test").Page) {
+    const editBtn = page.locator('button[aria-label="Edit text"]');
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const pt = await textPoint(page);
+      await page.touchscreen.tap(pt.x, pt.y);
+      if (await editBtn.isVisible({ timeout: 1500 }).catch(() => false)) return pt;
+      await page.waitForTimeout(400);
+    }
+    throw new Error("could not select the text element");
+  }
+
+  /**
+   * Double-taps until the editor opens.
+   *
+   * Retried because the editor only counts two taps as one gesture within 400ms - the same window a
+   * browser uses - and two CDP round trips on a loaded machine can take longer than that. A finger
+   * is not rate-limited by CDP, so this is a limit of the harness, not of the gesture.
+   */
+  async function doubleTap(page: import("@playwright/test").Page, pt: { x: number; y: number }) {
+    const editor = page.locator("[data-canvas-text-editor]");
+    for (let attempt = 0; attempt < 4; attempt++) {
+      await page.touchscreen.tap(pt.x, pt.y);
+      await page.touchscreen.tap(pt.x, pt.y);
+      if (await editor.isVisible({ timeout: 1500 }).catch(() => false)) return;
+      await page.waitForTimeout(500);
+    }
+  }
+
+  test("47 - double-tapping text on a phone opens the editor, focused and legible", async ({ page }) => {
+    /*
+     * This was impossible before. Konva's `dbltap` never arrives once an element is selected,
+     * because the Transformer's finger-sized anchors blanket a small element and the first tap of
+     * the pair lands on a handle instead of the text — so there was no way to reword text on a
+     * phone at all.
+     */
+    await insertHeading(page, "/services/business-cards/design/new");
+    await doubleTap(page, await selectText(page));
+
+    const editor = page.locator("[data-canvas-text-editor]");
+    await expect(editor).toBeVisible();
+    await expect(editor).toBeFocused();
+    // Under 16px iOS zooms the whole page on focus, and at banner zoom the true size is ~5px.
+    const fontSize = await editor.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+    expect(fontSize).toBeGreaterThanOrEqual(16);
+  });
+
+  test("48 - selecting an element does not move the canvas out from under the finger", async ({ page }) => {
+    // The quick toolbar used to sit above the canvas in the flow, so selecting anything re-fitted
+    // the design and shifted it ~112px mid-gesture.
+    await insertHeading(page, "/services/business-cards/design/new");
+    const editBtn = page.locator('button[aria-label="Edit text"]');
+    let before: { x: number; y: number } | null = null;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const pt = await textPoint(page);
+      before = await page.locator("canvas").first().boundingBox();
+      await page.touchscreen.tap(pt.x, pt.y);
+      if (await editBtn.isVisible({ timeout: 1500 }).catch(() => false)) break;
+      await page.waitForTimeout(400);
+    }
+    await expect(editBtn).toBeVisible();
+    const after = await page.locator("canvas").first().boundingBox();
+    expect(Math.abs(after!.y - before!.y)).toBeLessThanOrEqual(2);
+    expect(Math.abs(after!.x - before!.x)).toBeLessThanOrEqual(2);
+  });
+
+  test("49 - the Edit text button opens the editor without needing the gesture", async ({ page }) => {
+    await insertHeading(page, "/services/business-cards/design/new");
+    await selectText(page);
+    const editBtn = page.locator('button[aria-label="Edit text"]');
+    await editBtn.tap();
+    await expect(page.locator("[data-canvas-text-editor]")).toBeFocused();
+  });
+
+  test("50 - editing text on a banner works at its fitted zoom, and the box does not balloon", async ({ page }) => {
+    // A banner fits at ~8%, where a heading is under 5px tall on screen.
+    await insertHeading(page, "/services/banners/design/new");
+    const pt = await selectText(page);
+    const heightBefore = await page.evaluate(() =>
+      (window as never as { Konva: { stages: { find: (s: string) => { height: () => number }[] }[] } }).Konva.stages.at(-1)!.find("Text")[0].height()
+    );
+    await doubleTap(page, pt);
+    await expect(page.locator("[data-canvas-text-editor]")).toBeFocused();
+
+    await page.keyboard.press("Control+a");
+    await page.keyboard.type("GRAND OPENING");
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(900);
+
+    const after = await page.evaluate(() => {
+      const t = (window as never as { Konva: { stages: { find: (s: string) => { text: () => string; height: () => number }[] }[] } }).Konva.stages.at(-1)!.find("Text")[0];
+      return { text: t.text(), height: t.height() };
+    });
+    expect(after.text).toBe("GRAND OPENING");
+    // scrollHeight used to be read against the editor's 44px floor, growing every commit by a third.
+    expect(after.height).toBeLessThanOrEqual(heightBefore * 1.1);
+  });
+});

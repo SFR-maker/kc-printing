@@ -50,12 +50,23 @@ export function ElementNode({ el, pxPerIn, isSelected, onSelect, onChange, onDra
       draggable={!el.locked}
       listening={el.visible}
       onClick={(e) => onSelect(el.id, e.evt.shiftKey)}
-      onTap={() => onSelect(el.id, false)}
       onDragStart={() => onDragStart(el.id)}
       onDragMove={(e) => onDragMove(el.id, e.target.x(), e.target.y())}
       onDragEnd={(e) => onDragEnd(el.id, e.target.x(), e.target.y())}
       onTransformEnd={handleTransformEnd}
+      onTap={() => onSelect(el.id, false)}
       onDblClick={() => el.type === "text" && onDblClickText(el.id)}
+      /*
+       * Konva names the same gesture three ways: `dblclick` for a mouse, `dbltap` for a finger, and
+       * `pointerdblclick` when the browser has pointer events - which every phone does, and which
+       * therefore is the one that actually fires there. Only `dblclick` was bound, so on a phone
+       * double-tapping text did nothing at all.
+       *
+       * Binding all three is safe: a mouse produces one of them, a finger the other two, and
+       * startEditText is idempotent.
+       */
+      onDblTap={() => el.type === "text" && onDblClickText(el.id)}
+      onPointerDblClick={() => el.type === "text" && onDblClickText(el.id)}
     >
       <ElementContent el={el} widthPx={widthPx} heightPx={heightPx} pxPerIn={pxPerIn} />
       {isSelected && el.locked && (

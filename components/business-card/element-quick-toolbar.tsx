@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bold, Italic, Copy, Trash2, MoreHorizontal, Lock, Unlock, AlignStartVertical } from "lucide-react";
+import { Bold, Italic, Copy, Trash2, MoreHorizontal, Lock, Unlock, AlignStartVertical, Pencil } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ export function ElementQuickToolbar({ onOpenDetails, variant = "desktop" }: Elem
   const removeSelected = useCardEditorStore((s) => s.removeSelected);
   const duplicateSelected = useCardEditorStore((s) => s.duplicateSelected);
   const toggleLockSelected = useCardEditorStore((s) => s.toggleLockSelected);
+  const requestEditText = useCardEditorStore((s) => s.requestEditText);
 
   const elements = activeSide === "front" ? design.front.elements : design.back.elements;
   const selected = elements.filter((el) => selectedIds.includes(el.id));
@@ -69,6 +70,14 @@ export function ElementQuickToolbar({ onOpenDetails, variant = "desktop" }: Elem
               {single?.locked ? <Unlock className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
             </IconBtn>
           </>
+        )}
+        {/*
+            Rewording text needs a control, not just a gesture. Double-tap is the only way in on
+            desktop and is fine there, but on a phone the Transformer handles around a selected
+            element are as tall as a heading is, so the gesture is fiddly at best - and nothing on
+            screen ever said the gesture existed. */}
+        {single?.type === "text" && (
+          <IconBtn label="Edit text" onClick={() => requestEditText(single.id)}><Pencil className="h-4 w-4" /></IconBtn>
         )}
         {isMobile && <IconBtn label="More options" onClick={onOpenDetails}><MoreHorizontal className="h-4 w-4" /></IconBtn>}
         <IconBtn label="Delete" onClick={removeSelected}><Trash2 className="h-4 w-4 text-red-500" /></IconBtn>

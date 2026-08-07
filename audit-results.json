@@ -1,132 +1,132 @@
 {
   "base": "https://611printing.com",
-  "at": "2026-08-06T03:24:08.437Z",
+  "at": "2026-08-07T15:16:18.962Z",
   "results": [
     {
       "n": 1,
       "area": "pages",
       "name": "/ responds",
       "status": "PASS",
-      "detail": "200 in 210ms"
+      "detail": "200 in 221ms"
     },
     {
       "n": 2,
       "area": "pages",
       "name": "/services responds",
       "status": "PASS",
-      "detail": "200 in 188ms"
+      "detail": "200 in 346ms"
     },
     {
       "n": 3,
       "area": "pages",
       "name": "/services/business-cards responds",
       "status": "PASS",
-      "detail": "200 in 67ms"
+      "detail": "200 in 75ms"
     },
     {
       "n": 4,
       "area": "pages",
       "name": "/services/postcards responds",
       "status": "PASS",
-      "detail": "200 in 68ms"
+      "detail": "200 in 113ms"
     },
     {
       "n": 5,
       "area": "pages",
       "name": "/services/banners responds",
       "status": "PASS",
-      "detail": "200 in 186ms"
+      "detail": "200 in 171ms"
     },
     {
       "n": 6,
       "area": "pages",
       "name": "/services/rigid-signs responds",
       "status": "PASS",
-      "detail": "200 in 175ms"
+      "detail": "200 in 179ms"
     },
     {
       "n": 7,
       "area": "pages",
       "name": "/services/business-cards/order responds",
       "status": "PASS",
-      "detail": "200 in 145ms"
+      "detail": "200 in 245ms"
     },
     {
       "n": 8,
       "area": "pages",
       "name": "/services/postcards/order responds",
       "status": "PASS",
-      "detail": "200 in 229ms"
+      "detail": "200 in 233ms"
     },
     {
       "n": 9,
       "area": "pages",
       "name": "/services/banners/order responds",
       "status": "PASS",
-      "detail": "200 in 160ms"
+      "detail": "200 in 116ms"
     },
     {
       "n": 10,
       "area": "pages",
       "name": "/services/rigid-signs/order responds",
       "status": "PASS",
-      "detail": "200 in 142ms"
+      "detail": "200 in 123ms"
     },
     {
       "n": 11,
       "area": "pages",
       "name": "/pricing responds",
       "status": "PASS",
-      "detail": "200 in 80ms"
+      "detail": "200 in 69ms"
     },
     {
       "n": 12,
       "area": "pages",
       "name": "/portfolio responds",
       "status": "PASS",
-      "detail": "200 in 88ms"
+      "detail": "200 in 106ms"
     },
     {
       "n": 13,
       "area": "pages",
       "name": "/contact responds",
       "status": "PASS",
-      "detail": "200 in 63ms"
+      "detail": "200 in 83ms"
     },
     {
       "n": 14,
       "area": "pages",
       "name": "/faq responds",
       "status": "PASS",
-      "detail": "200 in 163ms"
+      "detail": "200 in 186ms"
     },
     {
       "n": 15,
       "area": "pages",
       "name": "/about responds",
       "status": "PASS",
-      "detail": "200 in 71ms"
+      "detail": "200 in 70ms"
     },
     {
       "n": 16,
       "area": "pages",
       "name": "/terms responds",
       "status": "PASS",
-      "detail": "200 in 76ms"
+      "detail": "200 in 72ms"
     },
     {
       "n": 17,
       "area": "pages",
       "name": "/privacy responds",
       "status": "PASS",
-      "detail": "200 in 66ms"
+      "detail": "200 in 64ms"
     },
     {
       "n": 18,
       "area": "pages",
       "name": "/refund-policy responds",
       "status": "PASS",
-      "detail": "200 in 63ms"
+      "detail": "200 in 70ms"
     },
     {
       "n": 19,
@@ -742,9 +742,9 @@
     {
       "n": 110,
       "area": "builder",
-      "name": "banners: quantity is not preselected",
+      "name": "banners: quantity preselects 1",
       "status": "PASS",
-      "detail": "Choose a quantity▼"
+      "detail": "1▼"
     },
     {
       "n": 111,
@@ -923,7 +923,7 @@
       "area": "perf",
       "name": "/ responds under 2s",
       "status": "PASS",
-      "detail": "185ms"
+      "detail": "195ms"
     },
     {
       "n": 138,
@@ -937,7 +937,7 @@
       "area": "perf",
       "name": "/pricing responds under 2s",
       "status": "PASS",
-      "detail": "63ms"
+      "detail": "96ms"
     },
     {
       "n": 140,
@@ -951,7 +951,7 @@
       "area": "perf",
       "name": "/services/business-cards/order responds under 2s",
       "status": "PASS",
-      "detail": "157ms"
+      "detail": "120ms"
     },
     {
       "n": 142,

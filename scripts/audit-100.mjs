@@ -208,7 +208,16 @@ for (const [slug, expectControls] of [
     const el = [...document.querySelectorAll("[role=combobox]")].find((e) => e.getAttribute("aria-label") === "Quantity");
     return el?.textContent?.trim() ?? null;
   });
-  check("builder", `${slug}: quantity is not preselected`, /choose/i.test(qty ?? ""), qty ?? "no control");
+  /*
+   * Banners are the exception, on request: a banner order is almost always a single banner, so the
+   * quantity starts at 1. Everywhere else quantity stays an explicit choice, because the price
+   * depends on it far more sharply and a silent default would quote a number nobody picked.
+   */
+  if (slug === "banners") {
+    check("builder", `${slug}: quantity preselects 1`, /^1$/.test((qty ?? "").replace(/[^0-9]/g, "")), qty ?? "no control");
+  } else {
+    check("builder", `${slug}: quantity is not preselected`, /choose/i.test(qty ?? ""), qty ?? "no control");
+  }
 
   await page.close();
 }

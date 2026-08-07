@@ -25,6 +25,13 @@ interface EditorState {
   zoom: number;
   /** Incremented by requestFit; the canvas re-fits when it changes. */
   fitRequest: number;
+  /**
+   * Set by requestEditText; the canvas opens the text editor for this element when it changes.
+   *
+   * Carries a counter as well as the id so that asking to edit the same element twice in a row is
+   * still two distinct requests.
+   */
+  editTextRequest: { id: string; n: number } | null;
   showGuides: boolean;
   showGrid: boolean;
   dirty: boolean;
@@ -66,6 +73,7 @@ interface EditorState {
   setZoom: (zoom: number) => void;
   /** Asks the canvas to re-fit. Only it knows the space available, so this cannot be a zoom value. */
   requestFit: () => void;
+  requestEditText: (id: string) => void;
   toggleGuides: () => void;
   toggleGrid: () => void;
   resetToTemplate: (front: CardSide, back: CardSide, palette?: string[] | null) => void;
@@ -89,6 +97,7 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   future: [],
   zoom: 1,
   fitRequest: 0,
+  editTextRequest: null,
   showGuides: true,
   showGrid: false,
   dirty: false,
@@ -383,6 +392,7 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
    */
   setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.005, zoom)) }),
   requestFit: () => set((s) => ({ fitRequest: s.fitRequest + 1 })),
+  requestEditText: (id) => set((s) => ({ editTextRequest: { id, n: (s.editTextRequest?.n ?? 0) + 1 } })),
   toggleGuides: () => set((s) => ({ showGuides: !s.showGuides })),
   toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
 

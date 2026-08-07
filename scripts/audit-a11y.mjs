@@ -28,7 +28,7 @@ for (const path of PAGES) {
     await page.waitForTimeout(2500);
     await page.addScriptTag({ content: AXE });
     const r = await page.evaluate(async () => {
-      // @ts-ignore
+      // @ts-expect-error - axe is injected into the page at runtime, not imported
       const out = await window.axe.run(document, {
         runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },
       });

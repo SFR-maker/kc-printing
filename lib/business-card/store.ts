@@ -23,6 +23,8 @@ interface EditorState {
   past: HistoryEntry[];
   future: HistoryEntry[];
   zoom: number;
+  /** Incremented by requestFit; the canvas re-fits when it changes. */
+  fitRequest: number;
   showGuides: boolean;
   showGrid: boolean;
   dirty: boolean;
@@ -62,6 +64,8 @@ interface EditorState {
   canRedo: () => boolean;
 
   setZoom: (zoom: number) => void;
+  /** Asks the canvas to re-fit. Only it knows the space available, so this cannot be a zoom value. */
+  requestFit: () => void;
   toggleGuides: () => void;
   toggleGrid: () => void;
   resetToTemplate: (front: CardSide, back: CardSide, palette?: string[] | null) => void;
@@ -84,6 +88,7 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   past: [],
   future: [],
   zoom: 1,
+  fitRequest: 0,
   showGuides: true,
   showGrid: false,
   dirty: false,
@@ -367,7 +372,17 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   // Floor matches card-canvas.tsx's auto-fit floor (not a higher "always readable" value) — a
   // 33x81in roll-up banner genuinely needs single-digit zoom to fit on screen, and this is the
   // one place that clamp is actually enforced (auto-fit calls this same action).
-  setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.03, zoom)) }),
+  /**
+   * Clamped wide enough for the largest thing sold.
+   *
+   * The floor was 0.03, which is bigger than a banner needs: a 4 x 12ft banner is 28,800px at
+   * PX_PER_IN, and fitting that on a 374px phone takes 0.013. The floor overrode the fit, so the
+   * canvas rendered 864px wide on a 374px screen and was simply cut off - and because the same
+   * clamp applies to the buttons, zooming out could not recover it either. 0.005 covers a 6 x 20ft
+   * banner with room to spare.
+   */
+  setZoom: (zoom) => set({ zoom: Math.min(4, Math.max(0.005, zoom)) }),
+  requestFit: () => set((s) => ({ fitRequest: s.fitRequest + 1 })),
   toggleGuides: () => set((s) => ({ showGuides: !s.showGuides })),
   toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
 

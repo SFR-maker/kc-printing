@@ -7,6 +7,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useCardEditorStore } from "@/lib/business-card/store";
 import { LogoTile } from "@/components/layout/Wordmark";
 
+
+/**
+ * Zoom steps multiply rather than add.
+ *
+ * A flat 0.15 is a sensible nudge at 100% and nonsense at banner scale: from the 1.3% a 4 x 12ft
+ * banner fits at, "zoom out" did nothing and "zoom in" jumped six-fold. A ratio behaves the same at
+ * every scale.
+ */
+const ZOOM_STEP = 1.25;
 interface TopCommandBarProps {
   onSave: () => void;
   saving: boolean;
@@ -25,6 +34,7 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
   const canRedo = useCardEditorStore((s) => s.future.length > 0);
   const zoom = useCardEditorStore((s) => s.zoom);
   const setZoom = useCardEditorStore((s) => s.setZoom);
+  const requestFit = useCardEditorStore((s) => s.requestFit);
   const showGuides = useCardEditorStore((s) => s.showGuides);
   const toggleGuides = useCardEditorStore((s) => s.toggleGuides);
   const showGrid = useCardEditorStore((s) => s.showGrid);
@@ -46,14 +56,14 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
           <Redo2 className="h-4 w-4" />
         </IconButton>
         <div className="mx-1 h-5 w-px bg-kc-border" />
-        <IconButton label="Zoom out" onClick={() => setZoom(zoom - 0.15)}>
+        <IconButton label="Zoom out" onClick={() => setZoom(zoom / ZOOM_STEP)}>
           <ZoomOut className="h-4 w-4" />
         </IconButton>
         <span className="w-11 text-center text-xs text-kc-muted">{Math.round(zoom * 100)}%</span>
-        <IconButton label="Zoom in" onClick={() => setZoom(zoom + 0.15)}>
+        <IconButton label="Zoom in" onClick={() => setZoom(zoom * ZOOM_STEP)}>
           <ZoomIn className="h-4 w-4" />
         </IconButton>
-        <IconButton label="Fit to screen" onClick={() => setZoom(1)}>
+        <IconButton label="Fit to screen" onClick={() => requestFit()}>
           <Maximize2 className="h-4 w-4" />
         </IconButton>
         <div className="mx-1 h-5 w-px bg-kc-border" />

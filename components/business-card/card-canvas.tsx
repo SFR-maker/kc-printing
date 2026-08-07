@@ -74,6 +74,7 @@ export function CardCanvas() {
   }, []);
 
   const setZoom = useCardEditorStore((s) => s.setZoom);
+  const fitRequest = useCardEditorStore((s) => s.fitRequest);
 
   // Auto-fit the card to whatever space is actually available (critical on mobile, where a fixed
   // 100% zoom is wider than the whole screen) and re-fit on resize/orientation change. This means a
@@ -101,10 +102,10 @@ export function CardCanvas() {
        * sharp; the artwork itself is vector and rescales cleanly.
        */
       const fitZoom = Math.min(availW / widthPx, availH / heightPx, 2.5);
-      // Floor is intentionally low, not the ~25% that's plenty for a business card — a 33x81in
-      // roll-up banner can genuinely need single-digit zoom to fit on screen at all, and flooring
-      // it higher just makes most of the design scroll out of view instead of shrinking to fit.
-      setZoom(Math.max(0.03, fitZoom));
+      // Whatever fits, however small. A floor above the fit does not keep the design readable, it
+      // just pushes the edges off screen: a 4 x 12ft banner needs 0.013 on a phone and a 0.03 floor
+      // rendered it 864px wide in a 374px column.
+      setZoom(Math.max(0.005, fitZoom));
     };
 
     fit();
@@ -112,7 +113,48 @@ export function CardCanvas() {
     ro.observe(parent);
     return () => ro.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widthPx, heightPx]);
+  }, [widthPx, heightPx, fitRequest]);
+
+  /**
+   * Pinch to zoom.
+   *
+   * The only zoom controls were buttons behind a kebab menu, which is not how anyone zooms on a
+   * phone - and on a banner, where the fitted view is around 1%, being unable to zoom in meant being
+   * unable to edit at all. Two-finger pinch changes the zoom by the same ratio the fingers move, so
+   * it behaves the same whether the canvas is at 1% or 200%.
+   */
+  useEffect(() => {
+    const el = containerRef.current?.parentElement;
+    if (!el) return;
+
+    let startDistance = 0;
+    let startZoom = 1;
+
+    const distance = (t: TouchList) =>
+      Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+
+    const onStart = (e: TouchEvent) => {
+      if (e.touches.length !== 2) return;
+      startDistance = distance(e.touches);
+      startZoom = useCardEditorStore.getState().zoom;
+    };
+    const onMove = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || !startDistance) return;
+      // Prevent the browser's own page zoom taking the gesture instead.
+      e.preventDefault();
+      setZoom(startZoom * (distance(e.touches) / startDistance));
+    };
+    const onEnd = () => { startDistance = 0; };
+
+    el.addEventListener("touchstart", onStart, { passive: true });
+    el.addEventListener("touchmove", onMove, { passive: false });
+    el.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", onStart);
+      el.removeEventListener("touchmove", onMove);
+      el.removeEventListener("touchend", onEnd);
+    };
+  }, [setZoom]);
 
   useEffect(() => {
     const transformer = transformerRef.current;

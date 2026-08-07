@@ -20,6 +20,7 @@ import { ElementQuickToolbar } from "./element-quick-toolbar";
 import { MobileTopBar } from "./mobile/mobile-top-bar";
 import { MobileAddBar } from "./mobile/mobile-add-bar";
 import { MobilePropertiesSheet } from "./mobile/mobile-properties-sheet";
+import { MobileZoomPill } from "./mobile/mobile-zoom-pill";
 
 const LOCAL_KEY = "draft";
 const AUTOSAVE_DEBOUNCE_MS = 1500;
@@ -185,6 +186,8 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       <div className="flex flex-1 overflow-hidden">
         {!isMobile && <LeftToolPanel />}
         <LogoDropZone>
+          {/* Sits over the canvas so the zoom control is visible while editing, not in a menu. */}
+          {isMobile && <MobileZoomPill />}
           <div
             className="flex flex-1 items-center justify-center overflow-auto bg-kc-bg p-2 sm:p-6"
             onClick={(e) => {

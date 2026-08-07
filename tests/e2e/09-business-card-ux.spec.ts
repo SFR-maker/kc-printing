@@ -128,14 +128,27 @@ test.describe("Business card editor — mobile UX", () => {
     expect(download.suggestedFilename()).toMatch(/\.pdf$/);
   });
 
-  test("46 - zoom controls work from the mobile overflow menu", async ({ page }) => {
+  test("46 - zoom controls sit on the canvas, not behind a menu", async ({ page }) => {
+    /*
+     * They used to be three taps deep in the overflow menu, which on a banner meant being unable to
+     * work at all: a 4 x 12ft banner fits at about 1%, so nothing is touchable until you zoom, and
+     * nothing on screen said zooming was possible.
+     */
     await page.goto("/services/business-cards/design/new");
-    await page.waitForTimeout(800);
-    await page.locator('button[aria-label="More options"]').click();
-    await page.waitForTimeout(300);
-    await expect(page.locator("text=/Zoom \\d+%/")).toBeVisible();
-    await page.locator('button[aria-label="Zoom in"]').click();
-    await page.waitForTimeout(300);
-    await expect(page.locator("text=/Zoom \\d+%/")).toBeVisible();
+    await page.waitForTimeout(1500);
+
+    const readout = page.locator("button").filter({ hasText: /^\d[\d.]*%$/ }).first();
+    await expect(readout).toBeVisible();
+    const before = await readout.textContent();
+
+    await page.locator('button[aria-label="Zoom in"]').first().click();
+    await page.waitForTimeout(500);
+    expect(await readout.textContent()).not.toBe(before);
+
+    // "Fit to screen" re-fits rather than jumping to 100%, which on a banner is 28,800px wide.
+    await page.locator('button[aria-label="Fit to screen"]').first().click();
+    await page.waitForTimeout(700);
+    const box = await page.locator("canvas").first().boundingBox();
+    expect(box!.width).toBeLessThanOrEqual((page.viewportSize()?.width ?? 0) + 1);
   });
 });

@@ -81,8 +81,11 @@ export function BannerPrintSpec({
     // Each change supersedes the one before it, so a slow earlier reply cannot overwrite a newer
     // price with a stale one.
     const ticket = ++latest.current;
-    setPrice((p) => ({ ...p, loading: true }));
     const timer = setTimeout(async () => {
+      // Marked loading inside the debounce rather than in the effect body: setting state
+      // synchronously there cascades a render on every keystroke-speed change, and it also means a
+      // quick change of mind never flashes "Pricing…" before the answer arrives.
+      setPrice((prev) => ({ ...prev, loading: true }));
       try {
         const res = await fetch("/api/price/banners", {
           method: "POST",

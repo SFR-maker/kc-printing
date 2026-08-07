@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Undo2, Redo2, Save, Download, ArrowRight, MoreVertical, Eye, EyeOff, Grid3x3, ZoomIn, ZoomOut, Maximize2, Home } from "lucide-react";
+import { Undo2, Redo2, Save, Download, ArrowRight, MoreVertical, Eye, EyeOff, Grid3x3, Home } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 
 interface MobileTopBarProps {
@@ -21,8 +21,6 @@ export function MobileTopBar({ onSave, saving, onExport, exporting, onContinue }
   const redo = useCardEditorStore((s) => s.redo);
   const canUndo = useCardEditorStore((s) => s.past.length > 0);
   const canRedo = useCardEditorStore((s) => s.future.length > 0);
-  const zoom = useCardEditorStore((s) => s.zoom);
-  const setZoom = useCardEditorStore((s) => s.setZoom);
   const showGuides = useCardEditorStore((s) => s.showGuides);
   const toggleGuides = useCardEditorStore((s) => s.toggleGuides);
   const showGrid = useCardEditorStore((s) => s.showGrid);
@@ -70,14 +68,8 @@ export function MobileTopBar({ onSave, saving, onExport, exporting, onContinue }
           <MenuRow label="Save Design" icon={<Save className="h-4 w-4" />} onClick={() => { onSave(); setMenuOpen(false); }} disabled={saving} />
           <MenuRow label={exporting ? "Exporting..." : "Export PDF"} icon={<Download className="h-4 w-4" />} onClick={() => { onExport(); setMenuOpen(false); }} disabled={exporting} />
           <div className="my-1.5 h-px bg-kc-border" />
-          <div className="flex items-center justify-between px-2 py-1.5">
-            <span className="text-xs text-kc-muted">Zoom {Math.round(zoom * 100)}%</span>
-            <div className="flex items-center gap-1">
-              <button aria-label="Zoom out" onClick={() => setZoom(zoom - 0.15)} className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-kc-bg"><ZoomOut className="h-3.5 w-3.5" /></button>
-              <button aria-label="Zoom in" onClick={() => setZoom(zoom + 0.15)} className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-kc-bg"><ZoomIn className="h-3.5 w-3.5" /></button>
-              <button aria-label="Fit to screen" onClick={() => setZoom(1)} className="flex h-7 w-7 items-center justify-center rounded-md hover:bg-kc-bg"><Maximize2 className="h-3.5 w-3.5" /></button>
-            </div>
-          </div>
+          {/* Zoom lives on the canvas now (MobileZoomPill) - it has to be visible to be used, and
+              a second copy here made every "Zoom in" selector ambiguous. */}
           <MenuRow label={showGuides ? "Hide Guides" : "Show Guides"} icon={showGuides ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />} onClick={toggleGuides} />
           <MenuRow label={showGrid ? "Hide Grid" : "Show Grid"} icon={<Grid3x3 className="h-4 w-4" />} onClick={toggleGrid} />
           <div className="my-1.5 h-px bg-kc-border" />

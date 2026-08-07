@@ -52,13 +52,14 @@ export const STARTING_PRICES: Record<string, number> = {
 };
 
 /**
- * "from $8.39", to the cent.
+ * "from $9" - rounded up to the whole dollar.
  *
- * Not rounded: rounding down advertises a price nothing is sold at, and rounding up hides the
- * cheapest thing on the shelf. The exact figure is both true and checkable.
+ * Up rather than down, always: the real floor for business cards is $8.39, so "from $9" is a price
+ * the customer can actually be charged and beaten, while "from $8" would advertise a figure nothing
+ * is sold at. Ceiling keeps the claim conservative in the customer's favour.
  */
 export function startingPriceLabel(slug: string): string {
   const price = STARTING_PRICES[slug];
   if (!price || !Number.isFinite(price)) return "";
-  return `from $${price.toFixed(2)}`;
+  return `from $${Math.ceil(price)}`;
 }

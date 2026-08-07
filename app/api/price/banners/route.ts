@@ -23,9 +23,20 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
-  const parsed = schema.safeParse(await req.json().catch(() => null));
+  const body = await req.json().catch(() => null);
+  const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ valid: false, total: 0, error: "Invalid request" }, { status: 400 });
+    // A quantity of 0 is the picker's "not chosen yet" sentinel, so it lands here as a failed
+    // positive() check. "Invalid request" told the customer nothing about what to do next.
+    const missingQuantity = !body || typeof body !== "object" || !Number((body as Record<string, unknown>).quantity);
+    return NextResponse.json(
+      {
+        valid: false,
+        total: 0,
+        error: missingQuantity ? "Choose a quantity to see your price." : "That combination isn't available.",
+      },
+      { status: 400 },
+    );
   }
   const { size, material, quantity, grommets } = parsed.data;
 

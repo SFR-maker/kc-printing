@@ -110,6 +110,13 @@ export function calculateBusinessCardPrice(
 ): BcPriceBreakdown {
   const { sizeId, paperId, colorId, quantity, rush = false, roundCorners = false, manualProof = false } = input;
 
+  // Nothing chosen yet is not the same as a choice that cannot be filled: "that quantity isn't
+  // available" reads as a rejection of something the customer picked, when they have not picked.
+  if (!quantity) {
+    return { valid: false, error: "Choose a quantity to see your price.", basePrice: 0, rushSurcharge: 0, roundCornersPrice: 0, proofPrice: 0, total: 0 };
+  }
+
+
   const byQty = data.matrix[matrixKey(sizeId, paperId, colorId)];
   if (!byQty) {
     return { valid: false, error: "This paper/color combination isn't available for the selected size.", basePrice: 0, rushSurcharge: 0, roundCornersPrice: 0, proofPrice: 0, total: 0 };

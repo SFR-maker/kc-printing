@@ -92,6 +92,13 @@ export interface PostcardPrice {
 /** Prices a postcard run. Only exact, quoted figures - never an estimate. */
 export function calculatePostcardPrice(input: PostcardPriceInput): PostcardPrice {
   const { size, paper, color, quantity } = input;
+
+  // Nothing chosen yet is not the same as a choice that cannot be filled: "that quantity isn't
+  // available" reads as a rejection of something the customer picked, when they have not picked.
+  if (!quantity) {
+    return { valid: false, error: "Choose a quantity to see your price.", total: 0 };
+  }
+
   const price = data.prices[`${size}|${paper}|${color}|${quantity}`];
 
   if (price !== undefined) return { valid: true, total: round2(price) };

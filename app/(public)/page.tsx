@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { startingPriceLabel } from "@/lib/pricing/starting-prices";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Star, Phone, Mail, FileCheck, Users2, Clock3 } from "lucide-react";
@@ -33,7 +34,7 @@ const SERVICES = [
     orderHref: "/services/business-cards/order",
     image: "/images/print/business-cards.webp",
     alt: "Three stacks of printed business cards in cyan, magenta, and gold with visible cut edges",
-    price: "from $39",
+    price: startingPriceLabel("business-cards"),
     sizes: "Standard, square, slim, circle, or leaf shapes",
     bestFor: "Networking, trade shows, front-desk stacks",
   },
@@ -43,7 +44,7 @@ const SERVICES = [
     orderHref: "/services/postcards/order",
     image: "/images/print/postcards.webp",
     alt: "A loose pile of printed postcards on a concrete surface",
-    price: "from $49",
+    price: startingPriceLabel("postcards"),
     sizes: "3×5 up to 6×11, EDDM-ready",
     bestFor: "Mailers, promotions, seasonal campaigns",
   },
@@ -53,7 +54,7 @@ const SERVICES = [
     orderHref: "/services/banners/order",
     image: "/images/print/banners.webp",
     alt: "A hemmed vinyl banner with metal grommets, rope-tied to a garden fence",
-    price: "from $79",
+    price: startingPriceLabel("banners"),
     sizes: "Hemmed vinyl and mesh, 1 ft up to 12 ft",
     bestFor: "Storefronts, trade shows, events",
   },
@@ -63,7 +64,7 @@ const SERVICES = [
     orderHref: "/services/rigid-signs/order",
     image: "/images/print/rigid-signs.webp",
     alt: "Four die-cut rigid signs leaning against a studio wall",
-    price: "from $59",
+    price: startingPriceLabel("rigid-signs"),
     sizes: "Circle, star, arrow, house, or rounded square",
     bestFor: "Offices, storefronts, yard and event signage",
   },
@@ -406,6 +407,17 @@ export default async function HomePage() {
                 "@type": "LocalBusiness",
                 "@id": `${APP_URL}/#business`,
                 name: "611 Printing",
+                /*
+                 * The logo Google shows beside the business in search and the knowledge panel, and
+                 * the image it uses in local results. Both were absent, so Google had nothing to
+                 * show and picked whatever it liked off the page.
+                 *
+                 * A raster square, not the SVG: Google's structured-data guidance wants a
+                 * crawlable raster of at least 112 x 112 for `logo`, and icon-512.png is the real
+                 * mark - the black tile with the CMYK bar.
+                 */
+                logo: `${APP_URL}/icon-512.png`,
+                image: [`${APP_URL}/icon-512.png`, `${APP_URL}/og-default.png`],
                 // Was hardcoded to https://kcprinting.com, a domain the site is not served from,
                 // which pointed every structured-data consumer at the wrong host.
                 url: APP_URL,

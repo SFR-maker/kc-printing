@@ -32,8 +32,10 @@ export const DEFAULT_BANNER_SPEC: BannerSpec = {
   // The commonest storefront banner, on the standard scrim.
   size: "3 ft x 6 ft",
   material: "13 oz. Premium Scrim Glossy Vinyl",
-  // 0 means not chosen: quantity is a required choice, not a default run length.
-  quantity: 0,
+  // One banner. Unlike cards or postcards, which sell in runs where any default would be a decision
+  // made for the customer, a banner is usually bought singly - so one is a starting point rather
+  // than an assumption.
+  quantity: 1,
   // What most people actually want on an outdoor banner, and what the old copy silently promised.
   grommets: DEFAULT_GROMMETS,
 };

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { startingPriceLabel } from "@/lib/pricing/starting-prices";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
@@ -17,7 +18,7 @@ const SERVICES = [
     name: "Business Cards",
     image: "/images/print/business-cards.webp",
     alt: "Three stacks of printed business cards in cyan, magenta, and gold with visible cut edges",
-    price: "from $39",
+    price: startingPriceLabel("business-cards"),
     description: "Standard, square, slim, circle, or leaf shapes, in 14 to 32pt paper. Files come back print-ready at 300-350 DPI with proper bleed.",
     highlights: ["Standard 2 × 3.5 in, plus specialty shapes", "14pt to 32pt paper weights", "Up to 8 revisions included"],
   },
@@ -26,7 +27,7 @@ const SERVICES = [
     name: "Postcards",
     image: "/images/print/postcards.webp",
     alt: "A loose pile of printed postcards on a concrete surface",
-    price: "from $49",
+    price: startingPriceLabel("postcards"),
     description: "Six popular sizes from 3×5 to 6×11, front-and-back design, and EDDM-ready layouts for mail campaigns.",
     highlights: ["3×5 up to 6×11, EDDM-ready", "Front and back design", "Up to 8 revisions included"],
   },
@@ -35,7 +36,7 @@ const SERVICES = [
     name: "Banners",
     image: "/images/print/banners.webp",
     alt: "A hemmed vinyl banner with metal grommets, rope-tied to a garden fence",
-    price: "from $79",
+    price: startingPriceLabel("banners"),
     description: "Large-format vinyl and wind-through mesh for storefronts, fences, and outdoor events. Hemmed on all four sides, with grommets where you need them.",
     highlights: ["Vinyl and mesh, 1 ft to 12 ft", "Hemmed four sides, grommets optional", "Up to 8 revisions included"],
   },
@@ -44,7 +45,7 @@ const SERVICES = [
     name: "Rigid Signs",
     image: "/images/print/rigid-signs.webp",
     alt: "Four die-cut rigid signs leaning against a studio wall",
-    price: "from $59",
+    price: startingPriceLabel("rigid-signs"),
     description: "Die-cut rigid signage in circle, star, arrow, house, or rounded-square shapes, available in acrylic, aluminum, PVC, foam board, or corrugated plastic.",
     highlights: ["5 shapes, 5 materials", "Print-ready file with die line included", "Up to 8 revisions included"],
   },

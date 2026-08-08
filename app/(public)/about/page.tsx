@@ -3,8 +3,10 @@ import Image from "next/image";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ClosingCta } from "@/components/layout/ClosingCta";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import { localeAlternates } from "@/lib/i18n/metadata";
 
 export const metadata: Metadata = {
+  alternates: localeAlternates("/about", "en"),
   title: "About 611 Printing - Online Design Studio",
   description:
     "611 Printing is a fully online design studio serving Kansas City, Johnson County, Dallas-Fort Worth, and businesses nationwide. Fast, professional, print-ready.",
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 // Real, verifiable facts only — no client counts, ratings, or years-in-business claims until
 // there's real data to back them.
 const FACTS = [
-  { value: "4", label: "Products, kept deliberately narrow" },
+  { value: "5", label: "Products, kept deliberately narrow" },
   { value: "24hr", label: "Rush turnaround available" },
   { value: "8", label: "Maximum revisions per order" },
   { value: "100%", label: "Online, no in-person visit needed" },

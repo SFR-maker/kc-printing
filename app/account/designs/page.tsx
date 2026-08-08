@@ -24,6 +24,7 @@ const ROUTE_BY_DB_PRODUCT: Record<string, DesignProduct> = {
   POSTCARD: "postcard",
   BANNER: "banner",
   RIGID_SIGN: "rigid-sign",
+  WINDOW_DECAL: "window-decal",
 };
 
 export default async function DesignsPage() {

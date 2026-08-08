@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Boxes, ClipboardCheck, FolderKanban, Globe, Image, LayoutDashboard, Package, ScrollText,
-  Search, Settings2, Sparkles, Star, Tag, Upload, Users, Wrench,
+  Megaphone, Search, Settings2, Sparkles, Star, Tag, Upload, Users, Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +37,7 @@ const GROUPS: { heading: string; items: { href: string; label: string; icon: typ
     heading: "The website",
     items: [
       { href: "/admin/homepage", label: "Homepage", icon: Globe },
+      { href: "/admin/specials", label: "Specials", icon: Megaphone },
       { href: "/admin/portfolio", label: "Portfolio", icon: Image },
       { href: "/admin/testimonials", label: "Testimonials", icon: Star },
       { href: "/admin/seo", label: "SEO", icon: Search },

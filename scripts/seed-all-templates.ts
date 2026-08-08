@@ -6,6 +6,7 @@ import { generateAiCardTemplates } from "../lib/business-card/templates/generate
 import { generatePostcardTemplates } from "../lib/business-card/templates/generate-postcard";
 import { generateBannerTemplates } from "../lib/business-card/templates/generate-banner";
 import { generateRigidSignTemplates } from "../lib/business-card/templates/generate-rigid-sign";
+import { generateWindowDecalTemplates } from "../lib/business-card/templates/generate-window-decal";
 import { exportSideThumbnail, THUMBNAIL_WIDTH } from "../lib/business-card/export";
 import type { CardTemplate } from "../lib/business-card/schema";
 
@@ -16,7 +17,7 @@ async function toDataUri(buffer: Buffer): Promise<string> {
   return `data:image/webp;base64,${buffer.toString("base64")}`;
 }
 
-async function seedProduct(product: "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN", templates: CardTemplate[]) {
+async function seedProduct(product: "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN" | "WINDOW_DECAL", templates: CardTemplate[]) {
   console.log(`\n${product}: generating ${templates.length} templates...`);
   let created = 0;
   let updated = 0;
@@ -106,6 +107,9 @@ async function main() {
   }
   if (products.includes("all") || products.includes("rigid-sign")) {
     totalFailed += await seedProduct("RIGID_SIGN", generateRigidSignTemplates());
+  }
+  if (products.includes("all") || products.includes("window-decal")) {
+    totalFailed += await seedProduct("WINDOW_DECAL", generateWindowDecalTemplates());
   }
 
   const counts = await db.cardTemplate.groupBy({ by: ["product"], _count: true, where: { active: true } });

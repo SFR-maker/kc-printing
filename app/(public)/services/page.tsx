@@ -5,8 +5,10 @@ import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import { localeAlternates } from "@/lib/i18n/metadata";
 
 export const metadata: Metadata = {
+  alternates: localeAlternates("/services", "en"),
   title: "Design Services - Business Cards, Postcards, Banners, Rigid Signs",
   description:
     "Browse all 611 Printing services: business cards, postcards, hemmed vinyl and mesh banners, and die-cut rigid signs.",
@@ -48,6 +50,15 @@ const SERVICES = [
     price: startingPriceLabel("rigid-signs"),
     description: "Die-cut rigid signage in circle, star, arrow, house, or rounded-square shapes, available in acrylic, aluminum, PVC, foam board, or corrugated plastic.",
     highlights: ["5 shapes, 5 materials", "Print-ready file with die line included", "Up to 8 revisions included"],
+  },
+  {
+    slug: "window-decals",
+    name: "Window Decals",
+    image: "/images/print/window-decals.webp",
+    alt: "A storefront window with a printed vinyl decal applied to the glass",
+    price: startingPriceLabel("window-decals"),
+    description: "Storefront window graphics on adhesive vinyl, static cling, or see-through perforated film. Cut to eleven shapes, removable with no residue.",
+    highlights: ["3 films, 11 cut shapes", "117 sizes from 6 in to 5 ft", "Removable with no residue"],
   },
 ];
 

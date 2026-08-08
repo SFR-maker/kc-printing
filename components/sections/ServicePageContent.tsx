@@ -7,12 +7,33 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import type { ServiceDef } from "@/lib/service-data";
 import type { ProductThumbnail } from "@/lib/product-thumbnails";
 import { formatDollars } from "@/lib/utils";
+import { type Locale, localePath } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 interface ServicePageContentProps {
   service: ServiceDef;
   designStudioHref?: string;
   aiDesignHref?: string;
   heroImages?: ProductThumbnail[];
+  /**
+   * Photographed variants of the product, where the first decision a customer has to make is which
+   * variant they want rather than what size it is.
+   *
+   * Only window signage uses this so far: decal, cling and perf look nearly identical described in
+   * words and completely different applied to glass, and "which of these three do I need" is the
+   * question the product page actually has to answer. The specs table cannot answer it, because the
+   * difference is what the film does in place, not what it is made of.
+   */
+  variants?: { name: string; src: string; alt: string; description: string }[];
+  /**
+   * Which language this page is being rendered in.
+   *
+   * The product content (name, tagline, specs, FAQs) arrives already translated in `service`; what
+   * this switches is the interface furniture around it, and the destination of every internal link -
+   * a Spanish page whose "Contact us" button lands on the English contact page has quietly ended the
+   * Spanish session.
+   */
+  locale?: Locale;
 }
 
 /* Magenta is the only interactive accent; cyan and gold live in the photography and the
@@ -40,6 +61,10 @@ const HERO_PHOTO: Record<string, { src: string; alt: string }> = {
     src: "/images/print/rigid-signs.webp",
     alt: "Four die-cut rigid signs leaning against a studio wall",
   },
+  "window-decals": {
+    src: "/images/print/window-decals.webp",
+    alt: "A storefront window with a printed vinyl decal applied to the glass",
+  },
 };
 
 export function ServicePageContent({
@@ -47,9 +72,17 @@ export function ServicePageContent({
   designStudioHref,
   aiDesignHref,
   heroImages,
+  variants,
+  locale = "en",
 }: ServicePageContentProps) {
+  const t = getDictionary(locale).service;
+  const common = getDictionary(locale).common;
   const photo = HERO_PHOTO[service.slug] ?? HERO_PHOTO["business-cards"];
+  // The order flow is English-only (see ORDER_FLOW_LOCALE), so this URL is deliberately not
+  // localised. The note under the hero buttons is what tells a Spanish reader so before they click.
   const orderHref = `/services/${service.slug}/order`;
+  const contactHref = localePath("/contact", locale);
+  const portfolioHref = localePath("/portfolio", locale);
   const lower = service.name.toLowerCase();
 
   return (
@@ -76,27 +109,34 @@ export function ServicePageContent({
                   <>
                     <Button asChild size="lg" className={BTN_PRIMARY}>
                       <Link href={designStudioHref}>
-                        Start designing <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                        {t.startDesigning} <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
                       </Link>
                     </Button>
                     <Button asChild size="lg" variant="outline" className={BTN_SECONDARY}>
-                      <Link href={orderHref}>Order without designing</Link>
+                      <Link href={orderHref}>{t.orderWithoutDesigning}</Link>
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button asChild size="lg" className={BTN_PRIMARY}>
                       <Link href={orderHref}>
-                        Order <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                        {common.order} <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
                       </Link>
                     </Button>
                     <Button asChild size="lg" variant="outline" className={BTN_SECONDARY}>
-                      <Link href="/contact">Contact us</Link>
+                      <Link href={contactHref}>{common.contactUs}</Link>
                     </Button>
                   </>
                 )}
               </div>
             </Reveal>
+            {t.orderFlowLanguageNote && (
+              <Reveal y={16} delay={0.24}>
+                <p className="mt-5 max-w-[46ch] text-[14.98px] leading-relaxed text-kc-dark/55">
+                  {t.orderFlowLanguageNote}
+                </p>
+              </Reveal>
+            )}
           </div>
         </div>
 
@@ -122,12 +162,10 @@ export function ServicePageContent({
             {[
               {
                 icon: PenLine,
-                text: designStudioHref
-                  ? "Design it yourself in the browser, free, no software"
-                  : "A real designer builds the layout for you",
+                text: designStudioHref ? t.designYourself : t.realDesigner,
               },
-              { icon: FileCheck, text: "Print-ready PDF, JPG, and PNG with every order" },
-              { icon: RefreshCw, text: "Revisions included on every package" },
+              { icon: FileCheck, text: t.filesIncluded },
+              { icon: RefreshCw, text: t.revisionsIncluded },
             ].map(({ icon: Icon, text }) => (
               <RevealItem
                 key={text}
@@ -148,17 +186,17 @@ export function ServicePageContent({
             <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div className="max-w-xl">
                 <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
-                  Start from a design
+                  {t.startFromDesign}
                 </h2>
                 <p className="mt-3 text-[16.59px] leading-relaxed text-kc-dark/70">
-                  Open any of these in the editor and make it yours, or start from a blank file.
+                  {t.startFromDesignBody}
                 </p>
               </div>
               <Link
-                href="/portfolio"
+                href={portfolioHref}
                 className="text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
               >
-                See all examples
+                {t.seeAllExamples}
               </Link>
             </Reveal>
 
@@ -193,14 +231,14 @@ export function ServicePageContent({
 
             {aiDesignHref && (
               <p className="mt-6 text-[15.52px] text-kc-dark/70">
-                Prefer to describe it?{" "}
+                {t.preferDescribe}{" "}
                 <Link
                   href={aiDesignHref}
                   className="font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
                 >
-                  Generate a starting design
+                  {t.generateStarting}
                 </Link>{" "}
-                and edit it from there.
+                {t.editFromThere}
               </p>
             )}
           </div>
@@ -212,7 +250,7 @@ export function ServicePageContent({
         <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
           <div>
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">
-              Sizes, stock, and files
+              {t.specsHeading}
             </h2>
             <p className="mt-4 max-w-sm text-[17.66px] leading-relaxed text-kc-dark/70">
               {service.description}
@@ -230,15 +268,53 @@ export function ServicePageContent({
         </div>
       </section>
 
+      {/* ── Variants, for products where the choice of material is the real decision ── */}
+      {variants && variants.length > 0 && (
+        <section className="band-tight bg-kc-paper">
+          <div className="container-tight">
+            <Reveal className="mb-8 max-w-xl">
+              <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">
+                {t.variantsHeading}
+              </h2>
+              <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/70">
+                {t.variantsBody}
+              </p>
+            </Reveal>
+
+            <RevealGroup className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              {variants.map((v) => (
+                <RevealItem key={v.name} className="h-full">
+                  <figure className="flex h-full flex-col">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-kc-bg">
+                      <Image
+                        src={v.src}
+                        alt={v.alt}
+                        fill
+                        sizes="(min-width: 640px) 33vw, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                    <figcaption className="mt-4">
+                      <div className="text-[16.05px] font-semibold text-kc-dark">{v.name}</div>
+                      <p className="mt-1 text-[14.98px] leading-relaxed text-kc-dark/70">{v.description}</p>
+                    </figcaption>
+                  </figure>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+          </div>
+        </section>
+      )}
+
       {/* ── Packages ── */}
       <section className="band bg-kc-paper">
         <div className="container-tight">
           <Reveal className="mb-10 max-w-xl">
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
-              Choose your package
+              {t.choosePackage}
             </h2>
             <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/70">
-              Every package includes print-ready file delivery and revisions.
+              {t.choosePackageBody}
             </p>
           </Reveal>
 
@@ -346,7 +422,7 @@ export function ServicePageContent({
       <section className="band bg-kc-bg">
         <div className="container-tight grid grid-cols-1 gap-10 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
           <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
-            {service.name} questions
+            {t.questionsTitle.replace("{product}", service.name)}
           </h2>
           <Accordion className="border-t border-kc-dark/10">
             {service.faqs.map((faq, i) => (
@@ -370,17 +446,16 @@ export function ServicePageContent({
           <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h2 className="display-tight max-w-xl text-3xl text-white sm:text-[2.68rem]">
-                Ready to order your {lower}?
+                {t.readyHeading.replace("{product}", lower)}
               </h2>
               <p className="mt-5 max-w-md text-[16.59px] leading-relaxed text-white/60">
-                Choose a package, share your brand details, and your first draft arrives in 1 to 3
-                business days.
+                {t.readyBody}
               </p>
             </div>
             <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
               <Button asChild size="lg" className={`${BTN_PRIMARY} w-full sm:w-auto`}>
                 <Link href={orderHref}>
-                  Order <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                  {common.order} <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
                 </Link>
               </Button>
               <Button
@@ -389,7 +464,7 @@ export function ServicePageContent({
                 variant="outline"
                 className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[16.05px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
               >
-                <Link href="/contact">Contact us</Link>
+                <Link href={contactHref}>{common.contactUs}</Link>
               </Button>
             </div>
           </div>

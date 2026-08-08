@@ -1,0 +1,206 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import { ArrowRight, FileCheck, RefreshCw, Users2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import { SERVICES_ES } from "@/lib/service-data-es";
+import { startingPriceLabel } from "@/lib/pricing/starting-prices";
+import { SERVICE_SLUG_ES } from "@/lib/i18n/config";
+import { localeAlternates } from "@/lib/i18n/metadata";
+import { getDictionary } from "@/lib/i18n/dictionaries";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "611 Printing - Impresión a costo en Kansas City | Tarjetas, lonas y calcomanías",
+  },
+  description:
+    "Imprenta en línea que vende la impresión a costo. Tarjetas de presentación, postales, lonas, letreros rígidos y calcomanías para ventanas, con diseño incluido si lo necesita. Kansas City y todo el país.",
+  alternates: localeAlternates("/", "es"),
+};
+
+export const revalidate = 3600;
+
+const BTN_PRIMARY =
+  "edge h-12 bg-kc-coral px-7 text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep";
+const BTN_SECONDARY =
+  "edge h-12 border border-kc-dark/20 bg-transparent px-7 text-[16.05px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5";
+
+const PRODUCTS = [
+  { slug: "business-cards", image: "/images/print/business-cards.webp", alt: "Pilas de tarjetas de presentación impresas", sizes: "Estándar y 5 formas especiales", bestFor: "Redes de contacto, mostradores, seguimiento" },
+  { slug: "postcards", image: "/images/print/postcards.webp", alt: "Postales promocionales impresas sobre una mesa de concreto", sizes: "De 3×5 hasta 6×11 pulg", bestFor: "Correo directo, EDDM, promociones" },
+  { slug: "banners", image: "/images/print/banners.webp", alt: "Una lona de vinil con ojillos amarrada a una reja", sizes: "Vinil con dobladillo y malla, de 1 a 12 pies", bestFor: "Fachadas, ferias, eventos" },
+  { slug: "rigid-signs", image: "/images/print/rigid-signs.webp", alt: "Letreros rígidos troquelados recargados en una pared", sizes: "Círculo, estrella, flecha, casa o cuadrado", bestFor: "Oficinas, locales, jardín y eventos" },
+  { slug: "window-decals", image: "/images/print/window-decals.webp", alt: "El vidrio de un local con una calcomanía de vinil aplicada", sizes: "Vinil adhesivo, estático o perforado", bestFor: "Vidrio de local, puertas, mamparas" },
+];
+
+const GUARANTEES = [
+  { icon: FileCheck, text: "PDF, JPG y PNG listos para imprenta en cada pedido" },
+  { icon: Users2, text: "Un diseñador real en cada archivo, nunca una plantilla cambiada" },
+  { icon: RefreshCw, text: "Revisiones incluidas en todos los paquetes de diseño" },
+];
+
+export default function SpanishHomePage() {
+  const t = getDictionary("es");
+
+  return (
+    <>
+      {/* ── Hero ── */}
+      <section className="relative bg-kc-bg">
+        <div className="reg-bar relative z-20" />
+        <div className="container-tight flex items-center px-4 pb-4 pt-14 sm:px-6 lg:min-h-[520px] lg:px-8 lg:py-16">
+          <div className="lg:max-w-[52%]">
+            <Reveal y={16}>
+              <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl lg:text-[3.75rem]">
+                La impresión, a costo. El diseño, aparte.
+              </h1>
+            </Reveal>
+            <Reveal y={16} delay={0.08}>
+              <p className="mt-6 max-w-[48ch] text-[18.19px] leading-relaxed text-kc-dark/75">
+                Le cobramos por la impresión exactamente lo que nos cobra nuestro proveedor, sin nada
+                añadido y sin mínimos. Si necesita que hagamos el arte, ese es un servicio de diseño
+                aparte con precio claro. Si ya tiene su archivo, solo paga la impresión.
+              </p>
+            </Reveal>
+            <Reveal y={16} delay={0.16}>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Button asChild size="lg" className={BTN_PRIMARY}>
+                  <Link href="/es/servicios">
+                    {t.common.seeAll} <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className={BTN_SECONDARY}>
+                  <Link href="/es/precios">{t.nav.pricing}</Link>
+                </Button>
+              </div>
+            </Reveal>
+            <Reveal y={16} delay={0.24}>
+              <p className="mt-5 max-w-[48ch] text-[14.98px] leading-relaxed text-kc-dark/55">
+                El pedido, el editor de diseño y el pago se realizan en inglés. Si prefiere hacer su
+                pedido en español, llámenos al{" "}
+                <a href="tel:+18165210462" className="font-semibold text-kc-magenta-deep hover:text-kc-dark">
+                  (816) 521-0462
+                </a>.
+              </p>
+            </Reveal>
+          </div>
+        </div>
+
+        <div className="px-4 pb-16 pt-10 sm:px-6 lg:absolute lg:bottom-0 lg:right-0 lg:top-[3px] lg:w-[44%] lg:max-w-[680px] lg:p-0">
+          <div className="edge relative aspect-[4/3] w-full overflow-hidden lg:aspect-auto lg:h-full lg:rounded-none">
+            <Image
+              src="/images/print/hero-card-fan.webp"
+              alt="Un abanico de tarjetas de presentación impresas sobre un escritorio de madera"
+              fill
+              priority
+              sizes="(min-width: 1600px) 680px, (min-width: 1024px) 44vw, 100vw"
+              className="object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ── Guarantees ── */}
+      <section className="border-y border-kc-dark/10 bg-kc-bg">
+        <div className="container-tight px-4 sm:px-6 lg:px-8">
+          <RevealGroup className="grid grid-cols-1 divide-y divide-kc-dark/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+            {GUARANTEES.map(({ icon: Icon, text }) => (
+              <RevealItem key={text} className="flex items-start gap-3 py-7 sm:px-7 sm:first:pl-0 sm:last:pr-0">
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-kc-coral" strokeWidth={1.75} />
+                <span className="text-[15.52px] leading-snug text-kc-dark/75">{text}</span>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ── Products ── */}
+      <section className="band bg-kc-paper">
+        <div className="container-tight">
+          <Reveal className="mb-10 max-w-xl">
+            <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">{t.services.heading}</h2>
+            <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/70">{t.services.intro}</p>
+          </Reveal>
+
+          <RevealGroup className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {PRODUCTS.map((p) => {
+              const service = SERVICES_ES[p.slug];
+              return (
+                <RevealItem key={p.slug} className="h-full">
+                  <Link
+                    href={`/es/servicios/${SERVICE_SLUG_ES[p.slug]}`}
+                    className="edge group flex h-full flex-col overflow-hidden border border-kc-dark/12 bg-white transition-colors hover:border-kc-dark/30"
+                  >
+                    <div className="relative aspect-[4/3] overflow-hidden bg-kc-bg">
+                      <Image
+                        src={p.image}
+                        alt={p.alt}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col p-6">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="display-tight text-2xl text-kc-dark">{service.name}</h3>
+                        <span className="shrink-0 whitespace-nowrap font-mono text-[13.38px] text-kc-dark/60">
+                          {startingPriceLabel(p.slug).replace("from", t.common.from)}
+                        </span>
+                      </div>
+                      <dl className="mt-4 space-y-2 text-[14.45px]">
+                        <div>
+                          <dt className="text-kc-dark/50">Tamaños</dt>
+                          <dd className="text-kc-dark/75">{p.sizes}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-kc-dark/50">Ideal para</dt>
+                          <dd className="text-kc-dark/75">{p.bestFor}</dd>
+                        </div>
+                      </dl>
+                      <span className="mt-auto pt-6 text-[14.98px] font-semibold text-kc-magenta-deep transition-colors group-hover:text-kc-dark">
+                        {t.common.learnMore} →
+                      </span>
+                    </div>
+                  </Link>
+                </RevealItem>
+              );
+            })}
+          </RevealGroup>
+        </div>
+      </section>
+
+      {/* ── Closing ── */}
+      <section className="bg-kc-ink">
+        <div className="reg-bar" />
+        <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+          <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h2 className="display-tight max-w-xl text-3xl text-white sm:text-[2.68rem]">
+                ¿Listo para imprimir?
+              </h2>
+              <p className="mt-5 max-w-md text-[16.59px] leading-relaxed text-white/60">
+                Elija un producto para ver tamaños, materiales y el precio real de impresión, sin
+                registrarse y sin cotización por correo.
+              </p>
+            </div>
+            <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
+              <Button asChild size="lg" className={`${BTN_PRIMARY} w-full sm:w-auto`}>
+                <Link href="/es/servicios">
+                  {t.common.seeAll} <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="edge h-12 w-full border border-white/25 bg-transparent px-7 text-[16.05px] font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10 sm:w-auto"
+              >
+                <Link href="/es/contacto">{t.common.contactUs}</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}

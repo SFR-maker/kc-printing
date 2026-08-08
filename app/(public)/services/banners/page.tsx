@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { SERVICES } from "@/lib/service-data";
 import { ServicePageContent } from "@/components/sections/ServicePageContent";
 import { getFeaturedThumbnails } from "@/lib/product-thumbnails";
+import { localeAlternates } from "@/lib/i18n/metadata";
 
 const service = SERVICES["banners"];
 
 export const metadata: Metadata = {
+  alternates: localeAlternates("/services/banners", "en"),
   title: service?.name ?? "Service",
   description: service?.description ?? "",
 };

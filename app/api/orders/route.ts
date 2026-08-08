@@ -8,6 +8,7 @@ import { calculateBannerPrice } from "@/lib/pricing/banners-server";
 import { grommetPrice, isGrommetPriced } from "@/lib/pricing/banner-finishing-server";
 import { calculatePostcardPrice } from "@/lib/pricing/postcards";
 import { calculateRigidSignPrice } from "@/lib/pricing/rigid-signs-server";
+import { calculateWindowDecalPrice } from "@/lib/pricing/window-decals-server";
 import { isTestOrderCode } from "@/lib/pricing/test-order";
 import { getPricingSettings } from "@/lib/pricing/settings-server";
 import { TERMS_VERSION } from "@/lib/legal/terms";
@@ -104,6 +105,15 @@ const schema = z.object({
       quantity: z.number().int().positive(),
     })
     .optional(),
+  /** Window signage, likewise by supplier id: size and shape labels are not unique here either. */
+  windowSpec: z
+    .object({
+      material: z.enum(["window-decals", "window-clings", "window-perfs"]),
+      sizeId: z.number().int().positive(),
+      shapeId: z.number().int().positive(),
+      quantity: z.number().int().positive(),
+    })
+    .optional(),
   // Only required for guests (see the userId check below) — a signed-in user's account email is
   // used instead, but the field is accepted either way so the client doesn't need to know the
   // customer's auth state before submitting.
@@ -158,7 +168,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });
   }
 
-  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, postcardSpec, rigidSpec, cardDesignId, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
+  const { service, selectedPackage, selectedAddOns, quantity, bcSpec, bannerSpec, postcardSpec, rigidSpec, windowSpec, cardDesignId, guestEmail, artwork, acceptedTerms, testCode, ...config } = parsed.data;
 
   if (!acceptedTerms) {
     return NextResponse.json(
@@ -221,6 +231,14 @@ export async function POST(req: Request) {
     if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid rigid sign specification" }, { status: 400 });
     printPrice = priced.total;
     orderQuantity = rigidSpec.quantity;
+  } else if (service === "window-decals" && windowSpec) {
+    // Priced server-side from the same tables the builder quoted from. As with rigid signs those
+    // tables never reach the browser, so the client could not have computed this figure itself -
+    // which makes pricing here the only pricing that happens.
+    const priced = calculateWindowDecalPrice(windowSpec);
+    if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid window signage specification" }, { status: 400 });
+    printPrice = priced.total;
+    orderQuantity = windowSpec.quantity;
   } else if (service === "business-cards") {
     if (!bcSpec) return NextResponse.json({ error: "Missing print specifications" }, { status: 400 });
     const priced = calculateBusinessCardPrice(bcSpec, await getPricingSettings());
@@ -287,7 +305,7 @@ export async function POST(req: Request) {
           addOnIds: selectedAddOns,
           quantity: orderQuantity,
           price: total,
-          config: { ...config, cardDesignId: cardDesignId ?? null, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, postcardSpec: postcardSpec ?? null, rigidSpec: rigidSpec ?? null, testOrder: freeTestOrder },
+          config: { ...config, cardDesignId: cardDesignId ?? null, selectedAddOns, bcSpec: bcSpec ?? null, bannerSpec: bannerSpec ?? null, postcardSpec: postcardSpec ?? null, rigidSpec: rigidSpec ?? null, windowSpec: windowSpec ?? null, testOrder: freeTestOrder },
         },
       },
     },

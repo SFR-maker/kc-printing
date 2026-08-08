@@ -7,6 +7,9 @@ import corrugated from "./corrugated-boards-scraped.json";
 import pvc from "./pvc-boards-scraped.json";
 import foam from "./foam-boards-scraped.json";
 import aluminium from "./aluminum-boards-scraped.json";
+import windowDecals from "./window-decals-scraped.json";
+import windowClings from "./window-clings-scraped.json";
+import windowPerfs from "./window-perfs-scraped.json";
 import bcData from "./business-card-data.json";
 
 /**
@@ -48,6 +51,9 @@ export const STARTING_PRICES: Record<string, number> = {
   banners: cheapest(table(bannersRaw)),
   "rigid-signs": Math.min(
     ...[yardSigns, corrugated, pvc, foam, aluminium].map((d) => cheapest(table(d))),
+  ),
+  "window-decals": Math.min(
+    ...[windowDecals, windowClings, windowPerfs].map((d) => cheapest(table(d))),
   ),
 };
 

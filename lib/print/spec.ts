@@ -15,7 +15,7 @@
  * inspector.
  */
 
-export type ProductKind = "business-cards" | "postcards" | "banners" | "rigid-signs";
+export type ProductKind = "business-cards" | "postcards" | "banners" | "rigid-signs" | "window-decals";
 
 export interface PrintSpec {
   product: ProductKind;
@@ -62,6 +62,22 @@ const DEFAULTS: Record<ProductKind, Omit<PrintSpec, "product" | "trimWidthIn" | 
     note: "Grommets sit in the corners and every 2 ft along the edges, so keep anything you need to read well inside the safe zone.",
   },
   "rigid-signs": { bleedIn: 0.125, safeZoneInsetIn: 0.25, minDpi: 100, recommendedDpi: 150, maxFileMb: 75 },
+  /**
+   * Window film is cut on a plotter rather than guillotined, and the supplier quotes these at 150
+   * DPI - a storefront decal is read from the pavement, not held in a hand.
+   *
+   * The safe zone is wider than a rigid sign's because the cut has more play on a flexible film and
+   * because the graphic is applied by hand to glass: a line of text sitting 0.25" from the edge
+   * reads as crooked if the application is a degree off, which it usually is.
+   */
+  "window-decals": {
+    bleedIn: 0.125,
+    safeZoneInsetIn: 0.5,
+    minDpi: 100,
+    recommendedDpi: 150,
+    maxFileMb: 75,
+    note: "Decals are applied by hand to glass, so keep text and logos well inside the safe zone - a graphic that runs close to the edge shows every degree of misalignment.",
+  },
 };
 
 /**

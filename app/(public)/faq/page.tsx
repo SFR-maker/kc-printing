@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ClosingCta } from "@/components/layout/ClosingCta";
+import { localeAlternates } from "@/lib/i18n/metadata";
 
 export const metadata: Metadata = {
+  alternates: localeAlternates("/faq", "en"),
   title: "Frequently Asked Questions",
   description:
     "Answers to common questions about 611 Printing design services, file formats, turnaround times, revisions, and ordering.",

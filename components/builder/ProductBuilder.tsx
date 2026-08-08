@@ -23,6 +23,7 @@ import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
 } from "@/components/builder/PostcardPrintSpec";
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
+import { WindowDecalPrintSpec, type WindowDecalPriceState } from "@/components/builder/WindowDecalPrintSpec";
 import type { BannerPriceState } from "@/components/builder/BannerPrintSpec";
 
 import { CardSideSchema } from "@/lib/business-card/schema";
@@ -31,6 +32,10 @@ import {
   defaultRigidSpec, rigidNeedsBack, rigidBackLabel, sizeById,
   type RigidMaterialId, type RigidSignSpec,
 } from "@/lib/pricing/rigid-signs";
+import {
+  defaultWindowDecalSpec, windowNeedsBack, sizeById as windowSizeById,
+  type WindowMaterialId, type WindowDecalSpec,
+} from "@/lib/pricing/window-decals";
 import { calculatePostcardPrice } from "@/lib/pricing/postcards";
 
 import { parseTrimSize, printSpec, type PrintSpec } from "@/lib/print/spec";
@@ -96,6 +101,15 @@ const schema = z.object({
       quantity: z.number(),
     })
     .optional(),
+  /** Window signage, likewise by supplier id: a 24" x 6" rectangle and rounded rectangle share a label. */
+  windowSpec: z
+    .object({
+      material: z.string(),
+      sizeId: z.number(),
+      shapeId: z.number(),
+      quantity: z.number(),
+    })
+    .optional(),
   // Collected at Review regardless of sign-in state, since the client has no reliable way to know
   // auth status before submitting: guests need it so there's somewhere to send confirmation and
   // print files (the API only actually requires it when the request turns out to be unauthenticated).
@@ -156,15 +170,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   const isBanners = service.slug === "banners";
   const isPostcards = service.slug === "postcards";
   const isRigidSigns = service.slug === "rigid-signs";
+  const isWindowDecals = service.slug === "window-decals";
   /**
    * Products that carry real print specs and an artwork step, rather than only a design package.
    * Everything else still runs the old package-first flow until it has priced options of its own.
    */
-  const hasPrintSpec = isBusinessCards || isBanners || isPostcards || isRigidSigns;
+  const hasPrintSpec = isBusinessCards || isBanners || isPostcards || isRigidSigns || isWindowDecals;
 
   const [step, setStep] = useState(0);
   /** Rigid signs are quoted by /api/price/rigid-signs; the picker reports the result up here. */
   const [rigidPrice, setRigidPrice] = useState<RigidSignPriceState>({ valid: false, total: 0, loading: true });
+  /** Window signage is quoted the same way, by /api/price/window-decals. */
+  const [windowPrice, setWindowPrice] = useState<WindowDecalPriceState>({ valid: false, total: 0, loading: true });
   /** Banners moved server-side too: their table is 110 sizes and 1.1MB, far too much to bundle. */
   const [bannerPriceState, setBannerPriceState] = useState<BannerPriceState>({ valid: false, total: 0, finishing: 0, loading: true });
   /**
@@ -367,6 +384,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   const printPrice = isBanners ? bannerPrice
     : isPostcards ? postcardPrice
     : isRigidSigns ? (rigidPrice.loading ? null : { valid: rigidPrice.valid, total: rigidPrice.total, error: rigidPrice.error })
+    : isWindowDecals ? (windowPrice.loading ? null : { valid: windowPrice.valid, total: windowPrice.total, error: windowPrice.error })
     : bcPrice;
 
   const rawPrice = hasPrintSpec
@@ -394,7 +412,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       ? postcardNeedsBack((values.postcardSpec ?? DEFAULT_POSTCARD_SPEC).color)
       : isRigidSigns
         ? rigidNeedsBack((values.rigidSpec ?? defaultRigidSpec()).color)
-        : false;
+        // Window signage prints on the face only - it is applied to glass, so there is no back.
+        : isWindowDecals
+          ? windowNeedsBack()
+          : false;
 
   /** Geometry the artwork step and proof are measured against. */
   const artworkSpec: PrintSpec = (() => {
@@ -414,6 +435,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       const spec = (values.rigidSpec ?? defaultRigidSpec()) as RigidSignSpec;
       const size = sizeById(spec.material as RigidMaterialId, spec.sizeId);
       return printSpec("rigid-signs", size?.trimWidthIn ?? 24, size?.trimHeightIn ?? 18);
+    }
+    if (isWindowDecals) {
+      // Same as the boards: the film trims a touch under the nominal size, so the document is laid
+      // out to the real trim rather than to the label.
+      const spec = (values.windowSpec ?? defaultWindowDecalSpec()) as WindowDecalSpec;
+      const size = windowSizeById(spec.material as WindowMaterialId, spec.sizeId);
+      return printSpec("window-decals", size?.trimWidthIn ?? 24, size?.trimHeightIn ?? 18);
     }
     return printSpec(
       "business-cards",
@@ -667,9 +695,29 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                   ? "Real print pricing: size, material and quantity all affect your price."
                   : isRigidSigns
                     ? "Real print pricing: material, shape, size, thickness and quantity all affect your price."
-                    : "Real print pricing: size, paper, sides, and quantity all affect your price."}
+                    : isWindowDecals
+                      ? "Real print pricing: film, shape, size and quantity all affect your price."
+                      : "Real print pricing: size, paper, sides, and quantity all affect your price."}
               </p>
-              {isRigidSigns ? (
+              {isWindowDecals ? (
+                <WindowDecalPrintSpec
+                  spec={(values.windowSpec ?? defaultWindowDecalSpec()) as WindowDecalSpec}
+                  onPriceChange={setWindowPrice}
+                  onChange={(next) => {
+                    const prev = (values.windowSpec ?? defaultWindowDecalSpec()) as WindowDecalSpec;
+                    setValue("windowSpec", next);
+                    // Film, shape and size all decide the document, so a proof approved against the
+                    // old one no longer describes what prints. Drop it rather than carry a stale
+                    // approval through to the press.
+                    const changedDoc = prev.material !== next.material
+                      || prev.sizeId !== next.sizeId
+                      || prev.shapeId !== next.shapeId;
+                    if (changedDoc && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
+                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                    }
+                  }}
+                />
+              ) : isRigidSigns ? (
                 <RigidSignPrintSpec
                   spec={(values.rigidSpec ?? defaultRigidSpec()) as RigidSignSpec}
                   onPriceChange={setRigidPrice}

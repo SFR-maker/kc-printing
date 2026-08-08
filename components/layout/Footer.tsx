@@ -1,16 +1,20 @@
 import Link from "next/link";
 import { Phone, Mail, Globe } from "lucide-react";
 import { Wordmark } from "@/components/layout/Wordmark";
+import { localePath, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 const SERVICES = [
   { label: "Business Cards", href: "/services/business-cards" },
   { label: "Postcards", href: "/services/postcards" },
   { label: "Banners", href: "/services/banners" },
   { label: "Rigid Signs", href: "/services/rigid-signs" },
+  { label: "Window Decals", href: "/services/window-decals" },
 ];
 
 const COMPANY = [
   { label: "About", href: "/about" },
+  { label: "Specials", href: "/specials" },
   { label: "Portfolio", href: "/portfolio" },
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", href: "/faq" },
@@ -34,7 +38,11 @@ const AREAS = [
  * The page ends in ink. On the homepage the closing CTA band is the same near-black surface, so
  * the two read as one continuous block rather than a theme flip at the bottom of the page.
  */
-export function Footer() {
+export function Footer({ locale = "en" }: { locale?: Locale } = {}) {
+  const t = getDictionary(locale).footer;
+  // Every internal link is resolved through localePath, so the Spanish footer keeps the reader on
+  // the Spanish site instead of dropping them back into English at the bottom of every page.
+  const path = (href: string) => localePath(href, locale);
   return (
     <footer className="bg-kc-ink text-white">
       <div className="container-tight px-4 py-16 sm:px-6 lg:px-8">
@@ -43,7 +51,7 @@ export function Footer() {
           <div className="col-span-2 lg:col-span-1">
             <Wordmark variant="inverse" className="mb-5" />
             <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/55">
-              Business cards, postcards, banners, and rigid signs, designed by a real person and
+              Business cards, postcards, banners, rigid signs, and window decals, designed by a real person and
               delivered print-ready. Ordered entirely online.
             </p>
             <div className="space-y-2.5">
@@ -71,27 +79,27 @@ export function Footer() {
             </div>
           </div>
 
-          <FooterColumn title="Services">
+          <FooterColumn title={t.servicesHeading}>
             {SERVICES.map((s) => (
               <li key={s.href}>
-                <Link href={s.href} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
+                <Link href={path(s.href)} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
                   {s.label}
                 </Link>
               </li>
             ))}
           </FooterColumn>
 
-          <FooterColumn title="Company">
+          <FooterColumn title={t.companyHeading}>
             {COMPANY.map((c) => (
               <li key={c.href}>
-                <Link href={c.href} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
+                <Link href={path(c.href)} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
                   {c.label}
                 </Link>
               </li>
             ))}
           </FooterColumn>
 
-          <FooterColumn title="Service Areas">
+          <FooterColumn title={t.areasHeading}>
             {AREAS.map((city) => (
               <li key={city} className="text-[13.91px] text-white/60">
                 {city}
@@ -102,7 +110,7 @@ export function Footer() {
 
         <div className="mt-16 flex flex-col items-start justify-between gap-5 border-t border-kc-ink-line pt-7 sm:flex-row sm:items-center">
           <p className="text-xs text-white/50">
-            {new Date().getFullYear()} 611 Printing. All rights reserved. Fully online design studio.
+            {new Date().getFullYear()} 611 Printing. {t.rights}
           </p>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             {LEGAL.map((l) => (

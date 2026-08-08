@@ -173,4 +173,5 @@ export const THUMBNAIL_WIDTH: Record<string, number> = {
   POSTCARD: 800,
   BANNER: 800,
   RIGID_SIGN: 800,
+  WINDOW_DECAL: 800,
 };

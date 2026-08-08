@@ -5,6 +5,7 @@ export const PRODUCT_BY_SLUG = {
   postcards: "POSTCARD",
   banners: "BANNER",
   "rigid-signs": "RIGID_SIGN",
+  "window-decals": "WINDOW_DECAL",
 } as const;
 
 export interface ProductThumbnail {

@@ -70,6 +70,7 @@ const DEFAULT_TRIM_IN: Record<DesignProduct, { w: number; h: number }> = {
   postcard: { w: 6, h: 4 },
   banner: { w: 72, h: 36 },
   "rigid-sign": { w: 24, h: 18 },
+  "window-decal": { w: 24, h: 18 },
 };
 
 /**
@@ -84,6 +85,9 @@ const TARGET_LONG_EDGE_PX: Record<DesignProduct, number> = {
   postcard: 1800,
   banner: 9000,
   "rigid-sign": 4000,
+  // Read from the pavement rather than held, like a banner, but a window graphic tops out at 5 ft
+  // rather than 20, so it needs fewer pixels to hit the same 150 DPI.
+  "window-decal": 5000,
 };
 
 /**

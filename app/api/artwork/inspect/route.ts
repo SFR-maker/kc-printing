@@ -14,7 +14,7 @@ const schema = z.object({
    * say what it is, because the resolution floor and the bleed are properties of the product - a
    * banner prints at 150 DPI and would fail a card's 300 floor on artwork the press accepts.
    */
-  product: z.enum(["business-cards", "postcards", "banners", "rigid-signs"]).default("business-cards"),
+  product: z.enum(["business-cards", "postcards", "banners", "rigid-signs", "window-decals"]).default("business-cards"),
   trimWidthIn: z.number().positive().max(600).optional(),
   trimHeightIn: z.number().positive().max(600).optional(),
 });

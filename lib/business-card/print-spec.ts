@@ -73,7 +73,7 @@ export const MIN_PRINT_DPI = 150;
 export const RECOMMENDED_DPI = 300;
 export const MIN_FONT_SIZE_PT = 6;
 
-export type DesignProduct = "business-card" | "postcard" | "banner" | "rigid-sign";
+export type DesignProduct = "business-card" | "postcard" | "banner" | "rigid-sign" | "window-decal";
 
 export interface SizePreset {
   key: string;
@@ -235,10 +235,45 @@ export const RIGID_SIGN_SIZES: SizePreset[] = [
 
 export const RIGID_SIGN_MATERIALS = ["Acrylic", "Aluminum", "PVC", "Foam Board", "Corrugated Plastic"] as const;
 
+/**
+ * Window graphic sizes you can design on, which are all sizes you can actually buy.
+ *
+ * Every entry here is a real trim from lib/pricing/window-decals-catalogue - the storefront's own
+ * 117-size catalogue, not a hand-picked set - so a design made in the studio always maps onto
+ * something orderable. A test asserts each of these is sellable, the same check that keeps the
+ * banner presets honest.
+ *
+ * The list is a working subset rather than all 117: fifty rectangle sizes in a dropdown is a worse
+ * experience than a dozen covering the shapes and proportions people actually ask for. Landscape
+ * banners across the top of a window, portrait panels beside a door, and the die-cut shapes, each
+ * at its one or two available sizes.
+ *
+ * The die-cut shapes design on a plain rectangle of the bounding size and have the shape applied as
+ * a clip mask at render/export time (lib/business-card/shape-paths.ts), exactly as rigid signs do.
+ */
+export const WINDOW_DECAL_SIZES: SizePreset[] = [
+  { key: "banner-24x6", label: "Window Banner 24 x 6 in", trimWidthIn: 23.875, trimHeightIn: 5.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "banner-24x9", label: "Window Banner 24 x 9 in", trimWidthIn: 23.875, trimHeightIn: 8.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "banner-36x18", label: "Window Banner 36 x 18 in", trimWidthIn: 35.875, trimHeightIn: 17.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "landscape-24x18", label: "Landscape 24 x 18 in", trimWidthIn: 23.875, trimHeightIn: 17.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "landscape-36x24", label: "Landscape 36 x 24 in", trimWidthIn: 35.875, trimHeightIn: 23.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "landscape-48x36", label: "Landscape 48 x 36 in", trimWidthIn: 47.875, trimHeightIn: 35.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "portrait-11x17", label: "Portrait 11 x 17 in", trimWidthIn: 10.875, trimHeightIn: 16.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "portrait-18x24", label: "Portrait 18 x 24 in", trimWidthIn: 17.875, trimHeightIn: 23.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "portrait-24x36", label: "Portrait 24 x 36 in", trimWidthIn: 23.875, trimHeightIn: 35.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "portrait-6x24", label: "Door Panel 6 x 24 in", trimWidthIn: 5.875, trimHeightIn: 23.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "square-24", label: "Square 24 x 24 in", trimWidthIn: 23.875, trimHeightIn: 23.875, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
+  { key: "circle-24", label: "Circle 24 in diameter", trimWidthIn: 23.875, trimHeightIn: 23.875, bleedIn: 0.125, safeZoneInsetIn: 0.75 },
+  { key: "octagon-23", label: "Octagon 23 in", trimWidthIn: 22.875, trimHeightIn: 22.875, bleedIn: 0.125, safeZoneInsetIn: 0.75 },
+  { key: "star-23x22", label: "Star 23 x 22 in", trimWidthIn: 22.875, trimHeightIn: 21.875, bleedIn: 0.125, safeZoneInsetIn: 0.75 },
+  { key: "arrow-24x18", label: "Arrow 24 x 18 in", trimWidthIn: 23.6875, trimHeightIn: 17.75, bleedIn: 0.125, safeZoneInsetIn: 0.75 },
+];
+
 export function sizePresetsFor(product: DesignProduct): SizePreset[] {
   if (product === "postcard") return POSTCARD_SIZES;
   if (product === "banner") return BANNER_SIZES;
   if (product === "rigid-sign") return RIGID_SIGN_SIZES;
+  if (product === "window-decal") return WINDOW_DECAL_SIZES;
   return BUSINESS_CARD_SIZES;
 }
 
@@ -252,15 +287,17 @@ export const PRODUCT_ROUTE_SEGMENT: Record<DesignProduct, string> = {
   postcard: "postcards",
   banner: "banners",
   "rigid-sign": "rigid-signs",
+  "window-decal": "window-decals",
 };
 
 /** Matches the Prisma DesignProduct enum values (kept as plain strings here so this file has no
  * dependency on the generated Prisma client). */
-export const PRODUCT_DB_VALUE: Record<DesignProduct, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN"> = {
+export const PRODUCT_DB_VALUE: Record<DesignProduct, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN" | "WINDOW_DECAL"> = {
   "business-card": "BUSINESS_CARD",
   postcard: "POSTCARD",
   banner: "BANNER",
   "rigid-sign": "RIGID_SIGN",
+  "window-decal": "WINDOW_DECAL",
 };
 
 export function inchesToPx(inches: number, dpi: number = DPI): number {

@@ -8,19 +8,24 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { db } from "@/lib/prisma";
 import { APP_URL } from "@/lib/app-url";
+import { localeAlternates } from "@/lib/i18n/metadata";
 
 export const metadata: Metadata = {
   // `absolute` bypasses the root layout's "%s | 611 Printing" template. Without it the brand
   // appeared twice: "611 Printing - ... | Kansas City | 611 Printing".
   title: {
-    absolute: "611 Printing - Business Cards, Postcards, Banners & Rigid Signs in Kansas City",
+    absolute: "611 Printing - Business Cards, Postcards, Banners, Signs & Window Decals in Kansas City",
   },
   description:
-    "Custom business cards, postcards, banners, and rigid signs. Fast online ordering, print-ready files. Serving Kansas City, Johnson County, Dallas-Fort Worth, and nationwide.",
-  // The root layout's relative "./" canonical resolves correctly on every route except this one,
-  // where Next renders it as /index - a URL that also returns 200, so the homepage was pointing
-  // search engines at a duplicate of itself and splitting its own ranking signals.
-  alternates: { canonical: "/" },
+    "Custom business cards, postcards, banners, rigid signs, and window decals. Fast online ordering, print-ready files. Serving Kansas City, Johnson County, Dallas-Fort Worth, and nationwide.",
+  alternates: {
+    ...localeAlternates("/", "en"),
+    // The root layout's relative "./" canonical resolves correctly on every route except this one,
+    // where Next renders it as /index - a URL that also returns 200, so the homepage was pointing
+    // search engines at a duplicate of itself and splitting its own ranking signals. Set after the
+    // spread so it overrides the "./" the alternates helper returns.
+    canonical: "/",
+  },
 };
 
 // Homepage pulls live testimonials from the DB (see below) — revalidate periodically so a newly
@@ -67,6 +72,16 @@ const SERVICES = [
     price: startingPriceLabel("rigid-signs"),
     sizes: "Circle, star, arrow, house, or rounded square",
     bestFor: "Offices, storefronts, yard and event signage",
+  },
+  {
+    name: "Window Decals",
+    href: "/services/window-decals",
+    orderHref: "/services/window-decals/order",
+    image: "/images/print/window-decals.webp",
+    alt: "A storefront window with a printed vinyl decal applied to the glass",
+    price: startingPriceLabel("window-decals"),
+    sizes: "Adhesive vinyl, static cling, or perforated film",
+    bestFor: "Storefront glass, doors, office partitions",
   },
 ];
 

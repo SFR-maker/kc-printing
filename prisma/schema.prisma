@@ -67,6 +67,7 @@ enum DesignProduct {
   POSTCARD
   BANNER
   RIGID_SIGN
+  WINDOW_DECAL
 }
 
 enum SettingType {
@@ -449,6 +450,70 @@ model PageSeo {
   updatedAt      DateTime @updatedAt
 
   @@index([path])
+}
+
+/**
+ * A promotion the shop is running: a seasonal offer, a new-product launch, a discount on a
+ * particular service.
+ *
+ * Kept as its own table rather than as SiteSettings JSON because a special is a record with a life
+ * of its own - it starts, it ends, it gets edited and turned off and turned back on next year - and
+ * because the promo bar, the /specials page and the admin editor all need to query the same set by
+ * different criteria (what is live now, what exists at all, what shows in the bar).
+ *
+ * `couponCode` is a plain string rather than a relation to Coupon on purpose: a special is
+ * advertising copy, and it must not break or block if the coupon behind it is later deleted or
+ * renamed. The coupon is validated at checkout by its own route, which is the only place that
+ * matters. What the special does here is *tell the customer the code*.
+ */
+model Special {
+  id          String   @id @default(cuid())
+  /** URL segment for /specials#<slug>, and the dismissal key the promo bar remembers. */
+  slug        String   @unique
+  title       String
+  /** One line, shown in the promo bar. Kept short by the editor rather than by the schema. */
+  blurb       String
+  /** Longer copy for the /specials card. Optional - a bar-only special needs no body. */
+  body        String?
+  imageUrl    String?
+  /** Where the call to action goes. A site-relative path, validated in the admin route. */
+  ctaLabel    String?
+  ctaHref     String?
+  /** Advertised discount code. Not a relation - see the note above. */
+  couponCode  String?
+
+  /**
+   * Spanish copy, shown on /es pages and in the promo bar above them.
+   *
+   * Optional, and falls back to the English text when absent. A shop running a promotion at 9pm
+   * should not be blocked from publishing it because they have not written the translation yet -
+   * an English offer on a Spanish page is a much smaller failure than no offer at all. The fallback
+   * lives in lib/specials so the page and the bar cannot disagree about it.
+   */
+  titleEs     String?
+  blurbEs     String?
+  bodyEs      String?
+  ctaLabelEs  String?
+
+  active      Boolean  @default(true)
+  /**
+   * Scheduling window. Null start means "live as soon as it is active"; null end means "until
+   * turned off". Both are checked at read time, so a special can be written in advance and simply
+   * appear, and an expired one stops showing without anyone remembering to switch it off.
+   */
+  startsAt    DateTime?
+  endsAt      DateTime?
+
+  /** Whether this one is eligible for the site-wide bar. Only the top-ranked live one is shown. */
+  showInBar   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active, startsAt, endsAt])
+  @@index([showInBar])
+  @@index([sortOrder])
 }
 
 model SiteSetting {

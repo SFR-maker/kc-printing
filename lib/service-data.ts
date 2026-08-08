@@ -167,4 +167,41 @@ export const SERVICES: Record<string, ServiceDef> = {
       { q: "Can I use my existing brand colors and logo?", a: "Yes. Upload your existing logo and brand guidelines in the order. If you do not have a style guide, fill out the brand questionnaire and our designer will match your colors as closely as possible." },
     ],
   },
+  "window-decals": {
+    slug: "window-decals",
+    name: "Window Decals",
+    tagline: "Turn your storefront glass into your best salesperson. Decals, clings, and perforated film.",
+    description:
+      "Custom window graphics printed on adhesive vinyl, static cling, or see-through perforated film. Cut to eleven shapes in sizes from 6 inches to 5 feet, with no residue on removal.",
+    icon: "🪟",
+    specs: [
+      { label: "Films", value: "3 mil Adhesive Vinyl, 8 mil White Cling Vinyl, 6 mil 70/30 Perforated" },
+      { label: "Shapes", value: "Rectangle, Rounded Rectangle, Square, Circle, Oval, Star, Octagon, Arrow, House, Apartment" },
+      { label: "Sizes", value: '24" x 6" up to 60" x 40", 117 sizes across all shapes' },
+      { label: "Printing", value: "Full colour on the face. Eco-solvent inks." },
+      { label: "Bleed", value: "0.125 in on all sides" },
+      { label: "Safe Zone", value: "0.5 in from the cut line" },
+      { label: "Resolution", value: "150 DPI at finished size" },
+      { label: "Delivery", value: "Print-ready PDF with cut line, high-res JPG" },
+    ],
+    packages: [
+      { name: "Silver", price: 59, features: ["1-2 images or logos", "Basic copy", "Up to 4 revisions", "Print-ready PDF with cut line"] },
+      { name: "Gold", price: 99, popular: true, features: ["3-4 images or logos", "Basic copy", "Up to 6 revisions", "Print-ready PDF with cut line", "Two layout concepts"] },
+      { name: "Platinum", price: 149, features: ["5 or more images or logos", "Comprehensive copy", "Up to 8 revisions", "Full file bundle", "Three layout concepts", "Priority delivery"] },
+    ],
+    addOns: [
+      { name: "Rush Delivery", price: 59, desc: "Completed within 24 hours" },
+      { name: "Extra Concept", price: 39, desc: "One additional layout concept" },
+      { name: "Reverse Reading Setup", price: 25, desc: "Artwork mirrored for second-surface application, applied inside the glass" },
+      { name: "Application Guide", price: 15, desc: "Printed placement and squeegee guide sized to your window" },
+    ],
+    faqs: [
+      { q: "What is the difference between a decal, a cling, and a perf?", a: "A decal is adhesive vinyl - it sticks to any clean flat surface, inside or out, and is the hard-wearing choice for anything staying up more than a season. A cling has no adhesive at all; static holds it to glass, so it repositions freely and is ideal for offers you change monthly. A perf is perforated film: from outside it reads as a solid graphic, from inside you can still see out, which is what you want across a window your staff or customers sit behind." },
+      { q: "Will it damage my glass or leave residue?", a: "No. All three films are removable and leave no residue behind. Clings lift off with no effort at all; decals and perfs peel away cleanly, and warming them with a hairdryer makes a large one easier to lift in one piece." },
+      { q: "Can you print something that reads correctly from inside the store?", a: "Yes. Add Reverse Reading Setup and we mirror the artwork for second-surface application, where the decal goes on the inside face of the glass and reads correctly from the street. This also protects the print from weather and scratching." },
+      { q: "How do I measure my window?", a: "Measure the glass itself, not the frame, and take the smallest width and height if the pane is not perfectly square. Then pick the next size down - a decal sized to the exact opening leaves no room to position it, and a half-inch of clear glass around the graphic looks deliberate rather than tight." },
+      { q: "How long do window graphics last outdoors?", a: "Adhesive vinyl holds up for three to five years outdoors and effectively indefinitely inside. Perforated film runs about three years outdoors. Clings are an indoor product and are best treated as seasonal - they are made to be swapped, not to weather." },
+      { q: "Do you print white ink?", a: "No. The films print full colour on white or clear stock, and anything left unprinted on the clear films shows the glass behind it. If your design needs white type, set it on a printed colour background rather than relying on white ink." },
+    ],
+  },
 };

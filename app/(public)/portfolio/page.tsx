@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/prisma";
 import { Reveal } from "@/components/motion/Reveal";
 import { PortfolioGrid, type PortfolioSample } from "@/components/portfolio/portfolio-grid";
+import { localeAlternates } from "@/lib/i18n/metadata";
 
 export const metadata: Metadata = {
+  alternates: localeAlternates("/portfolio", "en"),
   title: "Design Portfolio",
   description:
     "Real business card, postcard, banner, and rigid sign designs from 611 Printing's template library, serving Kansas City and nationwide.",
@@ -16,6 +18,7 @@ const ROUTE_SEGMENT: Record<string, string> = {
   POSTCARD: "postcards",
   BANNER: "banners",
   RIGID_SIGN: "rigid-signs",
+  WINDOW_DECAL: "window-decals",
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -23,6 +26,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   POSTCARD: "Postcards",
   BANNER: "Banners",
   RIGID_SIGN: "Rigid Signs",
+  WINDOW_DECAL: "Window Decals",
 };
 
 export const revalidate = 3600;
@@ -68,10 +72,14 @@ function spreadByIndustry(rows: Row[], limit: number): Row[] {
 export default async function PortfolioPage() {
   // One query per product rather than a single flat `take` — Postgres enums sort by declaration
   // order, not alphabetically, and Business Cards alone has far more featured rows than the other
-  // three products combined, so a single ordered-and-capped query silently returned zero
+  // products combined, so a single ordered-and-capped query silently returned zero
   // postcards/banners/rigid signs.
+  //
+  // Every product in the DesignProduct enum has to be listed here. Adding window decals to the enum
+  // and the storefront without adding them to this array left 96 seeded templates invisible on the
+  // one page whose entire job is showing the template library.
   const perProduct = await Promise.all(
-    (["BUSINESS_CARD", "POSTCARD", "BANNER", "RIGID_SIGN"] as const).map(async (product) => {
+    (["BUSINESS_CARD", "POSTCARD", "BANNER", "RIGID_SIGN", "WINDOW_DECAL"] as const).map(async (product) => {
       const rows = await db.cardTemplate.findMany({
         where: { featured: true, active: true, product },
         orderBy: { sortOrder: "asc" },

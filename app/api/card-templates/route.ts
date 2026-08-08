@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
 
-const PRODUCT_MAP: Record<string, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN"> = {
+const PRODUCT_MAP: Record<string, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN" | "WINDOW_DECAL"> = {
   "business-card": "BUSINESS_CARD",
   postcard: "POSTCARD",
   banner: "BANNER",
   "rigid-sign": "RIGID_SIGN",
+  "window-decal": "WINDOW_DECAL",
 };
 
 export async function GET(req: Request) {

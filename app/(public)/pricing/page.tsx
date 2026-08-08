@@ -6,8 +6,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ClosingCta } from "@/components/layout/ClosingCta";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { formatDollars } from "@/lib/utils";
+import { localeAlternates } from "@/lib/i18n/metadata";
 
 export const metadata: Metadata = {
+  alternates: localeAlternates("/pricing", "en"),
   title: "Transparent Pricing for All Design Services",
   description:
     "Clear, upfront pricing for business cards, postcards, banners, and rigid signs. No hidden fees. Multiple packages to fit any budget.",
@@ -46,6 +48,15 @@ const ALL_SERVICES = [
     href: "/services/rigid-signs",
     packages: [
       { name: "Silver", price: 59, features: ["1-2 images", "Up to 4 revisions", "PDF with die line"] },
+      { name: "Gold", price: 99, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
+      { name: "Platinum", price: 149, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
+    ],
+  },
+  {
+    name: "Window Decals",
+    href: "/services/window-decals",
+    packages: [
+      { name: "Silver", price: 59, features: ["1-2 images", "Up to 4 revisions", "PDF with cut line"] },
       { name: "Gold", price: 99, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
       { name: "Platinum", price: 149, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
     ],

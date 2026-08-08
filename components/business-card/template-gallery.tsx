@@ -41,6 +41,9 @@ const THUMB_ASPECT: Record<DesignProduct, string> = {
   postcard: "aspect-[3/2]",
   banner: "aspect-[4/3]",
   "rigid-sign": "aspect-square",
+  // Window graphics are predominantly wide storefront banners, so the gallery tile matches the
+  // proportion most of the templates are actually drawn at rather than squaring them off.
+  "window-decal": "aspect-[3/2]",
 };
 
 export function TemplateGallery({ product = "business-card" }: { product?: DesignProduct }) {

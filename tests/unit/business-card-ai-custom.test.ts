@@ -27,17 +27,26 @@ describe("buildCustomBusinessCard", () => {
     expect(qrElements(front.elements)).toHaveLength(0);
   });
 
+  /*
+   * The QR is on the back now, not the front.
+   *
+   * A card front has only 0.66in of clear space above the scrim, and the shop's own validator wants
+   * at least 0.8in for a code that scans reliably - so a compliant QR does not fit there at any
+   * position. What these two tests are actually about, the payload, is unchanged.
+   */
   it("adds a scannable QR element pointing at the website when includeQrCode is true", () => {
-    const { front } = buildCustomBusinessCard({ ...baseInfo, includeQrCode: true }, "/img.jpg", 1500, 900);
-    const qrs = qrElements(front.elements);
+    const { front, back } = buildCustomBusinessCard({ ...baseInfo, includeQrCode: true }, "/img.jpg", 1500, 900);
+    expect(qrElements(front.elements), "the front should stay free of the QR").toHaveLength(0);
+    const qrs = qrElements(back.elements);
     expect(qrs).toHaveLength(1);
     expect(qrs[0].value).toContain("test.co");
     expect(qrs[0].payloadType).toBe("url");
+    expect(qrs[0].width, "below the shop's own scannable minimum").toBeGreaterThanOrEqual(0.8);
   });
 
   it("falls back to a vcard QR when no website is given but phone/email exist", () => {
-    const { front } = buildCustomBusinessCard({ ...baseInfo, website: "", includeQrCode: true }, "/img.jpg", 1500, 900);
-    const qrs = qrElements(front.elements);
+    const { back } = buildCustomBusinessCard({ ...baseInfo, website: "", includeQrCode: true }, "/img.jpg", 1500, 900);
+    const qrs = qrElements(back.elements);
     expect(qrs).toHaveLength(1);
     expect(qrs[0].value).toContain("BEGIN:VCARD");
   });

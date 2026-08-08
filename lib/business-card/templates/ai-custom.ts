@@ -88,35 +88,145 @@ function qrValueFor(info: CustomDesignInfo): string | null {
 const BC_W = 3.75;
 const BC_H = 2.25;
 
+/**
+ * The box every piece of content has to stay inside, in this file's authored coordinates.
+ *
+ * These are not the same numbers as `safeZoneInsetIn`. Elements are authored on the 3.75 x 2.25
+ * bleed canvas and then re-based onto the house 0.05in bleed by rebleedSide, which shifts everything
+ * 0.075in toward the top-left. So a QR tile whose right edge sits at 3.69 here lands at 3.615 on a
+ * 3.6in document - outside the sheet entirely - and a contact line ending at 2.11 lands past the
+ * trim. Both shipped, and both are visible on a generated card as a QR clipped off the corner and a
+ * website line sitting on the cut edge.
+ *
+ * Stating the safe box as constants, and asserting against it in tests, is what stops the next
+ * hand-tuned literal from doing the same thing silently.
+ */
+const BC_SAFE = { left: 0.2, top: 0.2, right: 3.55, bottom: 2.05 } as const;
+
+/**
+ * QR size on a business card, and the padded tile it sits on.
+ *
+ * 0.8in is validateSide's own floor for a code that scans reliably. qrOnWhite pads the white tile
+ * outward by 12% of the code on each side, so the tile is 1.24x the code - and it is the tile, not
+ * the code, that has to clear the trim.
+ */
+const BC_QR_SIZE = 0.8;
+const BC_QR_TILE = BC_QR_SIZE * 1.24;
+
+/**
+ * The scrim ramp on the card front, as [y, height, opacity].
+ *
+ * The last band runs to the bottom edge and carries the type; the four above it fade the photograph
+ * into it. Opacity climbs in even ~0.09 steps, which is below the threshold at which the eye picks
+ * out an individual edge over a photograph.
+ */
+const SCRIM_STEPS: [number, number, number][] = [
+  [0.74, 0.09, 0.08],
+  [0.83, 0.09, 0.17],
+  [0.92, 0.09, 0.26],
+  [1.01, 0.09, 0.36],
+  [1.10, 0.08, 0.46],
+  [1.18, BC_H - 1.18, 0.56],
+];
+
 export function buildCustomBusinessCard(info: CustomDesignInfo, imageSrc: string, naturalW: number, naturalH: number): { front: CardSide; back: CardSide } {
-  const [p] = info.palette;
+  const [p, s] = info.palette;
   const qrValue = info.includeQrCode ? qrValueFor(info) : null;
   // Two explicit lines rather than one long joined string — up to 4 contact fields (phone, email,
   // website, LinkedIn) reliably wraps a single line at this width, and a wrapped second line was
   // getting silently clipped by the text element's fixed height instead of showing.
   const contactLine1 = joinNonEmpty([info.phone, info.email], "  ·  ");
   const contactLine2 = joinNonEmpty([info.website, info.linkedin], "  ·  ");
+
+  // A hairline in the brand colour reads as deliberate where a white rule reads as a default, but
+  // only if it is actually visible against the scrim. Falls back to white when the brand colour is
+  // too dark to separate from it.
+  const accent = contrastRatio(s, "#1A1A1A") >= 2.2 ? s : "#FFFFFF";
+
+  const L = 0.28;
+  const W = BC_SAFE.right - L;
+
   const front: CardSide = {
     physicalWidthIn: BC_W, physicalHeightIn: BC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle",
     background: { type: "solid", color: "#FFFFFF", gradient: null },
     elements: [
       bgImage(imageSrc, naturalW, naturalH, BC_W, BC_H),
-      shape({ x: 0, y: 1.15, width: BC_W, height: BC_H - 1.15, shape: "rect", fill: "#000000", opacity: 0.5 }),
-      text({ x: 0.25, y: 1.24, width: 3.25, height: 0.28, text: info.businessName, fontFamily: info.headingFont, fontSizePt: 14, fontWeight: "700", color: "#FFFFFF" }),
-      ...(info.tagline.trim() ? [text({ x: 0.25, y: 1.5, width: 3.25, height: 0.18, text: info.tagline, fontFamily: info.bodyFont, fontSizePt: 8.5, color: "#F2F2F2" })] : []),
-      shape({ x: 0.25, y: 1.7, width: 0.45, height: 0.015, shape: "divider", fill: "#FFFFFF" }),
-      // The QR tile sits in the top-right corner, well clear of this bottom strip, so these lines
-      // don't need to make room for it — they only need their own width to fit.
-      ...(contactLine1 ? [text({ x: 0.25, y: 1.78, width: 3.25, height: 0.16, text: contactLine1, fontFamily: info.bodyFont, fontSizePt: 6, color: "#F2F2F2" })] : []),
-      ...(contactLine2 ? [text({ x: 0.25, y: 1.95, width: 3.25, height: 0.16, text: contactLine2, fontFamily: info.bodyFont, fontSizePt: 6, color: "#F2F2F2" })] : []),
-      ...(qrValue ? qrOnWhite(3.75 - 0.62, 0.2, 0.5, qrValue) : []),
+      /*
+       * A stepped scrim rather than one 50% block.
+       *
+       * The single hard-edged panel cut the photograph in half with a visible horizontal seam, which
+       * is the cheapest-looking thing on the card - it reads as a caption bar pasted over a stock
+       * image rather than as one composition. Ramping the opacity lets the image dissolve into the
+       * type area instead.
+       *
+       * Stacked solid fills rather than an alpha gradient on purpose: gradient *stops* carry no
+       * opacity in this schema, and an rgba stop colour is not something svg-to-pdfkit can be
+       * trusted to rasterise the same way the browser does. Solid rects behave identically in the
+       * Konva canvas, the SVG preview and the printed PDF, which is the property that matters.
+       *
+       * Five steps rather than three: at three the increments are large enough to read as banding
+       * over a light or flat image, which trades one seam for two. At ~0.09 per step the ramp reads
+       * as a fade.
+       */
+      ...SCRIM_STEPS.map(([y, height, opacity]) =>
+        shape({ x: 0, y, width: BC_W, height, shape: "rect", fill: "#000000", opacity })),
+
+      text({ x: L, y: 1.20, width: W, height: 0.30, text: info.businessName, fontFamily: info.headingFont, fontSizePt: 15, fontWeight: "700", color: "#FFFFFF", lineHeight: 1.05 }),
+      // Uppercase and letterspaced. A tagline set the same way as the contact line competes with it;
+      // tracked-out small caps sit clearly below the name in the hierarchy without needing more size.
+      ...(info.tagline.trim()
+        ? [text({ x: L, y: 1.51, width: W, height: 0.15, text: info.tagline, fontFamily: info.bodyFont, fontSizePt: 7, fontWeight: "600", textTransform: "uppercase", letterSpacing: 1.1, color: "#E8E8E8" })]
+        : []),
+      shape({ x: L, y: 1.70, width: 0.34, height: 0.018, shape: "divider", fill: accent }),
+      // The QR tile sits in the top-right corner, well clear of this bottom block, so these lines
+      // only need their own width to fit.
+      ...(contactLine1 ? [text({ x: L, y: 1.76, width: W, height: 0.13, text: contactLine1, fontFamily: info.bodyFont, fontSizePt: 6.2, color: "#F2F2F2" })] : []),
+      ...(contactLine2 ? [text({ x: L, y: 1.90, width: W, height: 0.13, text: contactLine2, fontFamily: info.bodyFont, fontSizePt: 6.2, color: "#F2F2F2" })] : []),
+      // No QR on the front - it lives on the back now. See BC_QR_SIZE.
     ],
   };
+
+  /*
+   * The back was one centred line of text on a flat colour, which is what the back of a card looks
+   * like when nobody designed it. It now carries the contact details and the QR code, so the card
+   * works handed over either way up, and repeats the accent rule from the front so the two faces
+   * read as a pair.
+   */
+  const backInk = contrastRatio(p, "#FFFFFF") >= 3 ? "#FFFFFF" : "#161616";
+  const backAccent = backInk === "#FFFFFF" ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.35)";
+
+  // Text yields the right-hand column to the QR tile, so the two never collide.
+  const bx = 0.35;
+  const bw = qrValue ? 1.95 : BC_W - 0.7;
+  const balign = qrValue ? "left" : "center";
+
   const back: CardSide = {
     physicalWidthIn: BC_W, physicalHeightIn: BC_H, bleedIn: 0.125, safeZoneInsetIn: 0.125, shapeMask: "rectangle",
     background: { type: "solid", color: p, gradient: null },
     elements: [
-      text({ x: 0.3, y: BC_H / 2 - 0.18, width: BC_W - 0.6, height: 0.35, text: info.businessName, fontFamily: info.headingFont, fontSizePt: 15, fontWeight: "700", color: "#FFFFFF", align: "center" }),
+      text({ x: bx, y: 0.60, width: bw, height: 0.28, text: info.businessName, fontFamily: info.headingFont, fontSizePt: 14, fontWeight: "700", color: backInk, align: balign, lineHeight: 1.05 }),
+      shape({ x: balign === "center" ? BC_W / 2 - 0.15 : bx, y: 0.92, width: 0.3, height: 0.016, shape: "divider", fill: backAccent }),
+      ...(info.tagline.trim()
+        ? [text({ x: bx, y: 1.00, width: bw, height: 0.14, text: info.tagline, fontFamily: info.bodyFont, fontSizePt: 6.5, fontWeight: "600", textTransform: "uppercase", letterSpacing: 1.1, color: backInk, align: balign })]
+        : []),
+      // One field per line here rather than the front's joined pairs: the text column is half the
+      // width when a QR is present, and a joined line silently overflows it.
+      ...(info.phone.trim() ? [text({ x: bx, y: 1.20, width: bw, height: 0.12, text: info.phone, fontFamily: info.bodyFont, fontSizePt: 6, color: backInk, align: balign })] : []),
+      ...(info.email.trim() ? [text({ x: bx, y: 1.33, width: bw, height: 0.12, text: info.email, fontFamily: info.bodyFont, fontSizePt: 6, color: backInk, align: balign })] : []),
+      ...(info.website.trim() ? [text({ x: bx, y: 1.46, width: bw, height: 0.12, text: info.website, fontFamily: info.bodyFont, fontSizePt: 6, color: backInk, align: balign })] : []),
+      /*
+       * The QR moved here from the front, and grew from 0.5in to 0.8in doing it.
+       *
+       * 0.8in is the shop's own floor for a code that scans reliably (see validateSide's qr-small
+       * rule), and the front cannot host one: the clear band above the scrim is 0.66in tall, so a
+       * compliant code does not fit there at any position. The front QR was 0.5in - under the shop's
+       * own threshold - *and* placed so its white tile ran off the trim, so it was both hard to scan
+       * and partly cut off.
+       *
+       * A flat colour field is also a better backdrop for a code than a photograph, and keeping the
+       * front free of a white tile is most of what makes the front look composed rather than stickered.
+       */
+      ...(qrValue ? qrOnWhite(BC_SAFE.right - 0.896, (BC_H - BC_QR_TILE) / 2 + 0.096, BC_QR_SIZE, qrValue) : []),
     ],
   };
   // Authored on the historical 3.75 x 2.25 / 0.125in-bleed canvas; re-based onto the house spec so
@@ -126,6 +236,10 @@ export function buildCustomBusinessCard(info: CustomDesignInfo, imageSrc: string
 
 const PC_W = 6;
 const PC_H = 4;
+
+/** Same scannable floor as the business card. See BC_QR_SIZE. */
+const PC_QR_SIZE = 0.8;
+const PC_QR_TILE = PC_QR_SIZE * 1.24;
 
 export function buildCustomPostcard(info: CustomDesignInfo, imageSrc: string, naturalW: number, naturalH: number): { front: CardSide; back: CardSide } {
   const [p, , inkRaw] = info.palette;
@@ -143,7 +257,16 @@ export function buildCustomPostcard(info: CustomDesignInfo, imageSrc: string, na
       text({ x: 0.35, y: 3.56, width: 2.1, height: 0.22, text: `Call ${info.phone}`, fontFamily: info.bodyFont, fontSizePt: 10, fontWeight: "700", color: ink, align: "center" }),
       // QR tile is top-right (y=0.25), clear of this bottom strip, so no width needs to be reserved for it.
       ...(info.website.trim() ? [text({ x: 2.65, y: 3.56, width: 3.0, height: 0.22, text: info.website, fontFamily: info.bodyFont, fontSizePt: 9, color: "#F2F2F2" })] : []),
-      ...(qrValue ? qrOnWhite(PC_W - 0.85, 0.25, 0.65, qrValue) : []),
+      /*
+       * Placed off the safe edge rather than the sheet edge, and sized to the same 0.8in floor the
+       * business card uses.
+       *
+       * At PC_W - 0.85 the padded tile ended at 5.878 against a 5.875 safe limit - three thousandths
+       * of an inch over, invisible in a preview and still a real trim risk on a guillotine. The code
+       * was also 0.65in, under validateSide's own qr-small threshold. A 6 x 4in postcard has room
+       * for a compliant one, unlike the business card front.
+       */
+      ...(qrValue ? qrOnWhite(PC_W - 0.125 - PC_QR_TILE + PC_QR_SIZE * 0.12, 0.3, PC_QR_SIZE, qrValue) : []),
     ],
   };
   const back: CardSide = {

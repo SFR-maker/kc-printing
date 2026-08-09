@@ -157,7 +157,7 @@ export default function PricingPage() {
 
       <ClosingCta
         title="Have a custom project?"
-        body="Not sure which package fits, or need something outside these four products? Tell us what you're planning and we'll quote it."
+        body="Not sure which package fits, or need something outside these five products? Tell us what you're planning and we'll quote it."
         primary={{ label: "Contact us", href: "/contact" }}
         secondary={{ label: "Browse products", href: "/services" }}
         showContactDetails

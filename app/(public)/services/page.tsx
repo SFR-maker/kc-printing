@@ -71,7 +71,7 @@ export default function ServicesPage() {
           <Reveal className="max-w-2xl">
             <h1 className="display-tight text-[2.94rem] text-kc-dark sm:text-6xl">All services</h1>
             <p className="mt-5 text-[18.19px] leading-relaxed text-kc-dark/75">
-              Four products, each built around a designer who knows the format, not a template
+              Five products, each built around a designer who knows the format, not a template
               engine.
             </p>
           </Reveal>

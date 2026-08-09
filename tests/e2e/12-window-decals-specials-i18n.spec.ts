@@ -1,5 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { SERVICE_SLUG_ES, ROUTE_MAP } from "@/lib/i18n/config";
+import { SERVICES } from "@/lib/service-data";
+import { SERVICES_ES } from "@/lib/service-data-es";
 
 /**
  * End-to-end cover for the three features added together: window signage, the specials system, and
@@ -101,6 +103,61 @@ test.describe("window decals", () => {
     for (const [url, name] of [["/", "Window Decals"], ["/services", "Window Decals"], ["/pricing", "Window Decals"]] as const) {
       await page.goto(url);
       await expect(page.getByText(name).first(), url).toBeVisible();
+    }
+  });
+});
+
+test.describe("product listings", () => {
+  /**
+   * The homepage product grid is a hand-laid bento addressed by index (SERVICES[0]..SERVICES[4]),
+   * not a map, so a new product added to the array does not appear until a cell is added for it.
+   * That is exactly what happened with window decals: live on every other page, absent from the
+   * homepage. This asserts against the real product catalogue rather than against a copy of it.
+   */
+  test("the homepage lists every product", async ({ page }) => {
+    await page.goto("/");
+    const grid = page.locator("section", { has: page.getByRole("heading", { name: /products\. Done well/i }) });
+    for (const slug of Object.keys(SERVICES)) {
+      await expect(
+        grid.getByRole("link", { name: SERVICES[slug].name, exact: true }).first(),
+        `${SERVICES[slug].name} is missing from the homepage product grid`,
+      ).toBeVisible();
+    }
+  });
+
+  test("the services and pricing pages list every product", async ({ page }) => {
+    for (const url of ["/services", "/pricing"]) {
+      await page.goto(url);
+      for (const slug of Object.keys(SERVICES)) {
+        await expect(
+          page.getByText(SERVICES[slug].name).first(),
+          `${SERVICES[slug].name} is missing from ${url}`,
+        ).toBeVisible();
+      }
+    }
+  });
+
+  test("the Spanish services page lists every product", async ({ page }) => {
+    await page.goto("/es/servicios");
+    for (const slug of Object.keys(SERVICES_ES)) {
+      await expect(
+        page.getByText(SERVICES_ES[slug].name).first(),
+        `${SERVICES_ES[slug].name} is missing from /es/servicios`,
+      ).toBeVisible();
+    }
+  });
+
+  test("does not claim a product count that has gone stale", async ({ page }) => {
+    // "Four products. Done well." outlived the fourth product by one release.
+    const count = Object.keys(SERVICES).length;
+    const words = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
+    const wrong = words.filter((w, i) => i + 1 !== count);
+    for (const url of ["/", "/services", "/pricing"]) {
+      await page.goto(url);
+      const body = (await page.locator("body").innerText()).toLowerCase();
+      for (const w of wrong) {
+        expect(body, `${url} still says "${w} products"`).not.toContain(`${w.toLowerCase()} products`);
+      }
     }
   });
 });

@@ -204,12 +204,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Products: four items, four cells, no filler tiles ── */}
+      {/* ── Products: one cell per item, no filler tiles ── */}
       <section className="band bg-kc-paper">
         <div className="container-tight">
           <Reveal className="mb-12 max-w-xl">
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.94rem]">
-              Four products. Done well.
+              Five products. Done well.
             </h2>
             <p className="mt-4 text-[17.66px] leading-relaxed text-kc-dark/70">
               We keep the catalog focused so every order gets real attention from a designer who
@@ -217,8 +217,16 @@ export default async function HomePage() {
             </p>
           </Reveal>
 
-          {/* 4 products, 4 cells, exact fill. Column spans alternate 3/2 then 2/3 so the grid has a
-              diagonal rhythm instead of four equal cards. */}
+          {/*
+            A hand-laid bento rather than a map, because the column spans alternate 3/2 then 2/3 to
+            give the grid a diagonal rhythm instead of equal cards - which no generic loop produces.
+            The cost is that the layout has to be extended by hand: adding window decals to SERVICES
+            without adding a cell here left the product live on every other page and invisible on the
+            homepage, which is the page most people see first. `homepage lists every product` in the
+            e2e suite fails if that happens again.
+
+            Five items over a 5-column grid: 3+2, 2+3, then the newest product full width.
+          */}
           <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <RevealItem className="h-full sm:col-span-2 lg:col-span-3">
               <ProductTile service={SERVICES[0]} wide />
@@ -234,6 +242,10 @@ export default async function HomePage() {
 
             <RevealItem className="h-full sm:col-span-2 lg:col-span-3">
               <ProductTile service={SERVICES[3]} wide />
+            </RevealItem>
+
+            <RevealItem className="h-full sm:col-span-2 lg:col-span-5">
+              <ProductTile service={SERVICES[4]} wide />
             </RevealItem>
           </RevealGroup>
         </div>

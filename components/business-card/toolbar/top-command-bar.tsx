@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, Grid3x3, Eye, EyeOff, Save, Download, ArrowRight } from "lucide-react";
+import { Undo2, Redo2, ZoomIn, ZoomOut, Maximize2, Grid3x3, Eye, EyeOff, Save, Download, ArrowRight, Layers2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCardEditorStore } from "@/lib/business-card/store";
@@ -40,9 +41,19 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
   const showGrid = useCardEditorStore((s) => s.showGrid);
   const toggleGrid = useCardEditorStore((s) => s.toggleGrid);
   const dirty = useCardEditorStore((s) => s.dirty);
+  const clearBack = useCardEditorStore((s) => s.clearBack);
+  /**
+   * A back with nothing on it is "front only".
+   *
+   * The schema always carries two faces, so there is no such thing as deleting one - what the
+   * customer means by "remove the back" is that nothing should print on it. Emptiness is therefore
+   * the state to read, not a flag.
+   */
+  const backIsEmpty = useCardEditorStore((s) => s.design.back.elements.length === 0);
+  const [confirmingRemoveBack, setConfirmingRemoveBack] = useState(false);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-kc-border bg-white px-4 py-2.5">
+    <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-kc-border bg-white px-4 py-2.5">
       <div className="flex items-center gap-1">
         <Link href="/" title="Back to 611 Printing" className="mr-1 shrink-0">
           <LogoTile className="h-8 w-8" aria-hidden />
@@ -96,9 +107,77 @@ export function TopCommandBar({ onSave, saving, onExport, exporting, onContinue,
             }`}
           >
             {side}
+            {/*
+              A visual hint only, deliberately outside the accessible name.
+
+              Folding it in gave the tab a name that changed with its contents - "Backempty", then
+              "Back (empty)" - so the one control whose identity should be fixed was renaming itself.
+              Screen reader users are not left short: the "Add back" button beside these tabs appears
+              in exactly the same condition and says the same thing in words.
+            */}
+            {side === "back" && backIsEmpty && (
+              <span aria-hidden="true" className="ml-1.5 text-[11px] font-medium opacity-70">
+                empty
+              </span>
+            )}
           </button>
         ))}
       </div>
+
+      {/*
+        Starting from a two-sided template and wanting one side is common, and the only way through
+        it used to be starting the design again. Removing the back is undoable like any other edit,
+        so the confirmation is about making the consequence explicit rather than about safety.
+      */}
+      {backIsEmpty ? (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setActiveSide("back")}
+          className="border-kc-border text-kc-dark"
+        >
+          <Layers2 className="mr-1.5 h-3.5 w-3.5" /> Add back
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setConfirmingRemoveBack(true)}
+          className="border-kc-border text-kc-muted hover:text-kc-dark"
+        >
+          <Layers2 className="mr-1.5 h-3.5 w-3.5" /> Remove back
+        </Button>
+      )}
+
+      {confirmingRemoveBack && (
+        <div
+          role="alertdialog"
+          aria-label="Remove the back of this design"
+          className="absolute left-1/2 top-full z-50 mt-2 w-80 -translate-x-1/2 rounded-xl border border-amber-300 bg-amber-50 p-4 shadow-lg"
+        >
+          <p className="text-[13.5px] leading-snug text-amber-900">
+            This clears everything on the back and sets the order to print the front only. You can
+            undo it, and your price updates when you continue.
+          </p>
+          <div className="mt-3 flex gap-2">
+            <Button
+              size="sm"
+              onClick={() => { clearBack(); setConfirmingRemoveBack(false); }}
+              className="bg-amber-700 text-white hover:bg-amber-800"
+            >
+              Remove the back
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setConfirmingRemoveBack(false)}
+              className="border-amber-300 bg-white text-amber-900"
+            >
+              Keep it
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-2">
         <span className="text-xs text-kc-muted">

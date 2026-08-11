@@ -54,12 +54,15 @@ test.describe("Business card design studio", () => {
     test.skip(testInfo.project.name === "mobile-chrome", "Desktop TopCommandBar; mobile equivalent covered in 09-business-card-ux.spec.ts");
     await page.goto("/services/business-cards/design/new");
     await page.waitForTimeout(300);
-    const back = page.locator("button", { hasText: "Back" });
+    // Targeted by role, not by text: the toolbar now also carries an "Add back" / "Remove back"
+    // button, so `button` filtered on "Back" matches two things. The tab's accessible name stays
+    // exactly "Back" whatever is on the face - the "empty" hint beside it is aria-hidden.
+    const back = page.getByRole("tab", { name: "Back" });
     await back.click();
     // Asserted on aria-selected, not on a class name: bg-white is what the *inactive* tab wears, so
     // this assertion was checking that clicking Back did nothing.
     await expect(back).toHaveAttribute("aria-selected", "true");
-    await expect(page.locator("button", { hasText: "Front" })).toHaveAttribute("aria-selected", "false");
+    await expect(page.getByRole("tab", { name: "Front" })).toHaveAttribute("aria-selected", "false");
   });
 
   test("29 - zoom controls change zoom percentage", async ({ page }, testInfo) => {

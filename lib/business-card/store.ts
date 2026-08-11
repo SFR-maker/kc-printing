@@ -77,6 +77,15 @@ interface EditorState {
   toggleGuides: () => void;
   toggleGrid: () => void;
   resetToTemplate: (front: CardSide, back: CardSide, palette?: string[] | null) => void;
+  /**
+   * Empties the back face, keeping its geometry.
+   *
+   * Undoable like any other edit, which is what makes it safe to offer: a customer who removes the
+   * back and changes their mind gets it back with Ctrl+Z rather than having to rebuild it. The side
+   * itself is never deleted - the schema always has two faces, and a back that exists but is empty
+   * is exactly what "front only" means at print time.
+   */
+  clearBack: () => void;
   markSaved: () => void;
 }
 
@@ -395,6 +404,23 @@ export const useCardEditorStore = create<EditorState>((set, get) => ({
   requestEditText: (id) => set((s) => ({ editTextRequest: { id, n: (s.editTextRequest?.n ?? 0) + 1 } })),
   toggleGuides: () => set((s) => ({ showGuides: !s.showGuides })),
   toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
+
+  clearBack: () => {
+    const s = get();
+    const history = snapshot(s.design);
+    set({
+      design: {
+        ...s.design,
+        back: { ...s.design.back, elements: [], background: { type: "solid", color: "#FFFFFF", gradient: null } },
+      },
+      // Leaving the customer looking at a face they just emptied reads as though the tool broke.
+      activeSide: "front",
+      selectedIds: [],
+      past: [...s.past, history].slice(-MAX_HISTORY),
+      future: [],
+      dirty: true,
+    });
+  },
 
   resetToTemplate: (front, back, palette = null) => {
     const s = get();

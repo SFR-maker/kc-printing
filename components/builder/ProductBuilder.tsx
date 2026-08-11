@@ -25,6 +25,7 @@ import {
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
 import { WindowDecalPrintSpec, type WindowDecalPriceState } from "@/components/builder/WindowDecalPrintSpec";
 import { OrderSummaryPanel, type SummaryLine } from "@/components/builder/OrderSummaryPanel";
+import { ArtworkSummary, type ArtworkSource } from "@/components/builder/ArtworkSummary";
 import type { BannerPriceState } from "@/components/builder/BannerPrintSpec";
 
 import { CardSideSchema } from "@/lib/business-card/schema";
@@ -203,7 +204,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
    * a preview built on them would show nothing. Rendering the same JSON the press will print is
    * also the only version guaranteed to match.
    */
-  const [designPreview, setDesignPreview] = useState<{ title: string; front: string | null; back: string | null } | null>(null);
+  const [designPreview, setDesignPreview] = useState<{ title: string; front: string | null; back: string | null; fromAi: boolean } | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -276,6 +277,17 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
    */
   const studioDesign = Boolean(cardDesignId) && !uploadInstead;
 
+  /**
+   * The artwork summary shows for an upload only once there is a file *and* an approved proof.
+   *
+   * Mid-upload the customer still needs the uploader and the proof editor, and swapping them for a
+   * summary would strand them with an unapproved file and no way to approve it.
+   */
+  const uploadedArtworkSource: ArtworkSource | null =
+    values.artwork?.path === "UPLOAD" && values.artwork.front.fileUrl && values.artwork.front.approved
+      ? "UPLOAD"
+      : null;
+
   const stepKeys: StepKey[] = !hasPrintSpec
     ? ["package", "options", "details", "payment"]
     : // Someone who built their own design in the studio is in exactly the position of someone who
@@ -338,17 +350,36 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         // fails - signed in on a different device, storage cleared - the preview must say so rather
         // than sit on "Loading your design" forever.
         if (!d) {
-          setDesignPreview({ title: "", front: null, back: null });
+          setDesignPreview({ title: "", front: null, back: null, fromAi: false });
           return;
         }
         if (d) {
           const front = CardSideSchema.safeParse(d.front);
           const back = CardSideSchema.safeParse(d.back);
           setDesignPreview({
+            // `meta` is only written by the AI generator (it stores the structured business inputs
+            // the generator was given), so its presence is what distinguishes an AI design from one
+            // built by hand in the editor. Nothing else on the record records which route made it.
+            fromAi: Boolean(d.meta),
             title: d.title ?? "Your design",
             front: front.success ? renderSideToSvg(front.data, 150) : null,
             back: back.success ? renderSideToSvg(back.data, 150) : null,
           });
+
+          /*
+           * An empty back means the customer asked for front only, so the order says so.
+           *
+           * "Remove back" in the editor clears the face; without this the order still carried
+           * whatever sides option was set before, so someone who explicitly removed the back was
+           * quoted - and charged - for printing two of them.
+           *
+           * Only applied while the sides option is still untouched at its default. Once the
+           * customer has chosen sides themselves, their choice wins over this inference.
+           */
+          const backEmpty = back.success && back.data.elements.length === 0;
+          if (backEmpty && isBusinessCards && form.getValues("bcSpec")?.colorId === DEFAULT_BC_SPEC.colorId) {
+            setValue("bcSpec", { ...(form.getValues("bcSpec") ?? DEFAULT_BC_SPEC), colorId: 1 });
+          }
         }
         const meta = d?.meta;
         if (!meta) return;
@@ -857,68 +888,58 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
 
             <div className="space-y-4 border-t border-kc-border pt-8">
               <h2 className="text-xl font-bold text-kc-dark">Your Artwork</h2>
+              {/*
+                Once artwork exists this is a summary of it, not a fork.
+
+                The section used to keep offering "upload a file" or "have us design it" even after
+                the customer had chosen a template, generated an AI design or uploaded a file - so
+                the page went on asking a question it already had the answer to, and there was no one
+                place showing what would actually print.
+              */}
               {studioDesign ? (
-                <>
-                  {/*
-                    The studio design is the artwork. Showing the uploader here asked for a file the
-                    customer had already made and then refused to continue without one, which made a
-                    design built in the studio impossible to order.
-                  */}
-                  <p className="text-sm text-kc-muted">
-                    This is what will print. Nothing to upload.
-                  </p>
-                  <div className="rounded-xl border-2 border-kc-coral/40 bg-white p-5">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      {([["Front", designPreview?.front], ["Back", designPreview?.back]] as const).map(([face, src]) => (
-                        <figure key={face} className="overflow-hidden rounded-lg border border-kc-border bg-kc-bg">
-                          <figcaption className="border-b border-kc-border px-3 py-1.5 text-xs font-semibold text-kc-muted">
-                            {face}
-                          </figcaption>
-                          {src ? (
-                            // The SVG carries pixel width/height at the render DPI, which overflows
-                            // this column; the viewBox is in inches, so filling the width and letting
-                            // height follow shows the whole face at true proportions.
-                            <div
-                              className="bg-white [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
-                              dangerouslySetInnerHTML={{ __html: src }}
-                            />
-                          ) : (
-                            <div className="px-3 py-10 text-center text-xs text-kc-muted">
-                              {!designPreview
-                                ? "Loading your design…"
-                                : designPreview.title
-                                  ? "This side is empty"
-                                  : "Preview unavailable on this device — open it in the editor to check."}
-                            </div>
-                          )}
-                        </figure>
-                      ))}
-                    </div>
-                    <div className="mt-4 flex flex-wrap items-center justify-between gap-4 border-t border-kc-border pt-4">
-                      <div className="text-sm text-kc-muted">
-                        {designPreview?.title || "Your design"} — print-ready at the size and finish above.
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <a
-                          href={`/services/${service.slug}/design/${cardDesignId}`}
-                          className="text-sm font-semibold text-kc-magenta-deep hover:underline"
-                        >
-                          Edit design
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setUploadInstead(true);
-                            setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
-                          }}
-                          className="text-sm text-kc-muted underline hover:text-kc-dark"
-                        >
-                          Upload a file instead
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </>
+                <ArtworkSummary
+                  source={designPreview?.fromAi ? "AI" : "STUDIO"}
+                  title={designPreview?.title || "Your design"}
+                  faces={[
+                    {
+                      label: "Front",
+                      svg: designPreview?.front ?? null,
+                      emptyNote: !designPreview
+                        ? "Loading your design…"
+                        : designPreview.title
+                          ? "This side is empty"
+                          : "Preview unavailable on this device — open it in the editor to check.",
+                    },
+                    ...(backNeeded || designPreview?.back
+                      ? [{ label: "Back", svg: designPreview?.back ?? null, emptyNote: "This side is empty" }]
+                      : []),
+                  ]}
+                  specNote="Print-ready at the size and finish above. Nothing to upload."
+                  onEdit={() => { window.location.href = `/services/${service.slug}/design/${cardDesignId}`; }}
+                  onReplace={() => {
+                    setUploadInstead(true);
+                    setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                  }}
+                />
+              ) : uploadedArtworkSource ? (
+                <ArtworkSummary
+                  source={uploadedArtworkSource}
+                  title={artwork.front.fileName}
+                  faces={[
+                    { label: "Front", imageUrl: artwork.front.fileUrl },
+                    ...(backNeeded
+                      ? [{ label: "Back", imageUrl: artwork.back.fileUrl, emptyNote: "Not uploaded yet" }]
+                      : []),
+                  ]}
+                  specNote={`Print-ready at ${artworkSpec.trimWidthIn}″ × ${artworkSpec.trimHeightIn}″.`}
+                  editLabel="Adjust placement"
+                  onEdit={() => setValue("artwork", { ...artwork, front: { ...artwork.front, approved: false } })}
+                  // Replace keeps the upload route and clears the files; remove drops back to the
+                  // fork so the customer can change their mind about the route entirely.
+                  onReplace={() => setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" })}
+                  onRemove={() => { setUploadInstead(false); setValue("artwork", EMPTY_ARTWORK); }}
+                  removeWarning="This removes the file you uploaded and the proof you approved. You'll choose again between uploading a file and having us design it."
+                />
               ) : (
                 <>
               <p className="text-sm text-kc-muted">Upload a print-ready file, or have our designers build it for you.</p>

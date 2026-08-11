@@ -22,6 +22,7 @@ import { BannerPrintSpec, DEFAULT_BANNER_SPEC, type BannerSpec } from "@/compone
 import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
 } from "@/components/builder/PostcardPrintSpec";
+import { bannerTrimInches, orientedSizeLabel } from "@/components/builder/BannerPrintSpec";
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
 import { WindowDecalPrintSpec, type WindowDecalPriceState } from "@/components/builder/WindowDecalPrintSpec";
 import { OrderSummaryPanel, type SummaryLine } from "@/components/builder/OrderSummaryPanel";
@@ -88,7 +89,11 @@ const schema = z.object({
   quantity: z.number().int("Quantity must be a whole number").min(1, "Quantity must be at least 1"),
   bcSpec: bcSpecSchema.optional(),
   bannerSpec: z
-    .object({ size: z.string(), material: z.string(), quantity: z.number(), grommets: z.string() })
+    .object({
+      size: z.string(), material: z.string(), quantity: z.number(), grommets: z.string(),
+      /** How the banner hangs. Not priced - see BannerSpec. */
+      orientation: z.enum(["horizontal", "vertical"]).optional(),
+    })
     .optional(),
   postcardSpec: z
     .object({ size: z.string(), paper: z.string(), color: z.string(), quantity: z.number() })
@@ -454,7 +459,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   /** Geometry the artwork step and proof are measured against. */
   const artworkSpec: PrintSpec = (() => {
     if (isBanners) {
-      const trim = parseTrimSize(values.bannerSpec?.size ?? DEFAULT_BANNER_SPEC.size)
+      const b = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
+      /*
+       * Orientation decides which edge is the width.
+       *
+       * The catalogue states the short edge first, so parseTrimSize alone laid every banner out
+       * portrait - a 3 x 8 landscape banner was proofed as a 3 wide by 8 tall document, and any
+       * artwork placed into it was rotated a quarter turn away from what the customer asked for.
+       */
+      const trim = bannerTrimInches(b.size, b.orientation ?? "horizontal")
+        ?? parseTrimSize(b.size)
         ?? { widthIn: 72, heightIn: 36 };
       return printSpec("banners", trim.widthIn, trim.heightIn);
     }
@@ -696,7 +710,9 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       if (bc.roundCorners) lines.push({ label: "Corners", value: "Rounded" });
     } else if (isBanners) {
       const b = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
-      lines.push({ label: "Size", value: b.size });
+      const orientation = b.orientation ?? "horizontal";
+      lines.push({ label: "Size", value: orientedSizeLabel(b.size, orientation) });
+      lines.push({ label: "Orientation", value: orientation === "horizontal" ? "Horizontal" : "Vertical" });
       lines.push({ label: "Material", value: b.material });
       lines.push({ label: "Grommets", value: b.grommets });
       lines.push({ label: "Quantity", value: b.quantity ? String(b.quantity) : "Not chosen" });
@@ -856,14 +872,17 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                 />
               ) : isBanners ? (
                 <BannerPrintSpec
-                  spec={values.bannerSpec ?? DEFAULT_BANNER_SPEC}
+                  // The stored draft predates orientation, so it is defaulted rather than assumed
+                  // present - an older saved order would otherwise arrive without one.
+                  spec={{ ...DEFAULT_BANNER_SPEC, ...(values.bannerSpec ?? {}) }}
                   onPriceChange={setBannerPriceState}
                   onChange={(next) => {
-                    const prev = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
+                    const prev = { ...DEFAULT_BANNER_SPEC, ...(values.bannerSpec ?? {}) };
                     setValue("bannerSpec", next);
-                    // Size decides the document, so a proof approved against the old one no longer
-                    // describes what will print. Drop it rather than carry a stale approval.
-                    if (prev.size !== next.size && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
+                    // Size and orientation both decide the document, so a proof approved against the
+                    // old one no longer describes what will print. Drop it rather than carry a stale
+                    // approval through to the press.
+                    if ((prev.size !== next.size || prev.orientation !== next.orientation) && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
                       setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
                     }
                   }}

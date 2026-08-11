@@ -46,13 +46,28 @@ const THUMB_ASPECT: Record<DesignProduct, string> = {
   "window-decal": "aspect-[3/2]",
 };
 
-export function TemplateGallery({ product = "business-card" }: { product?: DesignProduct }) {
+export function TemplateGallery({
+  product = "business-card",
+  orientation,
+}: {
+  product?: DesignProduct;
+  /**
+   * Narrows the gallery to templates that hang the way the customer has chosen.
+   *
+   * Stored on the template as "landscape" / "portrait"; the banner order flow speaks in
+   * "horizontal" / "vertical". Mapped at the call site so the gallery keeps the database's
+   * vocabulary and the order flow keeps the customer's.
+   */
+  orientation?: "landscape" | "portrait";
+}) {
   const [templates, setTemplates] = useState<TemplateSummary[] | null>(null);
   const [error, setError] = useState(false);
   const [industry, setIndustry] = useState("all");
   const [style, setStyle] = useState("all");
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
+  /** True when the requested orientation had no templates and the unfiltered set is being shown. */
+  const [orientationUnavailable, setOrientationUnavailable] = useState(false);
   const routeSegment = PRODUCT_ROUTE_SEGMENT[product];
   const thumbAspect = THUMB_ASPECT[product];
   const supportsAi = product !== "rigid-sign";
@@ -65,21 +80,46 @@ export function TemplateGallery({ product = "business-card" }: { product?: Desig
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/card-templates?product=${product}`)
-      .then((res) => {
+
+    /*
+     * Falls back to the unfiltered set when an orientation matches nothing.
+     *
+     * Every banner template in the library is currently landscape, so filtering to vertical
+     * returned an empty gallery - which is a worse answer than the unfiltered one, and reads as
+     * though the site is broken rather than as though the library is thin. Showing everything with
+     * a note is honest and still useful; the note goes away on its own once portrait designs exist.
+     */
+    async function load() {
+      const url = (o?: string) => `/api/card-templates?product=${product}${o ? `&orientation=${o}` : ""}`;
+      try {
+        const res = await fetch(url(orientation));
         if (!res.ok) throw new Error("failed");
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) setTemplates(data.templates ?? []);
-      })
-      .catch(() => {
+        const data = await res.json();
+        let list: TemplateSummary[] = data.templates ?? [];
+        let fellBack = false;
+
+        if (orientation && list.length === 0) {
+          const all = await fetch(url());
+          if (all.ok) {
+            list = (await all.json()).templates ?? [];
+            fellBack = list.length > 0;
+          }
+        }
+        if (cancelled) return;
+        setTemplates(list);
+        setOrientationUnavailable(fellBack);
+      } catch {
         if (!cancelled) setError(true);
-      });
+      }
+    }
+    void load();
+
     return () => {
       cancelled = true;
     };
-  }, [product]);
+    // orientation is a dependency: without it the first fetch wins and switching orientation
+    // silently keeps showing the previous set.
+  }, [product, orientation]);
 
   const filtered = useMemo(() => {
     if (!templates) return [];
@@ -166,6 +206,12 @@ export function TemplateGallery({ product = "business-card" }: { product?: Desig
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-kc-dark">{filtered.length} Template{filtered.length !== 1 ? "s" : ""}</h2>
         </div>
+        {orientationUnavailable && (
+          <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13.5px] leading-snug text-amber-900">
+            We don&apos;t have {orientation === "portrait" ? "vertical" : "horizontal"} templates yet, so
+            these are all of them. Any of them can be re-laid-out to your size in the editor.
+          </p>
+        )}
         {filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-kc-border py-16 text-center text-sm text-kc-muted">
             No templates match your filters. Try a different search or category.

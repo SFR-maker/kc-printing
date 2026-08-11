@@ -83,6 +83,8 @@ const schema = z.object({
       material: z.string().max(80),
       quantity: z.number().int().positive(),
       grommets: z.string().max(60).optional(),
+      /** How the banner hangs. Recorded for production; it does not affect the quoted price. */
+      orientation: z.enum(["horizontal", "vertical"]).optional(),
     })
     .optional(),
   postcardSpec: z

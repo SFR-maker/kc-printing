@@ -10,6 +10,7 @@ import { bannerParcel } from "@/lib/shipping/banner-parcel";
 import { GROMMET_OPTIONS, DEFAULT_GROMMETS, HEMMING_INCLUDED, grommetNote } from "@/lib/pricing/banner-finishing";
 import { useEffect, useRef, useState } from "react";
 import { formatWeight } from "@/lib/shipping/parcel";
+import { OptionGroup } from "@/components/builder/OptionGroup";
 
 export interface BannerPriceState {
   valid: boolean;
@@ -20,12 +21,51 @@ export interface BannerPriceState {
   loading: boolean;
 }
 
+export type BannerOrientation = "horizontal" | "vertical";
+
 export interface BannerSpec {
   size: string;
   material: string;
   quantity: number;
   /** Finishing. Hemming is included free on all four sides, so only grommets are chosen. */
   grommets: string;
+  /**
+   * How the finished banner hangs.
+   *
+   * Not a supplier option, and deliberately not part of the price: the catalogue quotes "3 ft x 6 ft"
+   * as an area of vinyl and prints the same material either way. What it decides is which edge is
+   * the width - so it drives the artwork canvas, the proof, the template filter and the size labels,
+   * all of which were previously guessing landscape.
+   */
+  orientation: BannerOrientation;
+}
+
+/**
+ * A size label as the customer will hang it.
+ *
+ * The catalogue always states the short edge first ("2 ft x 6 ft"), which reads as portrait and is
+ * simply wrong for the landscape banner most people are buying. This puts the width first.
+ */
+export function orientedSizeLabel(label: string, orientation: BannerOrientation): string {
+  const m = label.match(/^([\d.]+)\s*ft\s*x\s*([\d.]+)\s*ft$/i);
+  if (!m) return label;
+  const short = Number(m[1]);
+  const long = Number(m[2]);
+  if (short === long) return label;
+  return orientation === "horizontal"
+    ? `${long} ft x ${short} ft`
+    : `${short} ft x ${long} ft`;
+}
+
+/** Finished width and height in inches, with orientation applied. */
+export function bannerTrimInches(label: string, orientation: BannerOrientation): { widthIn: number; heightIn: number } | null {
+  const m = label.match(/^([\d.]+)\s*ft\s*x\s*([\d.]+)\s*ft$/i);
+  if (!m) return null;
+  const short = Number(m[1]) * 12;
+  const long = Number(m[2]) * 12;
+  return orientation === "horizontal"
+    ? { widthIn: long, heightIn: short }
+    : { widthIn: short, heightIn: long };
 }
 
 export const DEFAULT_BANNER_SPEC: BannerSpec = {
@@ -38,6 +78,9 @@ export const DEFAULT_BANNER_SPEC: BannerSpec = {
   quantity: 1,
   // What most people actually want on an outdoor banner, and what the old copy silently promised.
   grommets: DEFAULT_GROMMETS,
+  // Landscape is what a storefront or trade-show banner almost always is, and it is what the
+  // artwork canvas already assumed before orientation was a choice at all.
+  orientation: "horizontal",
 };
 
 /**
@@ -56,7 +99,7 @@ const sizeGroups: [string, typeof BANNER_SIZES][] = (() => {
   const groups = new Map<string, typeof BANNER_SIZES>();
   for (const s of BANNER_SIZES) {
     const short = s.label.match(/^([\d.]+)\s*ft/)?.[1] ?? "other";
-    const key = short === "other" ? "Other sizes" : `${short} ft tall`;
+    const key = short === "other" ? "Other sizes" : `${short} ft`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(s);
   }
@@ -111,11 +154,27 @@ export function BannerPrintSpec({
 
   return (
     <div className="rounded-xl border-2 border-kc-coral/40 p-5">
+      <div className="mb-4">
+        <OptionGroup
+          label="Orientation"
+          options={[
+            { value: "horizontal", label: "Horizontal", sublabel: "Wider than it is tall" },
+            { value: "vertical", label: "Vertical", sublabel: "Taller than it is wide" },
+          ]}
+          value={spec.orientation}
+          onChange={(v) => set("orientation", v as BannerOrientation)}
+          columns={2}
+          hint="Same vinyl and the same price either way - this sets which edge is the width, and lays your artwork out to match."
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
           <Select value={spec.size} onValueChange={(v) => v && set("size", v)}>
-            <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Size" className="border-kc-border">
+              <SelectValue>{orientedSizeLabel(spec.size, spec.orientation)}</SelectValue>
+            </SelectTrigger>
             <SelectContent>
               {/* Grouped by the short edge. The supplier prints 110 sizes and a flat list of them is
                   unreadable; "3 ft" then its lengths is how someone actually looks for one. */}
@@ -124,7 +183,8 @@ export function BannerPrintSpec({
                   <SelectLabel>{group}</SelectLabel>
                   {sizes.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
-                      {s.label} <span className="text-kc-muted">· {areaSqFt(s.label)} sq ft</span>
+                      {orientedSizeLabel(s.label, spec.orientation)}{" "}
+                      <span className="text-kc-muted">· {areaSqFt(s.label)} sq ft</span>
                     </SelectItem>
                   ))}
                 </SelectGroup>

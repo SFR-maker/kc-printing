@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { TemplateGallery } from "@/components/business-card/template-gallery";
 
 export const metadata: Metadata = {
@@ -34,12 +35,12 @@ export default async function BannerDesignPage({
         {orientation && (
           <p className="mx-auto mt-3 max-w-xl text-sm text-kc-muted">
             Showing {orientation === "portrait" ? "vertical" : "horizontal"} designs.{" "}
-            <a
+            <Link
               href="/services/banners/design"
               className="font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
             >
               Show all
-            </a>
+            </Link>
           </p>
         )}
       </div>

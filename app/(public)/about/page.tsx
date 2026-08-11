@@ -57,9 +57,9 @@ export default function AboutPage() {
             <h2 className="display-tight text-3xl text-kc-dark sm:text-[2.68rem]">What we do</h2>
             <div className="mt-6 space-y-5 text-[17.66px] leading-relaxed text-kc-dark/75">
               <p>
-                We specialize in four things and do them well: business cards, postcards, banners,
-                and rigid signs. Every order is handled by a real designer who cares about your
-                brand.
+                We specialize in five things and do them well: business cards, postcards, banners,
+                rigid signs, and window decals. Every order is handled by a real designer who cares
+                about your brand.
               </p>
               <p>
                 We use AI tools to speed up the early creative process, but every design is reviewed

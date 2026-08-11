@@ -108,7 +108,7 @@ const PROCESS = [
 
 const FAQS = [
   { q: "How does the ordering process work?", a: "Choose your product and package, upload your artwork or notes, and our designers get to work. You'll see your first draft within 1-3 business days. Request revisions and download your print-ready files once you approve." },
-  { q: "What file formats do you deliver?", a: "Business cards, postcards, banners, and rigid signs all come as a print-ready PDF with proper bleed (and a die line for rigid signs), plus a high-resolution JPG and PNG, ready to send to any print shop, including ours." },
+  { q: "What file formats do you deliver?", a: "Business cards, postcards, banners, rigid signs, and window decals all come as a print-ready PDF with proper bleed (and a cut line for rigid signs and decals), plus a high-resolution JPG and PNG, ready to send to any print shop, including ours." },
   { q: "I don't have a finished design. Can you still help?", a: "Yes. Upload a logo, some brand colors, or just tell us what you're going for, and our AI-assisted brief tool helps capture the direction before a real designer starts the layout." },
   { q: "Can I request revisions?", a: "Yes. Every package includes 4 to 8 revisions depending on the tier. Need more than that? Additional revisions are available at a flat rate." },
   { q: "Do you serve businesses outside Kansas City?", a: "We do. 611 Printing works out of the Kansas City metro and serves Johnson County, Dallas-Fort Worth, and businesses nationwide. All ordering and file delivery happens online." },
@@ -149,7 +149,7 @@ export default async function HomePage() {
 
             <Reveal y={16} delay={0.08}>
               <p className="mt-6 max-w-[46ch] text-[18.19px] leading-relaxed text-kc-dark/75">
-                Business cards, postcards, banners, and rigid signs, built into print-ready files
+                Business cards, postcards, banners, rigid signs, and window decals, built into print-ready files
                 by a real designer.
               </p>
             </Reveal>

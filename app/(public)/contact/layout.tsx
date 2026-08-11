@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   alternates: localeAlternates("/contact", "en"),
   title: "Contact 611 Printing - Get a Quote",
   description:
-    "Call, text, or message 611 Printing about business cards, postcards, banners, and rigid signs. Kansas City based, serving clients nationwide online.",
+    "Call, text, or message 611 Printing about business cards, postcards, banners, rigid signs, and window decals. Kansas City based, serving clients nationwide.",
 };
 
 export default function ContactLayout({ children }: { children: React.ReactNode }) {

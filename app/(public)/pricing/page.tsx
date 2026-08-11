@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   alternates: localeAlternates("/pricing", "en"),
   title: "Transparent Pricing for All Design Services",
   description:
-    "Clear, upfront pricing for business cards, postcards, banners, and rigid signs. No hidden fees. Multiple packages to fit any budget.",
+    "Clear, upfront pricing for business cards, postcards, banners, rigid signs, and window decals. No hidden fees. Multiple packages to fit any budget.",
 };
 
 const ALL_SERVICES = [

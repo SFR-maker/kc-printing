@@ -33,7 +33,7 @@ const FAQS = [
   {
     category: "Files and Formats",
     items: [
-      { q: "What file formats are delivered?", a: "Business cards, postcards, and banners are delivered as a print-ready PDF with proper bleed, plus a high-resolution JPG and PNG." },
+      { q: "What file formats are delivered?", a: "Every product is delivered as a print-ready PDF with proper bleed, plus a high-resolution JPG and PNG. Rigid signs and window decals also carry a marked cut line." },
       { q: "Are files print-ready?", a: "Yes. All print files include proper bleed, are set to CMYK color mode, and are at the correct resolution (300-350 DPI for small formats, 72-150 DPI for large format). They are ready to upload directly to any commercial printer." },
       { q: "What file formats can I upload?", a: "We accept TIF, TIFF, EPS, AI, PSD, BMP, GIF, JPG, PNG, and PDF. Files should ideally be at 300 DPI or higher. Logos should be vector files (AI, EPS, or PDF) for best results." },
       { q: "How do I download my completed files?", a: "Completed files are available in your account dashboard under My Orders. You will also receive an email notification when your files are ready to download." },

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDollars } from "@/lib/utils";
 import {
   WINDOW_MATERIALS, type WindowMaterialId, type WindowDecalSpec,
   materialFilm, materialLabel, quantitiesFor, repairWindowDecalSpec, shapeLabel, shapesFor, sizeById, sizesFor,
@@ -140,29 +139,19 @@ export function WindowDecalPrintSpec({
         </div>
       </div>
 
-      <div className="mt-4 flex items-end justify-between border-t border-kc-border pt-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Print total</div>
-          <div className="text-sm text-kc-muted">
-            {/* Quantity 0 is the picker's "not chosen yet" sentinel, and "0 decals" reads as though
-                the customer had ordered none rather than as a prompt to choose. */}
-            {spec.quantity ? unit(spec.quantity) : "No quantity chosen"}
-            {size ? `, ${size.label}` : ""}
-          </div>
-          {size && (
-            <div className="text-xs text-kc-muted">
-              {materialFilm(spec.material)} · artwork at {size.dpi} DPI · finished {size.trimWidthIn}″ × {size.trimHeightIn}″
-            </div>
-          )}
-        </div>
-        {price.loading ? (
-          <div className="text-sm text-kc-muted">Pricing…</div>
-        ) : price.valid ? (
-          <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
-        ) : (
-          <p className="max-w-xs text-right text-sm text-amber-700">{price.error}</p>
-        )}
-      </div>
+      {/*
+        The print specification, but not the price.
+
+        The running total lives in the order summary panel, which is on screen the whole time. This
+        block used to carry its own total and its own "choose a quantity" prompt, so a customer saw
+        the same figure and the same warning twice on one screen and had to work out whether they
+        were the same thing.
+      */}
+      {size && (
+        <p className="mt-4 border-t border-kc-border pt-4 text-xs text-kc-muted">
+          {materialFilm(spec.material)} · artwork at {size.dpi} DPI · finished {size.trimWidthIn}″ × {size.trimHeightIn}″
+        </p>
+      )}
     </div>
   );
 }

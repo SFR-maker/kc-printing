@@ -17,23 +17,26 @@ import { calculatePrice } from "@/lib/pricing";
 import { FREE_TEST_SHIPPING, transitLabel } from "@/lib/shipping/rates";
 import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
 import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
-import { BusinessCardPrintSpec, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
+import { BusinessCardPrintSpec, SIDES_LABEL, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BannerPrintSpec, DEFAULT_BANNER_SPEC, type BannerSpec } from "@/components/builder/BannerPrintSpec";
 import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
 } from "@/components/builder/PostcardPrintSpec";
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
 import { WindowDecalPrintSpec, type WindowDecalPriceState } from "@/components/builder/WindowDecalPrintSpec";
+import { OrderSummaryPanel, type SummaryLine } from "@/components/builder/OrderSummaryPanel";
 import type { BannerPriceState } from "@/components/builder/BannerPrintSpec";
 
 import { CardSideSchema } from "@/lib/business-card/schema";
 import { renderSideToSvg } from "@/lib/business-card/render-svg";
 import {
   defaultRigidSpec, rigidNeedsBack, rigidBackLabel, sizeById,
+  materialLabel as rigidMaterialLabel, shapeLabel as rigidShapeLabel,
   type RigidMaterialId, type RigidSignSpec,
 } from "@/lib/pricing/rigid-signs";
 import {
   defaultWindowDecalSpec, windowNeedsBack, sizeById as windowSizeById,
+  materialLabel as windowMaterialLabel, shapeLabel as windowShapeLabel,
   type WindowMaterialId, type WindowDecalSpec,
 } from "@/lib/pricing/window-decals";
 import { calculatePostcardPrice } from "@/lib/pricing/postcards";
@@ -585,6 +588,14 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
     }
   };
 
+  /**
+   * The summary rail is shown while the customer is still configuring.
+   *
+   * Hidden on the review step, which already ends in its own itemised subtotal; two totals on one
+   * screen invites the reader to look for the difference between them.
+   */
+  const showSummaryPanel = currentStep !== "payment";
+
   const goNext = async () => {
     // Applies to every product with real print specs, not just business cards. Banners and postcards
     // were reaching payment without this, and the package gate below then refused them silently.
@@ -629,8 +640,66 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
     if (valid) setStep((s) => s + 1);
   };
 
+  /**
+   * The spec lines shown in the order summary, per product.
+   *
+   * Derived from the live spec rather than assembled at submit time, so the panel is describing the
+   * same configuration the price was quoted for. Each product answers in its own vocabulary - a
+   * banner has a material where a card has a paper - which is why this is a switch and not a
+   * generic walk over the spec object.
+   */
+  const summaryLines: SummaryLine[] = (() => {
+    const lines: SummaryLine[] = [];
+    if (isBusinessCards) {
+      const bc = values.bcSpec ?? DEFAULT_BC_SPEC;
+      const size = BC_SIZES.find((x) => x.id === bc.sizeId);
+      if (size) {
+        const [dim, orient] = splitSizeLabel(size.label);
+        lines.push({ label: "Size", value: dim });
+        if (orient) lines.push({ label: "Orientation", value: orient });
+      }
+      lines.push({ label: "Paper", value: BC_PAPERS.find((x) => x.id === bc.paperId)?.label ?? "-" });
+      lines.push({ label: "Sides", value: SIDES_LABEL[bc.colorId] ?? BC_COLORS.find((x) => x.id === bc.colorId)?.label ?? "-" });
+      lines.push({ label: "Quantity", value: bc.quantity ? `${bc.quantity.toLocaleString("en-US")} cards` : "Not chosen" });
+      if (bc.rush) lines.push({ label: "Turnaround", value: "Rush" });
+      if (bc.roundCorners) lines.push({ label: "Corners", value: "Rounded" });
+    } else if (isBanners) {
+      const b = values.bannerSpec ?? DEFAULT_BANNER_SPEC;
+      lines.push({ label: "Size", value: b.size });
+      lines.push({ label: "Material", value: b.material });
+      lines.push({ label: "Grommets", value: b.grommets });
+      lines.push({ label: "Quantity", value: b.quantity ? String(b.quantity) : "Not chosen" });
+    } else if (isPostcards) {
+      const pc = values.postcardSpec ?? DEFAULT_POSTCARD_SPEC;
+      lines.push({ label: "Size", value: pc.size });
+      lines.push({ label: "Paper", value: pc.paper });
+      lines.push({ label: "Sides", value: pc.color });
+      lines.push({ label: "Quantity", value: pc.quantity ? String(pc.quantity) : "Not chosen" });
+    } else if (isRigidSigns) {
+      const r = (values.rigidSpec ?? defaultRigidSpec()) as RigidSignSpec;
+      const size = sizeById(r.material as RigidMaterialId, r.sizeId);
+      lines.push({ label: "Material", value: rigidMaterialLabel(r.material as RigidMaterialId) });
+      lines.push({ label: "Shape", value: rigidShapeLabel(r.material as RigidMaterialId, r.shapeId) });
+      lines.push({ label: "Size", value: size?.label ?? "-" });
+      lines.push({ label: "Quantity", value: r.quantity ? String(r.quantity) : "Not chosen" });
+    } else if (isWindowDecals) {
+      const w = (values.windowSpec ?? defaultWindowDecalSpec()) as WindowDecalSpec;
+      const size = windowSizeById(w.material as WindowMaterialId, w.sizeId);
+      lines.push({ label: "Film", value: windowMaterialLabel(w.material as WindowMaterialId) });
+      lines.push({ label: "Shape", value: windowShapeLabel(w.material as WindowMaterialId, w.shapeId) });
+      lines.push({ label: "Size", value: size?.label ?? "-" });
+      lines.push({ label: "Quantity", value: w.quantity ? `${w.quantity.toLocaleString("en-US")} decals` : "Not chosen" });
+    }
+    if (selectedPkg) lines.push({ label: "Design package", value: selectedPkg.name });
+    return lines;
+  })();
+
+  /** The best preview available: the studio design, then an uploaded file, then the product shot. */
+  const summaryPreviewSvg = designPreview?.front ?? null;
+  const summaryPreviewImage = !summaryPreviewSvg && artwork.path === "UPLOAD" ? artwork.front.fileUrl ?? null : null;
+
   return (
-    <div className="section-pad container-tight max-w-4xl">
+    <div className="section-pad container-tight max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-kc-dark mb-2">Order {service.name}</h1>
         {testCode && (
@@ -673,6 +742,12 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         </div>
       </div>
 
+      {/*
+        Two columns from lg up: the form on the left, the summary pinned on the right. Below lg the
+        panel renders itself as a bottom sheet instead, so the grid collapses to a single column and
+        nothing is squeezed.
+      */}
+      <div className={cn("grid grid-cols-1 gap-8", showSummaryPanel && "lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10")}>
       <form
         onSubmit={handleSubmit(onSubmit, (invalid) => {
           // A submit button that does nothing is worse than one that explains itself. Validation can
@@ -1534,6 +1609,42 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
           )}
         </div>
       </form>
+
+      {showSummaryPanel && (
+        <OrderSummaryPanel
+          productName={service.name}
+          previewSvg={summaryPreviewSvg}
+          previewImageUrl={summaryPreviewImage}
+          fallbackImageUrl={`/images/print/${service.slug}.webp`}
+          previewAlt={`${service.name} preview`}
+          lines={summaryLines}
+          total={price ? price.total : null}
+          loading={hasPrintSpec && printPrice === null}
+          unavailableReason={
+            hasPrintSpec && printPrice && !printPrice.valid
+              ? printPrice.error ?? "Choose an available combination to see your price."
+              : null
+          }
+          shippingTiers={testCode ? [FREE_TEST_SHIPPING] : pricing.shippingTiers}
+          ctaLabel="Continue"
+          onCta={goNext}
+          ctaDisabled={hasPrintSpec && !printPrice?.valid}
+          footnote={
+            testCode
+              ? "Free test order - nothing to pay."
+              : `Shipping from ${formatDollars(cheapestShipping)} and sales tax are added at checkout.`
+          }
+        />
+      )}
+      </div>
     </div>
   );
+}
+
+/** "2\" x 3.5\" Horizontal U.S. Standard" -> ["2″ × 3.5″ U.S. Standard", "Horizontal"] */
+function splitSizeLabel(label: string): [string, string] {
+  const m = label.match(/^(.*?)\s+(Horizontal|Vertical)\s*(.*)$/i);
+  const pretty = (v: string) => v.replace(/"/g, "\u2033").replace(" x ", " \u00d7 ").trim();
+  if (!m) return [pretty(label), ""];
+  return [pretty(`${m[1]} ${m[3]}`.trim()), m[2]];
 }

@@ -1,8 +1,7 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDollars } from "@/lib/utils";
+import { OptionGroup, type Option } from "@/components/builder/OptionGroup";
 import {
   BC_SIZES,
   BC_PAPERS,
@@ -27,12 +26,46 @@ export interface BusinessCardSpec {
 const RUSH_MAX_QUANTITY = 2500;
 
 // European Standard sizes (339/340) are excluded from the picker — 611 Printing only sells to a
-// U.S. customer base and the extra options were just adding noise to the size dropdown.
+// U.S. customer base and the extra options were just adding noise.
 const DISPLAYED_BC_SIZES = BC_SIZES.filter((s) => s.id !== 339 && s.id !== 340);
+
+const HORIZONTAL = 1;
+const VERTICAL = 2;
 
 function formatQuantity(q: number): string {
   return q.toLocaleString("en-US");
 }
+
+/**
+ * Splits a supplier size label into the dimension and whatever it is called.
+ *
+ * The catalogue ships one row per size *and* orientation - `2" x 3.5" Horizontal U.S. Standard` and
+ * `2" x 3.5" Vertical U.S. Standard` are separate ids - so a single control listed eight options
+ * that were really four shapes and a rotation. Splitting them halves the list and turns orientation
+ * into the one-click choice it should always have been.
+ */
+function parseSizeLabel(label: string): { dimension: string; note: string } {
+  const m = label.match(/^(.*?)\s+(Horizontal|Vertical)\s*(.*)$/i);
+  if (!m) return { dimension: label, note: "" };
+  return { dimension: m[1].trim(), note: m[3].trim() };
+}
+
+/** The distinct card shapes, in catalogue order, each with the ids of its two rotations. */
+function sizeFamilies() {
+  const families: { dimension: string; note: string; byOrientation: Record<number, number> }[] = [];
+  for (const s of DISPLAYED_BC_SIZES) {
+    const { dimension, note } = parseSizeLabel(s.label);
+    let family = families.find((f) => f.dimension === dimension);
+    if (!family) {
+      family = { dimension, note, byOrientation: {} };
+      families.push(family);
+    }
+    family.byOrientation[s.orientation] = s.id;
+  }
+  return families;
+}
+
+const FAMILIES = sizeFamilies();
 
 export function BusinessCardPrintSpec({
   spec,
@@ -48,15 +81,27 @@ export function BusinessCardPrintSpec({
   const quantities = comboOk ? availableQuantities(spec.sizeId, spec.paperId, spec.colorId) : [];
   const price: BcPriceBreakdown = calculateBusinessCardPrice(spec, pricing);
 
+  const current = DISPLAYED_BC_SIZES.find((s) => s.id === spec.sizeId) ?? DISPLAYED_BC_SIZES[0];
+  const currentFamily = FAMILIES.find((f) => Object.values(f.byOrientation).includes(spec.sizeId)) ?? FAMILIES[0];
+
   function set<K extends keyof BusinessCardSpec>(key: K, value: BusinessCardSpec[K]) {
     const next = { ...spec, [key]: value };
-    // If the new size/paper/color combo doesn't offer the current quantity (or the combo itself
+    // If the new size/paper/colour combo doesn't offer the current quantity (or the combo itself
     // isn't sold), snap to the nearest thing that is, instead of silently showing an invalid price.
     if (key === "sizeId" || key === "paperId" || key === "colorId") {
       const nextQtys = isComboAvailable(next.sizeId, next.paperId, next.colorId)
         ? availableQuantities(next.sizeId, next.paperId, next.colorId)
         : [];
-      if (nextQtys.length > 0 && !nextQtys.includes(next.quantity)) {
+      /*
+       * 0 is the picker's "not chosen yet" sentinel and has to survive this.
+       *
+       * Snapping to the nearest available quantity treated 0 as a real run length and answered the
+       * question on the customer's behalf: picking a paper silently set the order to 50 cards, which
+       * is the smallest run and almost never what someone wants. DEFAULT_BC_SPEC leaves quantity at
+       * 0 precisely so nobody reaches checkout having accepted a number they never chose - the same
+       * rule rigid signs and window decals already follow in their repair functions.
+       */
+      if (next.quantity !== 0 && nextQtys.length > 0 && !nextQtys.includes(next.quantity)) {
         next.quantity = nextQtys.reduce((closest, q) => (Math.abs(q - next.quantity) < Math.abs(closest - next.quantity) ? q : closest), nextQtys[0]);
       }
       if (!nextQtys.includes(RUSH_MAX_QUANTITY) && next.quantity > RUSH_MAX_QUANTITY) {
@@ -69,141 +114,179 @@ export function BusinessCardPrintSpec({
     onChange(next);
   }
 
-  const hasAddOns = price.rushSurcharge > 0 || price.roundCornersPrice > 0 || price.proofPrice > 0;
+  /** Keeps the chosen shape and changes only the rotation, or vice versa. */
+  function setSize(dimension: string, orientation: number) {
+    const family = FAMILIES.find((f) => f.dimension === dimension) ?? currentFamily;
+    // Not every shape is necessarily made both ways; fall back to the one it does come in rather
+    // than setting an id that does not exist.
+    const id = family.byOrientation[orientation] ?? Object.values(family.byOrientation)[0];
+    set("sizeId", id);
+  }
+
+  const sizeOptions: Option[] = FAMILIES.map((f) => ({
+    value: f.dimension,
+    label: f.dimension.replace(/"/g, "″").replace(" x ", " × "),
+    sublabel: f.note || undefined,
+    badge: f.note.includes("U.S. Standard") ? "Most popular" : undefined,
+  }));
+
+  const orientationOptions: Option[] = [
+    { value: String(HORIZONTAL), label: "Horizontal", sublabel: "Landscape", disabled: !currentFamily.byOrientation[HORIZONTAL] },
+    { value: String(VERTICAL), label: "Vertical", sublabel: "Portrait", disabled: !currentFamily.byOrientation[VERTICAL] },
+  ];
+
+  const sidesOptions: Option[] = BC_COLORS.map((c) => ({
+    value: String(c.id),
+    label: SIDES_LABEL[c.id] ?? c.label,
+    sublabel: SIDES_NOTE[c.id],
+    disabled: !isComboAvailable(spec.sizeId, spec.paperId, c.id),
+    disabledReason: "Not made on this paper",
+  }));
+
+  const paperOptions: Option[] = BC_PAPERS.map((p) => ({
+    value: String(p.id),
+    label: p.label,
+    disabled: !isComboAvailable(spec.sizeId, p.id, spec.colorId),
+    disabledReason: "Not made with these sides",
+  }));
+
+  const quantityOptions: Option[] = quantities.map((q) => ({
+    value: String(q),
+    label: `${formatQuantity(q)} cards`,
+  }));
 
   return (
     <div className="space-y-5">
-      {/* Core selection, boxed and given visual priority: this is the decision that actually
-          drives price, so it gets the price shown immediately below it rather than buried under
-          the add-ons list. */}
-      <div className="rounded-xl border-2 border-kc-coral/30 bg-white p-5">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
-            <Label>Size</Label>
-            <Select value={String(spec.sizeId)} onValueChange={(v) => v && set("sizeId", Number(v))}>
-              <SelectTrigger aria-label="Size" className="bg-white"><SelectValue>{(v: string) => DISPLAYED_BC_SIZES.find((s) => String(s.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
-              <SelectContent>
-                {DISPLAYED_BC_SIZES.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
-            <Label>Paper Stock</Label>
-            <Select value={String(spec.paperId)} onValueChange={(v) => v && set("paperId", Number(v))}>
-              <SelectTrigger aria-label="Paper Stock" className="bg-white"><SelectValue>{(v: string) => BC_PAPERS.find((p) => String(p.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
-              <SelectContent>
-                {BC_PAPERS.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>{p.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
-            <Label>Sides</Label>
-            <Select value={String(spec.colorId)} onValueChange={(v) => v && set("colorId", Number(v))}>
-              <SelectTrigger aria-label="Sides" className="bg-white"><SelectValue>{(v: string) => BC_COLORS.find((c) => String(c.id) === v)?.label ?? v}</SelectValue></SelectTrigger>
-              <SelectContent>
-                {BC_COLORS.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>{c.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {!comboOk && (
-              <p className="text-xs text-amber-700">This paper doesn&apos;t support that side option. Pick a different paper or sides.</p>
-            )}
-          </div>
-
-          <div className="space-y-1.5 rounded-lg border border-kc-border bg-kc-bg p-3">
-            <Label>Quantity</Label>
-            <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))} disabled={quantities.length === 0}>
-              <SelectTrigger aria-label="Quantity" className="bg-white"><SelectValue placeholder="Choose a quantity">{(v: string) => (Number(v) ? `${formatQuantity(Number(v))} cards` : "Choose a quantity")}</SelectValue></SelectTrigger>
-              <SelectContent>
-                {quantities.map((q) => (
-                  <SelectItem key={q} value={String(q)}>{formatQuantity(q)} cards</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Price, front and center right after quantity — the add-ons below only ever add a
-            small line to this same total, so they shouldn't need their own competing summary. */}
-        <div className="mt-5 border-t border-kc-border pt-4">
-          {price.valid ? (
-            <>
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Print Total</div>
-                  <div className="text-xs text-kc-muted">{formatQuantity(spec.quantity)} cards</div>
-                </div>
-                <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
-              </div>
-              {hasAddOns && (
-                <div className="mt-3 space-y-1 border-t border-dashed border-kc-border pt-3 text-xs text-kc-muted">
-                  <div className="flex justify-between"><span>Base printing</span><span>{formatDollars(price.basePrice)}</span></div>
-                  {price.rushSurcharge > 0 && <div className="flex justify-between"><span>Rush turnaround</span><span>+{formatDollars(price.rushSurcharge)}</span></div>}
-                  {price.roundCornersPrice > 0 && <div className="flex justify-between"><span>Round corners</span><span>+{formatDollars(price.roundCornersPrice)}</span></div>}
-                  {price.proofPrice > 0 && <div className="flex justify-between"><span>Manual proof</span><span>+{formatDollars(price.proofPrice)}</span></div>}
-                </div>
-              )}
-            </>
-          ) : (
-            <p className="text-sm text-amber-700">{price.error ?? "Select a valid combination to see pricing."}</p>
-          )}
-        </div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <OptionGroup
+          label="Size"
+          options={sizeOptions}
+          value={currentFamily.dimension}
+          onChange={(v) => setSize(v, current.orientation)}
+          columns={2}
+        />
+        <OptionGroup
+          label="Orientation"
+          options={orientationOptions}
+          value={String(current.orientation)}
+          onChange={(v) => setSize(currentFamily.dimension, Number(v))}
+          columns={2}
+        />
       </div>
 
-      {/* Add-ons: kept plain and low-key on purpose — these are optional extras, not a second
-          set of decisions competing with size/paper/sides/quantity above. */}
+      <OptionGroup
+        label="Sides"
+        options={sidesOptions}
+        value={String(spec.colorId)}
+        onChange={(v) => set("colorId", Number(v))}
+        columns={3}
+        hint={comboOk ? undefined : "This paper doesn't support that side option. Pick a different paper or sides."}
+      />
+
+      {/* Twelve papers is not "a few", so this stays a select - a twelve-card grid would be worse
+          than the dropdown it replaced. See OptionGroup's maxCards. */}
+      <OptionGroup
+        label="Paper stock"
+        options={paperOptions}
+        value={String(spec.paperId)}
+        onChange={(v) => set("paperId", Number(v))}
+      />
+
+      <OptionGroup
+        label="Quantity"
+        options={quantityOptions}
+        value={spec.quantity ? String(spec.quantity) : ""}
+        onChange={(v) => set("quantity", Number(v))}
+        hint={quantities.length === 0 ? "Choose a paper and sides combination that is available." : undefined}
+      />
+
+      {/*
+        Add-ons stay checkboxes rather than becoming cards: they are independent yes/no extras, and a
+        card grid would imply picking one of them. The running total lives in the order summary, so
+        only the per-add-on deltas are shown here.
+      */}
       <div>
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-kc-muted">Optional add-ons</p>
-        <div className="divide-y divide-kc-border overflow-hidden rounded-lg border border-kc-border">
-          <label className={`flex items-center justify-between gap-3 p-3 ${spec.quantity > RUSH_MAX_QUANTITY ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-kc-bg"}`}>
-            <span className="flex items-center gap-2.5">
-              <input
-                type="checkbox"
-                checked={spec.rush}
-                disabled={spec.quantity > RUSH_MAX_QUANTITY}
-                onChange={() => set("rush", !spec.rush)}
-                className="h-4 w-4 shrink-0 accent-kc-coral"
-              />
-              <span>
-                <span className="block text-sm text-kc-dark">Rush Turnaround</span>
-                <span className="block text-xs text-kc-muted">
-                  {spec.quantity > RUSH_MAX_QUANTITY ? `Only available up to ${formatQuantity(RUSH_MAX_QUANTITY)} cards.` : "Faster production."}
-                </span>
-              </span>
-            </span>
-            {price.valid && spec.rush && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(price.rushSurcharge)}</span>}
-          </label>
-
-          <label className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
-            <span className="flex items-center gap-2.5">
-              <input type="checkbox" checked={spec.roundCorners} onChange={() => set("roundCorners", !spec.roundCorners)} className="h-4 w-4 shrink-0 accent-kc-coral" />
-              <span>
-                <span className="block text-sm text-kc-dark">Round Corners</span>
-                <span className="block text-xs text-kc-muted">A softer, more premium edge.</span>
-              </span>
-            </span>
-            {price.valid && spec.roundCorners && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(price.roundCornersPrice)}</span>}
-          </label>
-
-          <label className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
-            <span className="flex items-center gap-2.5">
-              <input type="checkbox" checked={spec.manualProof} onChange={() => set("manualProof", !spec.manualProof)} className="h-4 w-4 shrink-0 accent-kc-coral" />
-              <span>
-                <span className="block text-sm text-kc-dark">Manual Proof Review</span>
-                <span className="block text-xs text-kc-muted">A person checks your file before print (24 hrs). Instant automated proofing is free and used by default.</span>
-              </span>
-            </span>
-            {spec.manualProof && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(3)}</span>}
-          </label>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-kc-muted">Optional add-ons</p>
+        <div className="divide-y divide-kc-border overflow-hidden rounded-xl border border-kc-border">
+          <AddOn
+            checked={spec.rush}
+            onToggle={() => set("rush", !spec.rush)}
+            disabled={spec.quantity > RUSH_MAX_QUANTITY}
+            title="Rush turnaround"
+            note={spec.quantity > RUSH_MAX_QUANTITY ? `Only available up to ${formatQuantity(RUSH_MAX_QUANTITY)} cards.` : "Faster production."}
+            delta={price.valid && spec.rush ? price.rushSurcharge : null}
+          />
+          <AddOn
+            checked={spec.roundCorners}
+            onToggle={() => set("roundCorners", !spec.roundCorners)}
+            title="Round corners"
+            note="A softer, more premium edge."
+            delta={price.valid && spec.roundCorners ? price.roundCornersPrice : null}
+          />
+          <AddOn
+            checked={spec.manualProof}
+            onToggle={() => set("manualProof", !spec.manualProof)}
+            title="Manual proof review"
+            note="A person checks your file before print (24 hrs). Instant automated proofing is free and used by default."
+            delta={spec.manualProof ? price.proofPrice : null}
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Plainer wording than the supplier's, which says "Full Color Front, No Back".
+ *
+ * Exported because the order summary has to say the same thing the picker does. It was reading
+ * BC_COLORS directly, so a card labelled "Front only" appeared in the summary as "Full Color Front,
+ * No Back" - two names for one choice, on screen at the same time.
+ */
+export const SIDES_LABEL: Record<number, string> = {
+  1: "Front only",
+  2: "Front + grey back",
+  3: "Both sides",
+};
+
+const SIDES_NOTE: Record<number, string> = {
+  1: "Nothing on the reverse",
+  2: "Full colour front, greyscale back",
+  3: "Full colour both faces",
+};
+
+function AddOn({
+  checked, onToggle, disabled, title, note, delta,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+  title: string;
+  note: string;
+  delta: number | null;
+}) {
+  return (
+    <label
+      className={`flex items-center justify-between gap-3 p-3.5 transition-colors ${
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-kc-teal/[0.03]"
+      }`}
+    >
+      <span className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          onChange={onToggle}
+          className="h-4 w-4 shrink-0 accent-kc-teal"
+        />
+        <span>
+          <span className="block text-[14.5px] font-medium text-kc-dark">{title}</span>
+          <span className="block text-[12.5px] leading-snug text-kc-muted">{note}</span>
+        </span>
+      </span>
+      {delta !== null && delta > 0 && (
+        <span className="shrink-0 font-mono text-[12.5px] text-kc-muted">+{formatDollars(delta)}</span>
+      )}
+    </label>
   );
 }

@@ -54,15 +54,19 @@ test.describe("window decals", () => {
     await expect(page.getByLabel("Shape")).toBeVisible();
     await expect(page.getByLabel("Size")).toBeVisible();
 
+    // The price lives in the order summary, not inline beside the controls. Desktop renders it as a
+    // sticky rail and mobile as a bottom bar; only one of the two is visible at a time.
+    const summary = page.locator('[data-testid="order-summary"]:visible').first();
+
     // Quantity opens unchosen, so no price is shown until the customer picks one.
-    await expect(page.getByText(/Choose a quantity to see your price/i)).toBeVisible();
+    await expect(summary.getByText(/Choose a quantity to see your price/i)).toBeVisible();
 
     await page.getByLabel("Quantity").click();
     // `exact` matters: without it "1 decal" also matches "11 decals".
     await page.getByRole("option", { name: "1 decal", exact: true }).click();
 
     // The cheapest decal GotPrint sells is $18.12; any real quote is a dollar figure.
-    await expect(page.getByText(/^\$\d+\.\d{2}$/).first()).toBeVisible({ timeout: 15_000 });
+    await expect(summary.getByText(/^\$\d+\.\d{2}$/).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test("the price API quotes exactly what the supplier quoted", async ({ request }) => {

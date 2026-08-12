@@ -19,8 +19,6 @@ interface TemplateSummary {
   style: string;
   tags: string[];
   palette: string[];
-  thumbnailFront: string | null;
-  thumbnailBack: string | null;
 }
 
 function recentKeyFor(product: DesignProduct): string {
@@ -238,12 +236,19 @@ function TemplateGrid({ templates, product, routeSegment, thumbAspect }: { templ
           className="group overflow-hidden rounded-xl border border-kc-border bg-white transition-shadow hover:shadow-lg"
         >
           <div className={`${thumbAspect} bg-kc-bg`}>
-            {t.thumbnailFront ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={t.thumbnailFront} alt={t.title} className="h-full w-full object-cover" loading="lazy" />
-            ) : (
-              <div className="flex h-full items-center justify-center text-xs text-kc-muted">Preview unavailable</div>
-            )}
+            {/*
+              A URL rather than an inlined data URI, so loading="lazy" genuinely defers the ones
+              below the fold and the browser caches them between visits. decoding="async" keeps
+              a long grid from blocking paint while it decodes.
+            */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/api/card-templates/${encodeURIComponent(t.slug)}/thumbnail`}
+              alt={t.title}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div className="p-3">
             <h3 className="truncate text-sm font-semibold text-kc-dark group-hover:text-kc-teal">{t.title}</h3>

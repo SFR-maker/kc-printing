@@ -44,8 +44,17 @@ export async function GET(req: Request) {
       tags: true,
       orientation: true,
       palette: true,
-      thumbnailFront: true,
-      thumbnailBack: true,
+      /*
+       * Thumbnails are deliberately not selected.
+       *
+       * They are stored as base64 data URIs, and returning them inlined made this response 3.3 MB
+       * for business cards - 0.9 MB of which was the back thumbnail the gallery never renders. The
+       * gallery now points an <img> at /api/card-templates/[slug]/thumbnail, so the browser can
+       * lazy-load and cache them like any other image.
+       */
+      // Whether there is an image to point at, without carrying the image.
+      thumbnailFront: false,
+      thumbnailBack: false,
     },
     // Curated best-first: hand-picked featured templates (ranked by sortOrder) lead, then
     // everything else falls back to the original insertion order. See CardTemplate.featured.

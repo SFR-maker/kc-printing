@@ -47,14 +47,46 @@ export interface OrderSummaryPanelProps {
 }
 
 export function OrderSummaryPanel(props: OrderSummaryPanelProps) {
+  const { productName, lines, total, loading, unavailableReason } = props;
+
+  /*
+   * What a screen reader hears when the configuration changes.
+   *
+   * The price was the one thing on this page a blind customer was never told. Every control is
+   * correctly labelled and the add-on checkboxes even announce their own "+$49.00", but the running
+   * total changed in silence - so the number the whole page exists to show was the only number she
+   * had to go hunting for, after every single change.
+   *
+   * Announced once, from here, rather than inside the two panels: the desktop rail and the mobile
+   * bar both render into the DOM and hide one with CSS, and CSS visibility does not stop a live
+   * region firing - two live regions would mean hearing every price twice.
+   *
+   * The quantity and the total together, because "twenty-six dollars sixty" on its own does not say
+   * what changed or what it buys.
+   */
+  const quantityLine = lines.find((l) => l.label === "Quantity")?.value;
+  const announcement = unavailableReason
+    ? unavailableReason
+    : loading || total === null
+      ? ""
+      : `${productName} total ${formatDollars(total)}${quantityLine ? `, ${quantityLine}` : ""}`;
+
   return (
     <>
+      {/*
+        aria-atomic so the whole sentence is read rather than just the digits that changed, and
+        polite so it waits for a gap instead of interrupting whatever is being read.
+      */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </div>
+
       {/*
         top-24 clears the sticky header. max-h + overflow-y matter on a laptop: with eight spec lines
         and a preview the panel is taller than a 768px viewport, and without them the CTA sits below
         the fold permanently - a sticky summary whose button you cannot reach is worse than no panel.
       */}
-      <aside data-testid="order-summary" className="hidden lg:block">
+      <aside data-testid="order-summary" aria-label="Order summary" className="hidden lg:block">
         <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border-2 border-kc-border bg-white p-5 shadow-[0_2px_24px_-12px_rgba(12,10,9,0.18)]">
           <SummaryBody {...props} />
         </div>
@@ -197,7 +229,7 @@ function MobileSummary(props: OrderSummaryPanelProps) {
   return (
     <>
       <div aria-hidden className="h-24 lg:hidden" />
-      <div data-testid="order-summary" className="fixed inset-x-0 bottom-0 z-40 border-t border-kc-border bg-white shadow-[0_-2px_20px_-8px_rgba(12,10,9,0.25)] lg:hidden">
+      <div data-testid="order-summary" aria-label="Order summary" className="fixed inset-x-0 bottom-0 z-40 border-t border-kc-border bg-white shadow-[0_-2px_20px_-8px_rgba(12,10,9,0.25)] lg:hidden">
         {open && (
           <div className="max-h-[50vh] overflow-y-auto border-b border-kc-border px-4 py-3">
             <h2 className="mb-2 text-[15px] font-bold text-kc-dark">{productName}</h2>

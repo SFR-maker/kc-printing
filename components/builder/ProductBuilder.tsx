@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -230,6 +230,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   // Local rather than form.setError: this is set from goNext, outside a validation pass, and
   // RHF drops errors that its resolver did not produce on the next render.
   const [detailsError, setDetailsError] = useState<string | null>(null);
+  /**
+   * The heading of the step being shown.
+   *
+   * Focus was dropped to <body> at every transition, so the next Tab restarted from the top of the
+   * document - past the announcement bar, the whole header and the stepper - and nothing announced
+   * that the step had changed at all. Moving focus here does both jobs at once: the new heading is
+   * read out, and tabbing continues from the right place.
+   */
+  const stepHeadingRef = useRef<HTMLHeadingElement | null>(null);
+  const movedForStep = useRef(-1);
   const [designMetaLoaded, setDesignMetaLoaded] = useState(false);
   const [detailsExpanded, setDetailsExpanded] = useState(!cardDesignId);
 
@@ -412,6 +422,17 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardDesignId]);
+
+  /*
+   * Only on an actual change of step, and never on first render: stealing focus the moment the page
+   * loads would drag a sighted keyboard user past the header before they had seen it.
+   */
+  useEffect(() => {
+    if (movedForStep.current === -1) { movedForStep.current = step; return; }
+    if (movedForStep.current === step) return;
+    movedForStep.current = step;
+    stepHeadingRef.current?.focus();
+  }, [step]);
 
   const selectedPkg = service.packages.find((p) => p.name === values.selectedPackage);
   const selectedAddOnPrices = (values.selectedAddOns ?? []).map((name) => {
@@ -809,8 +830,24 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         <div className="flex items-center gap-2">
           {stepKeys.map((key, i) => (
             <div key={key} className="flex items-center gap-2">
+              {/*
+                Named, stated and disabled.
+
+                These were bare buttons labelled "1" "2" "3" "4" - and once a step completed the
+                digit became an aria-hidden tick, so the accessible name went empty entirely. A
+                screen reader read "button" with nothing after it, in the middle of the order flow.
+                Steps not yet reachable were also focusable and did nothing when activated.
+              */}
               <button
+                type="button"
                 onClick={() => i < step && setStep(i)}
+                // Only steps ahead are disabled. The current one is a no-op to click, but leaving
+                // it focusable is what lets a screen reader user tab to it and hear where they are.
+                disabled={i > step}
+                aria-current={i === step ? "step" : undefined}
+                aria-label={`Step ${i + 1} of ${stepKeys.length}: ${stepLabels[key]}${
+                  i < step ? " (completed)" : i === step ? " (current)" : " (not yet available)"
+                }`}
                 className={cn(
                   "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
                   i === step ? "bg-kc-coral text-white" :
@@ -818,7 +855,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                   "bg-kc-border text-kc-muted"
                 )}
               >
-                {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+                <span aria-hidden="true">{i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}</span>
               </button>
               <span className={cn("text-sm", i === step ? "font-semibold text-kc-dark" : "hidden text-kc-muted sm:block")}>{stepLabels[key]}</span>
               {i < stepKeys.length - 1 && <div className="hidden h-px w-6 bg-kc-border sm:block" />}
@@ -849,7 +886,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         {currentStep === "specs" && (
           <div className="space-y-8">
             <div className="space-y-4">
-              <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
+              <h2 ref={stepHeadingRef} tabIndex={-1} className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
               {artworkAtRisk && (
                 <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13.5px] leading-snug text-amber-900">
                   You have a file uploaded and proofed. Changing the size, orientation or finish
@@ -1297,12 +1334,25 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         {/* Step 2: Details */}
         {currentStep === "details" && (
           <div className="space-y-5">
-            <h2 className="text-xl font-bold text-kc-dark">Project Details</h2>
+            <h2 ref={stepHeadingRef} tabIndex={-1} className="text-xl font-bold text-kc-dark">Project Details</h2>
             <div className="space-y-2">
               <Label htmlFor="businessName">Business Name *</Label>
-              <Input id="businessName" placeholder="Your business name" {...register("businessName")} />
+              {/*
+                The message was rendered but silent: no role, no aria-invalid, no focus move. Someone
+                using a screen reader pressed Next, heard nothing at all, and had no way to learn why
+                the order had stopped.
+              */}
+              <Input
+                id="businessName"
+                placeholder="Your business name"
+                aria-invalid={Boolean(errors.businessName || detailsError) || undefined}
+                aria-describedby={errors.businessName || detailsError ? "businessName-error" : undefined}
+                {...register("businessName")}
+              />
               {(errors.businessName || detailsError) && (
-                <p className="text-xs text-red-500">{errors.businessName?.message ?? detailsError}</p>
+                <p id="businessName-error" role="alert" className="text-xs text-red-600">
+                  {errors.businessName?.message ?? detailsError}
+                </p>
               )}
             </div>
 
@@ -1327,10 +1377,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Contact Info for Design (optional)</Label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <Input placeholder="Phone" {...register("phone")} />
-                    <Input placeholder="Email" {...register("email")} />
-                    <Input placeholder="Website" {...register("website")} />
-                    <Input placeholder="LinkedIn (optional)" {...register("linkedin")} />
+                    {/*
+                      aria-label as well as the placeholder. A placeholder is not a label: it is
+                      dropped from the accessible name the moment the field has a value, so these
+                      five read as "edit, blank" with nothing to say which one they were.
+                    */}
+                    <Input aria-label="Phone" placeholder="Phone" {...register("phone")} />
+                    <Input aria-label="Email" placeholder="Email" {...register("email")} />
+                    <Input aria-label="Website" placeholder="Website" {...register("website")} />
+                    <Input aria-label="LinkedIn (optional)" placeholder="LinkedIn (optional)" {...register("linkedin")} />
                   </div>
                 </div>
 

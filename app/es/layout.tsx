@@ -42,7 +42,10 @@ export default async function SpanishLayout({ children }: { children: React.Reac
       <a href="#main-content" className="skip-link">Ir al contenido</a>
       <PromoBar special={special} />
       <Header />
-      <main id="main-content" className="flex-1">{children}</main>
+      {/* tabIndex -1 so the skip link actually moves the reading position. Without it the
+          browser moves its sequential-focus point but activeElement stays on <body>, so a
+          screen reader carries on reading from the top of the page. */}
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">{children}</main>
       <Footer locale="es" />
     </div>
   );

@@ -81,9 +81,61 @@ export interface RasterExportResult {
 }
 
 /** Rasterizes a card side to a 300 DPI PNG matching the side's own full-bleed physical dimensions. */
-export async function exportSidePng(side: CardSide): Promise<RasterExportResult> {
+/**
+ * A tiled "PREVIEW" mark, in the SVG's own inch coordinates.
+ *
+ * Applied to the artwork itself rather than added afterwards to the PNG or PDF, so one
+ * implementation covers both output formats and the mark scales with the piece - a business card
+ * and a 12ft banner both get a mark sized to them.
+ *
+ * Deliberately hard to remove and easy to see. A faint corner mark can be cropped in seconds; this
+ * repeats across the whole face, so an unpurchased export is legible as a proof and useless as
+ * finished artwork.
+ */
+const WATERMARK_TEXT = "611 PRINTING · PREVIEW";
+
+function watermarkOverlay(widthIn: number, heightIn: number): string {
+  const long = Math.max(widthIn, heightIn);
+
+  /*
+   * Spacing is derived from how wide the text actually is, not from a fraction of the canvas.
+   *
+   * Stepping by a share of the long edge put the marks closer together than the text was wide, so
+   * every row overprinted the next and the result read as "PREVIEWG11 PREVIEW" - illegible, and
+   * ugly enough to look like a rendering fault rather than a deliberate mark.
+   *
+   * 0.5em per character is the usual rule of thumb for average glyph width in a sans face; it does
+   * not need to be exact, only large enough that neighbours cannot touch.
+   */
+  const font = (long * 0.34) / (WATERMARK_TEXT.length * 0.5);
+  const textWidth = WATERMARK_TEXT.length * font * 0.5;
+  const stepX = textWidth * 1.5;
+  const stepY = font * 3.4;
+
+  const marks: string[] = [];
+  // Overdrawn well past the edges: the -30 degree rotation would otherwise leave bare corners.
+  for (let y = -heightIn; y < heightIn * 2; y += stepY) {
+    // Alternate rows are offset half a step so the marks read as a weave rather than a grid, which
+    // is harder to mask out in a rectangular selection.
+    const rowOffset = (Math.round(y / stepY) % 2) * (stepX / 2);
+    for (let x = -widthIn + rowOffset; x < widthIn * 2; x += stepX) {
+      marks.push(`<text x="${x.toFixed(3)}" y="${y.toFixed(3)}">${WATERMARK_TEXT}</text>`);
+    }
+  }
+
+  return `<g transform="rotate(-30 ${widthIn / 2} ${heightIn / 2})" fill="#000000" fill-opacity="0.18"
+      font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="${font.toFixed(4)}">${marks.join("")}</g>`;
+}
+
+/** Injects the mark just inside the closing tag, so it sits above every element. */
+function withWatermark(svg: string, widthIn: number, heightIn: number, on: boolean): string {
+  if (!on) return svg;
+  return svg.replace(/<\/svg>\s*$/, `${watermarkOverlay(widthIn, heightIn)}</svg>`);
+}
+
+export async function exportSidePng(side: CardSide, watermark = false): Promise<RasterExportResult> {
   const resolved = await resolveSideImages(side);
-  const svg = renderSideToSvg(resolved, DPI);
+  const svg = withWatermark(renderSideToSvg(resolved, DPI), side.physicalWidthIn, side.physicalHeightIn, watermark);
   const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
   const meta = await sharp(buffer).metadata();
   return {
@@ -104,10 +156,10 @@ export interface PdfExportResult {
 /** Produces a two-page (front, back) print-ready PDF at each side's own full-bleed physical size,
  * in points, with vector text/shapes/QR. Front and back are sized independently in case a design
  * ever has mismatched side dimensions, though in practice both sides of one design always match. */
-export async function exportCardPdf(front: CardSide, back: CardSide): Promise<PdfExportResult> {
+export async function exportCardPdf(front: CardSide, back: CardSide, watermark = false): Promise<PdfExportResult> {
   const [resolvedFront, resolvedBack] = await Promise.all([resolveSideImages(front), resolveSideImages(back)]);
-  const frontSvg = renderSideToSvg(resolvedFront);
-  const backSvg = renderSideToSvg(resolvedBack);
+  const frontSvg = withWatermark(renderSideToSvg(resolvedFront), front.physicalWidthIn, front.physicalHeightIn, watermark);
+  const backSvg = withWatermark(renderSideToSvg(resolvedBack), back.physicalWidthIn, back.physicalHeightIn, watermark);
 
   const frontWidthPt = front.physicalWidthIn * POINTS_PER_INCH;
   const frontHeightPt = front.physicalHeightIn * POINTS_PER_INCH;

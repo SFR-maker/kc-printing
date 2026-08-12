@@ -8,6 +8,7 @@ import type { OrderStatus } from "@prisma/client";
 import { OrderStatusBadge, PaymentBadge } from "@/components/admin/OrderStatusBadge";
 import { canDelete, canRefund } from "@/lib/orders/deletable";
 import { cn, formatDollars } from "@/lib/utils";
+import { CopyButton } from "@/components/admin/CopyButton";
 
 export interface AdminOrderRow {
   id: string;
@@ -204,9 +205,12 @@ export function AdminOrderTable({ orders }: { orders: AdminOrderRow[] }) {
                     />
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/admin/orders/${order.id}`} className="font-mono text-xs font-semibold text-kc-teal hover:underline">
-                      #{order.id.slice(-8)}
-                    </Link>
+                    <span className="flex items-center gap-0.5">
+                      <Link href={`/admin/orders/${order.id}`} className="font-mono text-xs font-semibold text-kc-teal hover:underline">
+                        #{order.id.slice(-8)}
+                      </Link>
+                      <CopyButton value={order.id} label="order ID" />
+                    </span>
                     <div className="mt-1 flex items-center gap-1.5 text-kc-muted">
                       {order.artworkPath === "UPLOAD" ? (
                         <FileUp className="h-3.5 w-3.5" strokeWidth={1.75} aria-label="Customer supplied the artwork" />
@@ -218,7 +222,12 @@ export function AdminOrderTable({ orders }: { orders: AdminOrderRow[] }) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-kc-dark">{order.customerName ?? order.shippingName ?? "—"}</div>
-                    <div className="text-xs text-kc-muted">{order.customerEmail ?? order.guestEmail ?? "—"}</div>
+                    <div className="flex items-center gap-0.5 text-xs text-kc-muted">
+                      {order.customerEmail ?? order.guestEmail ?? "—"}
+                      {(order.customerEmail ?? order.guestEmail) && (
+                        <CopyButton value={(order.customerEmail ?? order.guestEmail)!} label="email" />
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-kc-muted">
                     <div>{order.productName ?? "—"}</div>

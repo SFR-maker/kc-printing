@@ -9,6 +9,8 @@ import { FREE_AI_DESIGN_LIMIT } from "@/lib/business-card/ai-design-limit";
 import { PRODUCT_DB_VALUE, type DesignProduct } from "@/lib/business-card/print-spec";
 import { resolveAiPalette } from "@/lib/business-card/templates/ai-palettes";
 import { buildCustomBusinessCard, buildCustomPostcard, buildCustomBanner, type BannerFormat } from "@/lib/business-card/templates/ai-custom";
+import { AI_CONCEPTS, buildConceptPrompt, type AiConcept } from "@/lib/business-card/templates/ai-concepts";
+import { buildWatermarkedPreview } from "@/lib/business-card/watermark";
 
 // AI generation requires a signed-in account (purchasing does not — see app/api/orders) so usage
 // is tied to a real identity rather than a browser-local anonymousToken that resets the moment
@@ -118,17 +120,20 @@ function ratioLabel(widthIn: number, heightIn: number): string {
   return `${Math.max(1, rw)}:${Math.max(1, rh)}`;
 }
 
-function buildPrompt(product: DesignProduct, description: string, widthIn: number, heightIn: number): string {
-  const shape =
-    Math.abs(widthIn - heightIn) / Math.max(widthIn, heightIn) < 0.05
-      ? "square"
-      : widthIn > heightIn
-        ? "landscape"
-        : "portrait";
-  // Stating the shape and ratio matters: the image is composed for this canvas, and anything the
-  // model puts outside it is cropped away rather than scaled to fit.
-  return `Abstract background texture inspired by this business: "${description}". Soft flowing gradient, premium and modern, plenty of smooth open space for text overlay, no text, no logos, no watermark, no border, no frame, no device mockup, full-bleed edge to edge, ${shape} orientation, ${ratioLabel(widthIn, heightIn)} aspect ratio.`;
+/** "landscape", "portrait" or "square" - the model composes to this, and the rest is cropped. */
+function shapeOf(widthIn: number, heightIn: number): string {
+  if (Math.abs(widthIn - heightIn) / Math.max(widthIn, heightIn) < 0.05) return "square";
+  return widthIn > heightIn ? "landscape" : "portrait";
 }
+
+/**
+ * How many concepts one generation returns.
+ *
+ * Four is the number the brief asks for and about the number a person can actually compare at once.
+ * They are produced concurrently - four sequential image calls would take most of a minute, which
+ * is long enough that people leave.
+ */
+const CONCEPTS_PER_RUN = 4;
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -155,26 +160,11 @@ export async function POST(req: Request) {
   const trimW = data.trimWidthIn ?? (isRollup ? 33 : fallback.w);
   const trimH = data.trimHeightIn ?? (isRollup ? 79 : fallback.h);
 
-  let dataUrl: string;
-  try {
-    const result = await generateImageWithOpenRouter({ prompt: buildPrompt(product, data.description, trimW, trimH) });
-    dataUrl = result.dataUrl;
-  } catch {
-    return NextResponse.json({ error: "generation-failed" }, { status: 502 });
-  }
-
-  const raw = Buffer.from(dataUrl.split(",")[1] ?? "", "base64");
-  // Business cards/postcards are small enough that the model's native output already clears the
-  // print-DPI floor; banners are physically huge (up to 96in wide) so the smooth gradient is
-  // deliberately upscaled — see the equivalent step in scripts/generate-template-backgrounds.ts.
   const target = targetRaster(product, trimW, trimH);
-  const resized = await sharp(raw)
-    .resize(target.w, target.h, { fit: "cover", kernel: "lanczos3" })
-    .jpeg({ quality: 82 })
-    .toBuffer();
-  const imageSrc = `data:image/jpeg;base64,${resized.toString("base64")}`;
+  const shape = shapeOf(trimW, trimH);
+  const ratio = ratioLabel(trimW, trimH);
 
-  const info = {
+  const baseInfo = {
     businessName: data.businessName,
     tagline: data.tagline,
     phone: data.phone,
@@ -183,40 +173,109 @@ export async function POST(req: Request) {
     linkedin: data.linkedin,
     address: data.address,
     palette: resolveAiPalette(data.colorPaletteId),
-    headingFont: "Poppins",
-    bodyFont: "Inter",
     includeQrCode: data.includeQrCode,
   };
 
-  const { front, back } =
-    product === "business-card" ? buildCustomBusinessCard(info, imageSrc, target.w, target.h) :
-    product === "postcard" ? buildCustomPostcard(info, imageSrc, target.w, target.h) :
-    buildCustomBanner(info, imageSrc, target.w, target.h, data.bannerFormat as BannerFormat);
+  /** Lays out one concept's artwork into the product's template. */
+  function compose(concept: AiConcept, imageSrc: string) {
+    const info = { ...baseInfo, headingFont: concept.headingFont, bodyFont: concept.bodyFont };
+    return product === "business-card" ? buildCustomBusinessCard(info, imageSrc, target.w, target.h)
+      : product === "postcard" ? buildCustomPostcard(info, imageSrc, target.w, target.h)
+      : buildCustomBanner(info, imageSrc, target.w, target.h, data.bannerFormat as BannerFormat);
+  }
 
-  const design = await db.cardDesign.create({
-    data: {
-      userId: identity.userId,
-      templateId: null,
-      product: PRODUCT_DB_VALUE[product],
-      title: data.businessName,
-      front,
-      back,
-      meta: {
-        businessName: data.businessName,
-        phone: data.phone,
-        email: data.email,
-        website: data.website,
-        linkedin: data.linkedin,
-        colorPaletteId: data.colorPaletteId,
+  const concepts = AI_CONCEPTS.slice(0, CONCEPTS_PER_RUN);
+
+  /*
+   * Concepts are generated concurrently.
+   *
+   * Each image call takes several seconds; run in sequence, four of them is long enough that people
+   * assume the page has hung. `allSettled` rather than `all` because one model failure should cost
+   * that concept, not the whole set - three good options is a usable answer, and refusing to show
+   * any of them because the fourth timed out is not.
+   */
+  const settled = await Promise.allSettled(concepts.map(async (concept) => {
+    const { dataUrl } = await generateImageWithOpenRouter({
+      prompt: buildConceptPrompt(concept, data.description, shape, ratio),
+    });
+    const raw = Buffer.from(dataUrl.split(",")[1] ?? "", "base64");
+
+    // Business cards and postcards are small enough that the model's native output clears the
+    // print-DPI floor; banners are physically huge, so the artwork is deliberately upscaled.
+    const print = await sharp(raw)
+      .resize(target.w, target.h, { fit: "cover", kernel: "lanczos3" })
+      .jpeg({ quality: 82 })
+      .toBuffer();
+
+    return { concept, print };
+  }));
+
+  // Typed via flatMap rather than a predicate: sharp's Buffer is Buffer<ArrayBuffer>, which a
+  // hand-written PromiseFulfilledResult<Buffer> predicate does not line up with.
+  const produced = settled.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+
+  if (produced.length === 0) {
+    return NextResponse.json({ error: "generation-failed" }, { status: 502 });
+  }
+
+  /*
+   * Each concept is stored as a real design so the customer can open any of them in the editor, and
+   * so the print-resolution artwork lives server-side rather than in the browser.
+   *
+   * What goes back over the wire is the watermarked, downscaled preview - see lib/business-card/
+   * watermark. The clean version is in the database; the export endpoint releases it once the
+   * design has been paid for.
+   */
+  const results = await Promise.all(produced.map(async ({ concept, print }) => {
+    const printSrc = `data:image/jpeg;base64,${print.toString("base64")}`;
+    const { front, back } = compose(concept, printSrc);
+
+    const design = await db.cardDesign.create({
+      data: {
+        userId: identity.userId,
+        templateId: null,
+        product: PRODUCT_DB_VALUE[product],
+        title: `${data.businessName} — ${concept.name}`,
+        front,
+        back,
+        meta: {
+          businessName: data.businessName,
+          phone: data.phone,
+          email: data.email,
+          website: data.website,
+          linkedin: data.linkedin,
+          colorPaletteId: data.colorPaletteId,
+          conceptId: concept.id,
+        },
       },
-    },
-  });
+    });
 
+    const preview = await buildWatermarkedPreview(print, target.w, target.h);
+    const previewSides = compose(concept, preview.dataUrl);
+
+    return {
+      designId: design.id,
+      conceptId: concept.id,
+      name: concept.name,
+      blurb: concept.blurb,
+      // Watermarked and downscaled. The clean artwork stays on the server.
+      front: previewSides.front,
+      back: previewSides.back,
+    };
+  }));
+
+  // One generation, whatever the concept count - the customer asked once, so it costs one credit.
   await db.aiDesignGeneration.create({
     data: { userId: identity.userId, product: PRODUCT_DB_VALUE[product] },
   });
 
-  // front/back are returned (not just the id) so the dialog can render an immediate preview of what
-  // was actually generated before the user commits to opening the full editor.
-  return NextResponse.json({ designId: design.id, remaining: Math.max(0, FREE_AI_DESIGN_LIMIT - used - 1), front, back });
+  return NextResponse.json({
+    concepts: results,
+    remaining: Math.max(0, FREE_AI_DESIGN_LIMIT - used - 1),
+    // The first concept, kept under the old keys so an older client still shows something rather
+    // than silently rendering nothing.
+    designId: results[0].designId,
+    front: results[0].front,
+    back: results[0].back,
+  });
 }

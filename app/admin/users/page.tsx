@@ -2,6 +2,7 @@ import { db } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AdminUserRoleSelect } from "@/components/admin/AdminUserRoleSelect";
+import { CopyButton } from "@/components/admin/CopyButton";
 
 export default async function AdminUsersPage() {
   const users = await db.user.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
@@ -22,8 +23,20 @@ export default async function AdminUsersPage() {
             <tbody className="divide-y divide-kc-border">
               {users.map((user) => (
                 <tr key={user.id} className="hover:bg-kc-bg transition-colors">
-                  <td className="px-4 py-3 font-medium text-kc-dark">{user.name ?? "-"}</td>
-                  <td className="px-4 py-3 text-kc-muted">{user.email}</td>
+                  <td className="px-4 py-3 font-medium text-kc-dark">
+                    {user.name ? (
+                      <span className="flex items-center gap-0.5">
+                        {user.name}
+                        <CopyButton value={user.name} label="name" />
+                      </span>
+                    ) : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-kc-muted">
+                    <span className="flex items-center gap-0.5">
+                      {user.email}
+                      <CopyButton value={user.email} label="email" />
+                    </span>
+                  </td>
                   <td className="px-4 py-3">
                     <Badge
                       variant="secondary"

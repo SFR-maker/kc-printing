@@ -111,7 +111,9 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       const res = await fetch("/api/card-designs/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ front: design.front, back: design.back, format: "pdf" }),
+        // designId lets the server tell a bought design from an unbought one. Without it every
+        // export is treated as unpurchased and comes back watermarked, including a paid customer's.
+        body: JSON.stringify({ front: design.front, back: design.back, format: "pdf", designId }),
       });
       if (!res.ok) throw new Error("export failed");
       const blob = await res.blob();
@@ -126,7 +128,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
     } finally {
       setExporting(false);
     }
-  }, [design]);
+  }, [design, designId]);
 
   function resumeDraft() {
     const local = loadDesignLocally(LOCAL_KEY);

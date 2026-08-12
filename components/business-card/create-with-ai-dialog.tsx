@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, Loader2, Check } from "lucide-react";
+import { Sparkles, Loader2, Check, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,8 +46,12 @@ const EMPTY_FORM: FormState = {
   colorPaletteId: AI_PALETTE_AUTO_ID, includeQrCode: false, bannerFormat: "vinyl", sizeLabel: "",
 };
 
-interface PreviewData {
+interface Concept {
   designId: string;
+  conceptId: string;
+  name: string;
+  blurb: string;
+  /** Watermarked and downscaled - the clean artwork stays on the server until purchase. */
   front: CardSide;
 }
 
@@ -68,7 +72,9 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
   const [remaining, setRemaining] = useState<number | null>(null);
   const [status, setStatus] = useState<"idle" | "signin" | "loading" | "preview" | "error" | "limit">("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [concepts, setConcepts] = useState<Concept[] | null>(null);
+  /** Which concept the customer is looking at. Defaults to the first rather than to nothing. */
+  const [chosen, setChosen] = useState(0);
 
   // Lets the service page hero's "Design with AI" button link straight into this dialog
   // (?startAi=1) instead of just landing on the gallery and making the visitor find the button.
@@ -123,7 +129,18 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
       }
       const data = await res.json();
       setRemaining(data.remaining ?? 0);
-      setPreview({ designId: data.designId, front: data.front });
+      // An older response shape carried one design rather than a set; treated as a set of one so a
+      // cached client cannot end up with an empty picker.
+      const list: Concept[] = data.concepts ?? (data.designId
+        ? [{ designId: data.designId, conceptId: "single", name: "Your design", blurb: "", front: data.front }]
+        : []);
+      if (list.length === 0) {
+        setStatus("error");
+        setErrorMessage("Nothing came back from the generator. Please try again.");
+        return;
+      }
+      setConcepts(list);
+      setChosen(0);
       setStatus("preview");
     } catch {
       setStatus("error");
@@ -132,8 +149,9 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
   }
 
   function openEditor() {
-    if (!preview) return;
-    router.push(`/services/${PRODUCT_ROUTE_SEGMENT[product]}/design/${preview.designId}`);
+    const pick = concepts?.[chosen];
+    if (!pick) return;
+    router.push(`/services/${PRODUCT_ROUTE_SEGMENT[product]}/design/${pick.designId}`);
   }
 
   return (
@@ -144,7 +162,8 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
         if (!next) {
           setStatus("idle");
           setForm(EMPTY_FORM);
-          setPreview(null);
+          setConcepts(null);
+          setChosen(0);
         }
       }}
     >
@@ -182,8 +201,8 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             You&apos;ve used all your free AI designs. Browse our template gallery to keep designing, or contact us for more.
           </div>
-        ) : status === "preview" && preview ? (
-          <AiPreview front={preview.front} />
+        ) : status === "preview" && concepts ? (
+          <ConceptChooser concepts={concepts} chosen={chosen} onChoose={setChosen} />
         ) : (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -316,7 +335,19 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
           {status === "preview" ? (
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setOpen(false)} className="border-kc-border">Close</Button>
-              <Button onClick={openEditor} className="bg-kc-orange text-white hover:bg-kc-orange/90">Open in Editor</Button>
+              {/* Regenerating costs another credit, so it says so rather than surprising anyone. */}
+              <Button
+                variant="outline"
+                onClick={handleSubmit}
+                disabled={remaining !== null && remaining <= 0}
+                className="border-kc-border"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                {remaining !== null && remaining <= 0 ? "No generations left" : "Try four more"}
+              </Button>
+              <Button onClick={openEditor} className="bg-kc-orange text-white hover:bg-kc-orange/90">
+                Edit this one
+              </Button>
             </div>
           ) : (
             <>
@@ -348,12 +379,70 @@ export function CreateWithAiDialog({ product }: { product: DesignProduct }) {
   );
 }
 
-function AiPreview({ front }: { front: CardSide }) {
-  const svg = renderSideToSvg(front, 72);
+/**
+ * The four concepts, side by side.
+ *
+ * A grid rather than a carousel: comparing is the whole task, and a carousel makes you hold the
+ * previous one in your head. The selected concept is enlarged above the row so the detail is
+ * legible without opening the editor.
+ */
+function ConceptChooser({
+  concepts, chosen, onChoose,
+}: {
+  concepts: Concept[];
+  chosen: number;
+  onChoose: (i: number) => void;
+}) {
+  const pick = concepts[chosen] ?? concepts[0];
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-kc-muted">Here&apos;s your AI-generated design. Open it in the editor to fine-tune anything before ordering.</p>
-      <div className="overflow-hidden rounded-xl border border-kc-border [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+    <div className="space-y-3">
+      <p className="text-sm text-kc-muted">
+        Four takes on your brief. Pick the one closest to what you want and fine-tune it in the
+        editor - nothing is final yet.
+      </p>
+
+      <div
+        className="overflow-hidden rounded-xl border border-kc-border [&_svg]:h-auto [&_svg]:w-full"
+        dangerouslySetInnerHTML={{ __html: renderSideToSvg(pick.front, 96) }}
+      />
+
+      <div>
+        <div className="text-sm font-semibold text-kc-dark">{pick.name}</div>
+        {pick.blurb && <div className="text-xs text-kc-muted">{pick.blurb}</div>}
+      </div>
+
+      <div role="radiogroup" aria-label="Design concept" className="grid grid-cols-4 gap-2">
+        {concepts.map((c, i) => (
+          <button
+            key={c.designId}
+            type="button"
+            role="radio"
+            aria-checked={i === chosen}
+            tabIndex={i === chosen ? 0 : -1}
+            onClick={() => onChoose(i)}
+            title={`${c.name} — ${c.blurb}`}
+            className={`overflow-hidden rounded-lg border-2 transition-colors ${
+              i === chosen ? "border-kc-orange" : "border-kc-border hover:border-kc-orange/50"
+            }`}
+          >
+            <span
+              className="block [&_svg]:h-auto [&_svg]:w-full"
+              dangerouslySetInnerHTML={{ __html: renderSideToSvg(c.front, 40) }}
+            />
+            <span className="block truncate px-1 py-1 text-[11px] font-medium text-kc-dark">{c.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {/*
+        Said plainly rather than left for the customer to notice. The preview carries a watermark and
+        is deliberately below print resolution; the clean file is released once the design is paid
+        for. Explaining that up front reads as a policy - discovering it after export reads as a bug.
+      */}
+      <p className="rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs leading-snug text-kc-muted">
+        Previews are watermarked and low-resolution. Your clean, print-ready files are released as
+        soon as the order is paid for.
+      </p>
     </div>
   );
 }

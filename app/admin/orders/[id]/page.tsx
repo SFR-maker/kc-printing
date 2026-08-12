@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AdminOrderActions } from "@/components/admin/AdminOrderActions";
 import { OrderStatusBadge, PaymentBadge } from "@/components/admin/OrderStatusBadge";
 import { formatDollars } from "@/lib/utils";
+import { CopyButton, CopyableValue } from "@/components/admin/CopyButton";
+import { formatOrderSummary } from "@/lib/orders/summary-text";
 
 interface ItemConfig {
   businessName?: string;
@@ -47,6 +49,45 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
     order.shippingCountry,
   ].filter(Boolean) as string[];
 
+  /*
+   * Assembled here rather than in the copy button so it is built from the same values the page
+   * renders. A summary derived separately would drift the moment either side changed.
+   */
+  const summaryText = formatOrderSummary({
+    id: order.id,
+    createdAt: order.createdAt,
+    status: order.status,
+    total: order.total,
+    amountPaid: order.amountPaid,
+    taxAmount: order.taxAmount,
+    customerName: order.user?.name ?? order.shippingName ?? null,
+    customerEmail: order.user?.email ?? order.guestEmail ?? null,
+    shippingLines,
+    trackingCarrier: order.trackingCarrier,
+    trackingNumber: order.trackingNumber,
+    items: order.items.map((item) => {
+      const spec = (item.config as ItemConfig)?.bcSpec;
+      return {
+        productName: item.product.name,
+        packageName: item.packageTier?.name ?? null,
+        quantity: item.quantity,
+        price: item.price,
+        specs: [
+          spec?.rush ? "Rush turnaround" : null,
+          spec?.roundCorners ? "Rounded corners" : null,
+          spec?.manualProof ? "Manual proof review" : null,
+        ].filter((x): x is string => Boolean(x)),
+      };
+    }),
+    artworkSource: order.cardDesign
+      ? `Built in the Design Studio: ${order.cardDesign.title}`
+      : order.artworkPath === "UPLOAD"
+        ? "Customer supplied a print-ready file"
+        : "Our designers are making the artwork",
+    artworkFileName: order.artworkFileName,
+    notes: order.notes,
+  });
+
   return (
     <div className="space-y-5">
       <Link href="/admin/orders" className="inline-flex items-center gap-1.5 text-sm text-kc-muted hover:text-kc-dark">
@@ -55,12 +96,16 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-black text-kc-dark">Order #{order.id.slice(-8)}</h1>
+          <h1 className="flex items-center gap-1.5 text-2xl font-black text-kc-dark">
+            Order #{order.id.slice(-8)}
+            <CopyButton value={order.id} label="order ID" />
+          </h1>
           <p className="text-sm text-kc-muted">
             Placed {new Date(order.createdAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <CopyButton variant="button" value={summaryText} label="Copy order details" />
           {isTest && (
             <span className="rounded-full border-2 border-dashed border-kc-dark bg-kc-yellow/40 px-3 py-1 text-xs font-black uppercase tracking-wide text-kc-dark">
               Test order
@@ -74,8 +119,15 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Panel title="Customer">
-              <Row label="Name">{order.user?.name ?? order.shippingName ?? (order.guestEmail ? "Guest" : "—")}</Row>
-              <Row label="Email">{order.user?.email ?? order.guestEmail ?? "—"}</Row>
+              <Row label="Name">
+                <CopyableValue label="name" value={order.user?.name ?? order.shippingName ?? (order.guestEmail ? "Guest" : null)} />
+              </Row>
+              <Row label="Email">
+                <CopyableValue label="email" value={order.user?.email ?? order.guestEmail} />
+              </Row>
+              {order.user?.phone && (
+                <Row label="Phone"><CopyableValue label="phone" value={order.user.phone} mono /></Row>
+              )}
               <Row label="Account">{order.user ? "Registered" : "Guest checkout"}</Row>
             </Panel>
 
@@ -102,9 +154,13 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
           <Panel title="Deliver to">
             {shippingLines.length > 0 ? (
-              <address className="text-sm not-italic leading-relaxed text-kc-dark">
-                {shippingLines.map((line) => <div key={line}>{line}</div>)}
-              </address>
+              <div className="flex items-start justify-between gap-2">
+                <address className="text-sm not-italic leading-relaxed text-kc-dark">
+                  {shippingLines.map((line) => <div key={line}>{line}</div>)}
+                </address>
+                {/* The whole address at once: nobody pastes a postcode on its own. */}
+                <CopyButton value={shippingLines.join("\n")} label="address" />
+              </div>
             ) : (
               <p className="text-sm text-kc-muted">
                 No address yet — Stripe collects it at checkout, so it appears once payment completes.
@@ -113,7 +169,9 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
             {order.trackingNumber && (
               <p className="mt-3 flex items-center gap-1.5 text-sm text-emerald-700">
                 <Truck className="h-4 w-4" strokeWidth={1.75} />
-                {order.trackingCarrier ? `${order.trackingCarrier} — ` : ""}{order.trackingNumber}
+                {order.trackingCarrier ? `${order.trackingCarrier} — ` : ""}
+                <span className="font-mono">{order.trackingNumber}</span>
+                <CopyButton value={order.trackingNumber} label="tracking number" />
                 {order.shippedAt && (
                   <span className="text-kc-muted">· sent {new Date(order.shippedAt).toLocaleDateString()}</span>
                 )}
@@ -215,15 +273,19 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
               <div className="space-y-2 text-sm">
                 <Row label="Source">Customer supplied a print-ready file</Row>
                 {order.artworkFileUrl && (
-                  <a
-                    href={order.artworkFileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs font-semibold text-kc-teal hover:underline"
-                  >
-                    <FileIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                    {order.artworkFileName ?? "Download artwork"}
-                  </a>
+                  <div className="flex w-fit items-center gap-1">
+                    <a
+                      href={order.artworkFileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-kc-border bg-kc-bg px-3 py-2 text-xs font-semibold text-kc-teal hover:underline"
+                    >
+                      <FileIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                      {order.artworkFileName ?? "Download artwork"}
+                    </a>
+                    {/* The URL, not the file: it gets pasted into the supplier's upload form. */}
+                    <CopyButton value={order.artworkFileUrl} label="artwork URL" />
+                  </div>
                 )}
                 {order.artworkWidthIn && order.artworkHeightIn && (
                   <Row label="File size">

@@ -48,7 +48,23 @@ export function WindowDecalPrintSpec({
     // Each change supersedes the one before it; a slow earlier reply must not overwrite a newer
     // price with a stale one.
     const ticket = ++latest.current;
+
     const timer = setTimeout(async () => {
+      /*
+       * Nothing is asked of the server until a quantity has been chosen.
+       *
+       * The route answers 400 for a quantity of 0 - correctly, it is not a quotable request - but
+       * firing it anyway put a red 400 in the console of every freshly opened order page. The client
+       * already knows the selection is incomplete, so it says so itself.
+       *
+       * Inside the debounce rather than in the effect body: setting state synchronously there
+       * cascades a render on every change.
+       */
+      if (!spec.quantity) {
+        setPrice({ valid: false, total: 0, error: "Choose a quantity to see your price.", loading: false });
+        return;
+      }
+
       // Marked loading inside the debounce rather than in the effect body, so a quick change of mind
       // never flashes "Pricing…" before the answer arrives.
       setPrice((prev) => ({ ...prev, loading: true }));

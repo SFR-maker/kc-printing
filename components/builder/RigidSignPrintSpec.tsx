@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDollars } from "@/lib/utils";
+import { OptionGroup, type Option } from "@/components/builder/OptionGroup";
 import {
   RIGID_MATERIALS, type RigidMaterialId, type RigidSignSpec,
   colorsFor, materialLabel, quantitiesFor, repairRigidSpec, shapeLabel, shapesFor, sizeById, sizesFor,
@@ -17,6 +15,12 @@ export interface RigidSignPriceState {
   loading: boolean;
 }
 
+/** Plainer wording than the supplier's "Full Color Front, No Back". */
+const SIDES_LABEL: Record<string, string> = {
+  "1": "Front only",
+  "3": "Both sides",
+};
+
 /**
  * Material, shape, size, thickness, print sides and quantity for a rigid sign.
  *
@@ -26,8 +30,9 @@ export interface RigidSignPriceState {
  * therefore repaired against what the supplier actually quotes rather than left on a combination
  * that cannot be priced.
  *
- * The price comes from the server. The five price tables are about two megabytes, so unlike banners
- * and postcards they are not bundled - see lib/pricing/rigid-signs.
+ * The price comes from the server - the five tables are about two megabytes and are deliberately not
+ * bundled (see lib/pricing/rigid-signs) - and it is displayed by the order summary panel rather than
+ * here, so the customer sees one total rather than two.
  */
 export function RigidSignPrintSpec({
   spec,
@@ -53,10 +58,25 @@ export function RigidSignPrintSpec({
     // Each change supersedes the one before it; a slow earlier reply must not overwrite a newer
     // price with a stale one.
     const ticket = ++latest.current;
+
     const timer = setTimeout(async () => {
-      // Marked loading inside the debounce rather than in the effect body: setting state
-      // synchronously there cascades a render on every keystroke-speed change, and it also means a
-      // quick change of mind never flashes "Pricing…" before the answer arrives.
+      /*
+       * Nothing is asked of the server until a quantity has been chosen.
+       *
+       * The route answers 400 for a quantity of 0 - correctly, it is not a quotable request - but
+       * firing it anyway put a red 400 in the console of every freshly opened order page. The client
+       * already knows the selection is incomplete, so it says so itself.
+       *
+       * Inside the debounce rather than in the effect body: setting state synchronously there
+       * cascades a render on every change.
+       */
+      if (!spec.quantity) {
+        setPrice({ valid: false, total: 0, error: "Choose a quantity to see your price.", loading: false });
+        return;
+      }
+
+      // Marked loading inside the debounce rather than in the effect body, so a quick change of mind
+      // never flashes "Pricing…" before the answer arrives.
       setPrice((prev) => ({ ...prev, loading: true }));
       try {
         const res = await fetch("/api/price/rigid-signs", {
@@ -83,123 +103,89 @@ export function RigidSignPrintSpec({
     onChange(repairRigidSpec({ ...spec, [key]: value }, spec));
   }
 
+  const unit = (n: number) => (n === 1 ? "1 sign" : `${n.toLocaleString("en-US")} signs`);
+
+  const materialOptions: Option[] = RIGID_MATERIALS.map((m) => ({ value: m.id, label: m.label }));
+  const shapeOptions: Option[] = shapes.map((s) => ({ value: String(s.id), label: s.label }));
+  const sizeOptions: Option[] = sizes.map((s) => ({ value: String(s.id), label: s.label }));
+  const thicknessOptions: Option[] = thicknesses.map((t) => ({ value: t.value, label: t.label }));
+  const typeOptions: Option[] = types.map((t) => ({ value: t.value, label: t.label }));
+  const sidesOptions: Option[] = colors.map((c) => ({
+    value: c.value,
+    label: SIDES_LABEL[c.value] ?? c.label,
+  }));
+  const quantityOptions: Option[] = quantities.map((q) => ({ value: String(q), label: unit(q) }));
+
   return (
-    <div className="rounded-xl border-2 border-kc-coral/40 p-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Material</Label>
-          <Select value={spec.material} onValueChange={(v) => v && set("material", v as RigidMaterialId)}>
-            <SelectTrigger aria-label="Material" className="border-kc-border"><SelectValue>{materialLabel(spec.material)}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {RIGID_MATERIALS.map((m) => (
-                <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="space-y-5">
+      <OptionGroup
+        label="Material"
+        options={materialOptions}
+        value={spec.material}
+        onChange={(v) => set("material", v as RigidMaterialId)}
+        columns={3}
+      />
 
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Shape</Label>
-          <Select value={String(spec.shapeId)} onValueChange={(v) => v && set("shapeId", Number(v))}>
-            <SelectTrigger aria-label="Shape" className="border-kc-border"><SelectValue>{shapeLabel(spec.material, spec.shapeId)}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {shapes.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
-          <Select value={String(spec.sizeId)} onValueChange={(v) => v && set("sizeId", Number(v))}>
-            <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue>{size?.label ?? ""}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {sizes.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Thickness</Label>
-          <Select value={spec.thickness} onValueChange={(v) => v && set("thickness", v)}>
-            <SelectTrigger aria-label="Thickness" className="border-kc-border"><SelectValue>{thicknesses.find((t) => t.value === spec.thickness)?.label ?? ""}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {thicknesses.map((t) => (
-                <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {thicknesses.length === 1 && (
-            <p className="mt-2 text-xs text-kc-muted">This material comes in one thickness.</p>
-          )}
-        </div>
-
-        {types.length > 0 && (
-          <div className="rounded-lg border border-kc-border p-4">
-            <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Grade</Label>
-            <Select value={spec.type} onValueChange={(v) => v && set("type", v)}>
-              <SelectTrigger aria-label="Grade" className="border-kc-border"><SelectValue>{types.find((t) => t.value === spec.type)?.label ?? ""}</SelectValue></SelectTrigger>
-              <SelectContent>
-                {types.map((t) => (
-                  <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="mt-2 text-xs leading-snug text-kc-muted">
-              Premium holds a flatter face for indoor display; Economy is the better buy for short-term outdoor use.
-            </p>
-          </div>
-        )}
-
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Printed Sides</Label>
-          <Select value={spec.color} onValueChange={(v) => v && set("color", v)}>
-            <SelectTrigger aria-label="Printed Sides" className="border-kc-border"><SelectValue>{colors.find((c) => c.value === spec.color)?.label ?? ""}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {colors.map((c) => (
-                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
-          <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue placeholder="Choose a quantity">{spec.quantity ? (spec.quantity === 1 ? "1 sign" : `${spec.quantity.toLocaleString("en-US")} signs`) : undefined}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {quantities.map((q) => (
-                <SelectItem key={q} value={String(q)}>{q === 1 ? "1 sign" : `${q.toLocaleString("en-US")} signs`}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <OptionGroup
+          label="Shape"
+          options={shapeOptions}
+          value={String(spec.shapeId)}
+          onChange={(v) => set("shapeId", Number(v))}
+          columns={2}
+        />
+        <OptionGroup
+          label="Size"
+          options={sizeOptions}
+          value={String(spec.sizeId)}
+          onChange={(v) => set("sizeId", Number(v))}
+          columns={2}
+          hint={sizes.length === 1 ? "This shape is cut in one size." : undefined}
+        />
       </div>
 
-      <div className="mt-4 flex items-end justify-between border-t border-kc-border pt-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Print total</div>
-          <div className="text-sm text-kc-muted">
-            {spec.quantity === 1 ? "1 sign" : `${spec.quantity.toLocaleString("en-US")} signs`}
-            {size ? `, ${size.label}` : ""}
-          </div>
-          {size && (
-            <div className="text-xs text-kc-muted">
-              Artwork at {size.dpi} DPI · finished {size.trimWidthIn}″ × {size.trimHeightIn}″
-            </div>
-          )}
-        </div>
-        {price.loading ? (
-          <div className="text-sm text-kc-muted">Pricing…</div>
-        ) : price.valid ? (
-          <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
-        ) : (
-          <p className="max-w-xs text-right text-sm text-amber-700">{price.error}</p>
-        )}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <OptionGroup
+          label="Thickness"
+          options={thicknessOptions}
+          value={spec.thickness}
+          onChange={(v) => set("thickness", v)}
+          columns={2}
+          hint={thicknesses.length === 1 ? "This material comes in one thickness." : undefined}
+        />
+        <OptionGroup
+          label="Printed sides"
+          options={sidesOptions}
+          value={spec.color}
+          onChange={(v) => set("color", v)}
+          columns={2}
+        />
       </div>
+
+      {types.length > 0 && (
+        <OptionGroup
+          label="Grade"
+          options={typeOptions}
+          value={spec.type}
+          onChange={(v) => set("type", v)}
+          columns={2}
+          hint="Premium holds a flatter face for indoor display; Economy is the better buy for short-term outdoor use."
+        />
+      )}
+
+      <OptionGroup
+        label="Quantity"
+        options={quantityOptions}
+        value={spec.quantity ? String(spec.quantity) : ""}
+        onChange={(v) => set("quantity", Number(v))}
+      />
+
+      {size && (
+        <p className="border-t border-kc-border pt-4 text-xs text-kc-muted">
+          {materialLabel(spec.material)} · {shapeLabel(spec.material, spec.shapeId)} · artwork at{" "}
+          {size.dpi} DPI · finished {size.trimWidthIn}″ × {size.trimHeightIn}″
+        </p>
+      )}
     </div>
   );
 }

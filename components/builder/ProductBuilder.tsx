@@ -215,6 +215,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [artworkError, setArtworkError] = useState<string | null>(null);
+  /**
+   * Set when a spec change has just thrown away an uploaded file.
+   *
+   * Six different controls could discard an approved proof, and every one of them did it silently -
+   * the customer changed the size and their file was simply gone, with the uploader back as though
+   * they had never used it. The file cannot be carried over: it was measured and positioned against
+   * the old document, and the proof editor needs both to show anything, so a file kept without
+   * re-measuring would land back on the uploader regardless.
+   *
+   * What can be fixed is the silence. The specs step warns before, and this says so afterwards.
+   */
+  const [artworkDiscarded, setArtworkDiscarded] = useState<string | null>(null);
   // Local rather than form.setError: this is set from goNext, outside a validation pass, and
   // RHF drops errors that its resolver did not produce on the next render.
   const [detailsError, setDetailsError] = useState<string | null>(null);
@@ -414,7 +426,17 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         : { valid: bannerPriceState.valid, total: bannerPriceState.total, error: bannerPriceState.error })
     : null;
 
-  const postcardPrice = isPostcards && values.postcardSpec ? calculatePostcardPrice(values.postcardSpec) : null;
+  /*
+   * Falls back to the default spec rather than going null.
+   *
+   * `postcardSpec` has no defaultValue on the form - it is only written once the customer touches a
+   * control - so reading it directly left the price null on load. The summary panel reads null as
+   * "still pricing", so a freshly opened postcard order sat on "Pricing…" with its Continue button
+   * disabled until something was clicked. Every other product already resolves its spec this way.
+   */
+  const postcardPrice = isPostcards
+    ? calculatePostcardPrice(values.postcardSpec ?? DEFAULT_POSTCARD_SPEC)
+    : null;
   /**
    * Rigid signs are quoted by the server, so their price arrives asynchronously rather than being
    * computed here. The five price tables are about two megabytes and are deliberately not bundled -
@@ -641,6 +663,22 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
    */
   const showSummaryPanel = currentStep !== "payment";
 
+  /**
+   * Discards an uploaded file because the document it was proofed against has changed.
+   *
+   * Returns true when something was actually thrown away, so callers do not have to repeat the
+   * "only if there is a file" test that guards every one of them.
+   */
+  function discardArtworkFor(what: string): boolean {
+    if (artwork.path !== "UPLOAD" || !artwork.front.fileUrl) return false;
+    setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+    setArtworkDiscarded(what);
+    return true;
+  }
+
+  /** True once there is an uploaded file a spec change would cost the customer. */
+  const artworkAtRisk = artwork.path === "UPLOAD" && Boolean(artwork.front.fileUrl);
+
   const goNext = async () => {
     // Applies to every product with real print specs, not just business cards. Banners and postcards
     // were reaching payment without this, and the package gate below then refused them silently.
@@ -812,6 +850,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
           <div className="space-y-8">
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-kc-dark">Choose Your Print Specs</h2>
+              {artworkAtRisk && (
+                <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13.5px] leading-snug text-amber-900">
+                  You have a file uploaded and proofed. Changing the size, orientation or finish
+                  below means it has to be measured against the new document, so you will be asked
+                  to upload and approve it again.
+                </p>
+              )}
               <p className="text-sm text-kc-muted">
                 {isBanners
                   ? "Real print pricing: size, material and quantity all affect your price."
@@ -834,9 +879,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                     const changedDoc = prev.material !== next.material
                       || prev.sizeId !== next.sizeId
                       || prev.shapeId !== next.shapeId;
-                    if (changedDoc && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
-                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
-                    }
+                    if (changedDoc) discardArtworkFor("the film, shape or size");
                   }}
                 />
               ) : isRigidSigns ? (
@@ -852,9 +895,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                     const changedDoc = prev.material !== next.material
                       || prev.sizeId !== next.sizeId
                       || prev.shapeId !== next.shapeId;
-                    if (changedDoc && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
-                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
-                    }
+                    if (changedDoc) discardArtworkFor("the material, shape or size");
                   }}
                 />
               ) : isPostcards ? (
@@ -865,9 +906,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                     setValue("postcardSpec", next);
                     // Size decides the document, so a proof approved against the old one no longer
                     // describes what prints.
-                    if (prev.size !== next.size && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
-                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
-                    }
+                    if (prev.size !== next.size) discardArtworkFor("the size");
                   }}
                 />
               ) : isBanners ? (
@@ -882,8 +921,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                     // Size and orientation both decide the document, so a proof approved against the
                     // old one no longer describes what will print. Drop it rather than carry a stale
                     // approval through to the press.
-                    if ((prev.size !== next.size || prev.orientation !== next.orientation) && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
-                      setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
+                    if (prev.size !== next.size || prev.orientation !== next.orientation) {
+                      discardArtworkFor("the size or orientation");
                     }
                   }}
                 />
@@ -897,9 +936,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                   // Corner finish decides the document size, so a file measured against the old
                   // finish is no longer proofed correctly. Drop the proof and make them re-upload
                   // rather than let an approved proof silently apply to a different spec.
-                  if (prev.roundCorners !== next.roundCorners && artwork.path === "UPLOAD" && artwork.front.fileUrl) {
-                    setValue("artwork", { ...EMPTY_ARTWORK, path: "UPLOAD" });
-                  }
+                  if (prev.roundCorners !== next.roundCorners) discardArtworkFor("the corner finish");
                 }}
               />
               )}
@@ -907,6 +944,19 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
 
             <div className="space-y-4 border-t border-kc-border pt-8">
               <h2 className="text-xl font-bold text-kc-dark">Your Artwork</h2>
+              {artworkDiscarded && (
+                <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[13.5px] leading-snug text-amber-900">
+                  Changing {artworkDiscarded} changed the document your file was proofed against, so
+                  it was removed. Upload it again and approve the new proof.{" "}
+                  <button
+                    type="button"
+                    onClick={() => setArtworkDiscarded(null)}
+                    className="font-semibold underline"
+                  >
+                    Dismiss
+                  </button>
+                </p>
+              )}
               {/*
                 Once artwork exists this is a summary of it, not a fork.
 
@@ -1613,12 +1663,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
 
-          {price && (
-            <div className="text-center">
-              <div className="text-xs text-kc-muted">Estimated Total (before tax)</div>
-              <div className="text-xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
-            </div>
-          )}
+          {/*
+            No total here.
+
+            The order summary carries the running total on every step it is shown, and the review
+            step ends in its own itemised subtotal - so this middle copy put the same figure on
+            screen twice and left the reader looking for the difference between them.
+          */}
 
           {step < stepKeys.length - 1 ? (
             <Button

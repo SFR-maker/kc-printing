@@ -246,28 +246,19 @@ export function BannerPrintSpec({
         </div>
       </div>
 
-      <div className="mt-4 flex items-end justify-between border-t border-kc-border pt-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Print total</div>
-          <div className="text-sm text-kc-muted">
-            {spec.quantity === 1 ? "1 banner" : `${spec.quantity} banners`}, {spec.size}
-          </div>
-        </div>
-        {price.loading ? (
-          <div className="text-sm text-kc-muted">Pricing…</div>
-        ) : price.valid ? (
-          <div className="text-right">
-            <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
-            {price.finishing > 0 && (
-              <div className="text-xs text-kc-muted">
-                includes {formatDollars(price.finishing)} for {spec.grommets.toLowerCase()}
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="max-w-xs text-right text-sm text-amber-700">{price.error}</p>
-        )}
-      </div>
+      {/*
+        The grommet charge, but not the total.
+
+        The running total lives in the order summary panel, on screen the whole time. Keeping a
+        second copy here meant the same figure appeared twice and the customer had to work out
+        whether they were the same number. The finishing line stays because it explains a component
+        of that total that is otherwise invisible.
+      */}
+      {price.valid && price.finishing > 0 && (
+        <p className="mt-4 border-t border-kc-border pt-4 text-xs text-kc-muted">
+          Includes {formatDollars(price.finishing)} for {spec.grommets.toLowerCase()}.
+        </p>
+      )}
     </div>
   );
 }

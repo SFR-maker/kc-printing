@@ -1,11 +1,9 @@
 "use client";
 
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatDollars } from "@/lib/utils";
+import { OptionGroup, type Option } from "@/components/builder/OptionGroup";
 import {
   POSTCARD_PAPERS, POSTCARD_SIZES,
-  availableColors, availableQuantities, calculatePostcardPrice, isComboAvailable,
+  availableColors, availableQuantities, isComboAvailable,
 } from "@/lib/pricing/postcards";
 
 export interface PostcardSpec {
@@ -23,14 +21,30 @@ export const DEFAULT_POSTCARD_SPEC: PostcardSpec = {
   quantity: 0,
 };
 
+/** Plainer wording than the supplier's, matching what business cards call the same three choices. */
+const SIDES_LABEL: Record<string, string> = {
+  "Full Color Front, No Back": "Front only",
+  "Full Color Front, Grayscale Back": "Front + grey back",
+  "Full Color Both Sides": "Both sides",
+};
+
+const SIDES_NOTE: Record<string, string> = {
+  "Full Color Front, No Back": "Nothing on the reverse",
+  "Full Color Front, Grayscale Back": "Full colour front, greyscale back",
+  "Full Color Both Sides": "Full colour both faces",
+};
+
 /**
  * Size, paper, print sides and quantity for a postcard.
  *
  * The supplier's catalogue is ragged - a grayscale back exists on only three of the twelve stocks,
- * and heavier stocks start at higher quantities - so every dropdown is filtered by what is actually
+ * and heavier stocks start at higher quantities - so every control is filtered by what is actually
  * printable rather than showing a tidy grid the order would fail on after payment. Changing a
  * selection that invalidates the others snaps them to something available instead of leaving the
  * form in a state that cannot be priced.
+ *
+ * The running total is not here. It lives in the order summary, which stays on screen while these
+ * are being changed - see OrderSummaryPanel.
  */
 export function PostcardPrintSpec({
   spec,
@@ -39,7 +53,6 @@ export function PostcardPrintSpec({
   spec: PostcardSpec;
   onChange: (next: PostcardSpec) => void;
 }) {
-  const price = calculatePostcardPrice(spec);
   const colors = availableColors(spec.size, spec.paper);
   const quantities = availableQuantities(spec.size, spec.paper, spec.color);
 
@@ -57,7 +70,9 @@ export function PostcardPrintSpec({
       if (ok.length && !ok.includes(next.color)) next.color = ok[0];
     }
     const qtys = availableQuantities(next.size, next.paper, next.color);
-    if (qtys.length && !qtys.includes(next.quantity)) {
+    // 0 is "not chosen" and must survive repair, or changing the paper would silently pick a run
+    // length for the customer - the same rule business cards, rigid signs and decals all follow.
+    if (next.quantity !== 0 && qtys.length && !qtys.includes(next.quantity)) {
       // Nearest available rather than the minimum, so a customer who wanted 1,000 does not silently
       // drop to 25 because they changed the paper.
       next.quantity = qtys.reduce((a, b) => (Math.abs(b - next.quantity) < Math.abs(a - next.quantity) ? b : a), qtys[0]);
@@ -65,74 +80,56 @@ export function PostcardPrintSpec({
     onChange(next);
   }
 
+  const sizeOptions: Option[] = POSTCARD_SIZES.map((s) => ({ value: s.id, label: s.label }));
+
+  const paperOptions: Option[] = POSTCARD_PAPERS
+    .filter((p) => isComboAvailable(spec.size, p.label, availableColors(spec.size, p.label)[0] ?? ""))
+    .map((p) => ({ value: p.id, label: p.label }));
+
+  const sidesOptions: Option[] = colors.map((c) => ({
+    value: c,
+    label: SIDES_LABEL[c] ?? c,
+    sublabel: SIDES_NOTE[c],
+  }));
+
+  const quantityOptions: Option[] = quantities.map((q) => ({
+    value: String(q),
+    label: `${q.toLocaleString("en-US")} postcards`,
+  }));
+
   return (
-    <div className="rounded-xl border-2 border-kc-coral/40 p-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
-          <Select value={spec.size} onValueChange={(v) => v && set("size", v)}>
-            <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {POSTCARD_SIZES.map((s) => (
-                <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="space-y-5">
+      <OptionGroup
+        label="Size"
+        options={sizeOptions}
+        value={spec.size}
+        onChange={(v) => set("size", v)}
+        columns={2}
+      />
 
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Paper Stock</Label>
-          <Select value={spec.paper} onValueChange={(v) => v && set("paper", v)}>
-            <SelectTrigger aria-label="Paper Stock" className="border-kc-border"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {POSTCARD_PAPERS.filter((p) => isComboAvailable(spec.size, p.label, availableColors(spec.size, p.label)[0] ?? "")).map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <OptionGroup
+        label="Sides"
+        options={sidesOptions}
+        value={spec.color}
+        onChange={(v) => set("color", v)}
+        columns={3}
+        hint={colors.length === 1 ? "This stock only prints one way." : undefined}
+      />
 
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Printed Sides</Label>
-          <Select value={spec.color} onValueChange={(v) => v && set("color", v)}>
-            <SelectTrigger aria-label="Printed Sides" className="border-kc-border"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {colors.map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {colors.length === 1 && (
-            <p className="mt-2 text-xs text-kc-muted">This stock only prints one way.</p>
-          )}
-        </div>
+      <OptionGroup
+        label="Paper stock"
+        options={paperOptions}
+        value={spec.paper}
+        onChange={(v) => set("paper", v)}
+      />
 
-        <div className="rounded-lg border border-kc-border p-4">
-          <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
-          <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue placeholder="Choose a quantity" /></SelectTrigger>
-            <SelectContent>
-              {quantities.map((q) => (
-                <SelectItem key={q} value={String(q)}>{q.toLocaleString("en-US")} postcards</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-end justify-between border-t border-kc-border pt-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Print total</div>
-          <div className="text-sm text-kc-muted">
-            {spec.quantity.toLocaleString("en-US")} postcards, {spec.size}
-          </div>
-        </div>
-        {price.valid ? (
-          <div className="text-3xl font-black text-kc-magenta-deep">{formatDollars(price.total)}</div>
-        ) : (
-          <p className="max-w-xs text-right text-sm text-amber-700">{price.error}</p>
-        )}
-      </div>
+      <OptionGroup
+        label="Quantity"
+        options={quantityOptions}
+        value={spec.quantity ? String(spec.quantity) : ""}
+        onChange={(v) => set("quantity", Number(v))}
+        hint={quantities.length === 0 ? "Choose a size and paper combination that is available." : undefined}
+      />
     </div>
   );
 }

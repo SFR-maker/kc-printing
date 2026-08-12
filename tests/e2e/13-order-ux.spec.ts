@@ -157,12 +157,24 @@ test.describe("banner orientation", () => {
     expect(await priceIn(page)).toBe(before);
   });
 
-  test("the gallery falls back rather than showing nothing", async ({ page }) => {
-    // Every banner template is landscape today, so filtering to vertical would empty the gallery -
-    // which reads as a broken page rather than a thin library.
+  test("vertical banners have templates of their own", async ({ page }) => {
+    /*
+     * This used to assert the fallback, because every banner template was landscape and filtering
+     * to vertical emptied the gallery. The occasion library ships portrait layouts, so the correct
+     * assertion is now the opposite: real results, and no apology for the lack of them.
+     */
     await page.goto("/services/banners/design?orientation=vertical");
     await page.waitForTimeout(2500);
-    await expect(page.getByText(/don't have vertical templates yet/i)).toBeVisible();
+    expect(await page.locator('a[href*="/design/t-"]').count()).toBeGreaterThan(0);
+    await expect(page.getByText(/don't have vertical templates yet/i)).toHaveCount(0);
+    await expect(page.getByText(/Showing vertical designs/i)).toBeVisible();
+  });
+
+  test("still falls back rather than showing an empty gallery", async ({ page }) => {
+    // The safety net stays: a product with no templates in the requested orientation shows the
+    // full set with an explanation instead of nothing at all.
+    await page.goto("/services/rigid-signs/design?orientation=vertical");
+    await page.waitForTimeout(2000);
     expect(await page.locator('a[href*="/design/t-"]').count()).toBeGreaterThan(0);
   });
 });

@@ -7,6 +7,7 @@ import { generatePostcardTemplates } from "../lib/business-card/templates/genera
 import { generateBannerTemplates } from "../lib/business-card/templates/generate-banner";
 import { generateRigidSignTemplates } from "../lib/business-card/templates/generate-rigid-sign";
 import { generateWindowDecalTemplates } from "../lib/business-card/templates/generate-window-decal";
+import { generateBannerOccasionTemplates } from "../lib/business-card/templates/generate-banner-occasions";
 import { exportSideThumbnail, THUMBNAIL_WIDTH } from "../lib/business-card/export";
 import type { CardTemplate } from "../lib/business-card/schema";
 
@@ -103,7 +104,12 @@ async function main() {
     totalFailed += await seedProduct("POSTCARD", generatePostcardTemplates());
   }
   if (products.includes("all") || products.includes("banner")) {
-    totalFailed += await seedProduct("BANNER", generateBannerTemplates());
+    // Occasion-led templates first: they are what people actually shop a banner by. The
+    // industry-led set stays for the handful still curated as active.
+    totalFailed += await seedProduct("BANNER", [
+      ...generateBannerOccasionTemplates(),
+      ...generateBannerTemplates(),
+    ]);
   }
   if (products.includes("all") || products.includes("rigid-sign")) {
     totalFailed += await seedProduct("RIGID_SIGN", generateRigidSignTemplates());

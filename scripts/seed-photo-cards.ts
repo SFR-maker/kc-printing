@@ -20,6 +20,7 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { db } from "../lib/prisma";
+import { findTextBox } from "./lib-place-text";
 
 const BEDS_DIR = path.join(process.cwd(), "public", "images", "card-beds");
 const OUT_DIR = path.join(process.cwd(), "public", "images", "card-art");
@@ -33,55 +34,30 @@ const SAFE = 0.25;
 /** The model draws a card-shaped object; this much off each edge removes its border. */
 const CROP_INSET = 0.025;
 
-type Zone = "right" | "left" | "bottom" | "centre";
-
-/** Which region each layout was generated to leave empty. Must match generate-card-beds.ts. */
-const ZONE_BY_LAYOUT: Record<string, Zone> = {
-  "angled-split": "right",
-  "torn-edge": "right",
-  "full-bleed-scrim": "left",
-  "corner-wedge": "bottom",
-  "vertical-band": "right",
-  "arc-cut": "right",
-  duotone: "centre",
-  "inset-frame": "bottom",
-  triptych: "right",
-  "macro-texture": "centre",
-};
-
 /**
- * Whether the type goes light or dark, per LAYOUT rather than per zone.
+ * Type is laid into the flattest region the artwork actually has, measured per image.
  *
- * Zone was the wrong axis. Every layout except one leaves its empty area either as a saturated
- * brand-colour panel or as a deliberately darkened part of the photograph, so the type is white.
- * The first pass keyed this off the zone and put black type on a navy panel: legible in the
- * abstract, invisible on the card.
- *
- * vertical-band is the exception, and by design: its prompt asks for the right side to be slightly
- * overexposed and low contrast precisely so dark type sits on it.
+ * The previous version hardcoded a box per layout from what the prompt had asked the model to
+ * leave clear. The model did not oblige consistently, so on triptych the phone number ran straight
+ * through the white gutter between two photo panels, and on others the type sat on photography.
+ * See lib-place-text.ts.
  */
-const DARK_TYPE_LAYOUTS = new Set(["vertical-band"]);
 
-interface Box { x: number; y: number; w: number }
+/** Roughly the width of a character as a fraction of font size, for Inter at these weights. */
+const CHAR_W = 0.52;
 
-function zoneBox(zone: Zone): Box {
-  switch (zone) {
-    // The colour panel occupies the right 45%; type sits inside it, clear of the diagonal.
-    // x=2.35, not 2.05: the angled and arc layouts cut into the panel, and at 2.05 the
-    // first two characters of every line sat on the photograph on the wrong side of the cut.
-    case "right": return { x: 2.35, y: 0.58, w: W - SAFE - 2.35 };
-    case "left": return { x: SAFE, y: 0.62, w: 1.55 };
-    case "bottom": return { x: SAFE, y: 1.34, w: W - SAFE * 2 };
-    case "centre": return { x: SAFE + 0.25, y: 0.72, w: W - (SAFE + 0.25) * 2 };
-  }
+/** Largest size at which `text` fits `widthIn`, clamped to a legible range. */
+function fitPt(text: string, widthIn: number, max: number, min = 5.5): number {
+  const ptForWidth = (widthIn / (text.length * CHAR_W)) * 72;
+  return Math.max(min, Math.min(max, ptForWidth));
 }
 
 const text = (
-  id: string, t: string, box: Box, dy: number, sizePt: number,
-  weight: "400" | "600" | "700" | "900", color: string, opts: Partial<Record<string, unknown>> = {}
+  id: string, t: string, box: { x: number; y: number; w: number }, dy: number, sizePt: number,
+  weight: "400" | "600" | "700" | "900", color: string, opts: Record<string, unknown> = {}
 ) => ({
   id, type: "text" as const, text: t,
-  x: box.x, y: box.y + dy, width: box.w, height: sizePt / 72 * 1.35,
+  x: box.x, y: box.y + dy, width: box.w, height: (sizePt / 72) * 1.35,
   rotation: 0, opacity: 1, locked: false, visible: true,
   fontFamily: "Inter", fontSizePt: sizePt, fontWeight: weight,
   italic: false, underline: false, textTransform: "none" as const,
@@ -89,9 +65,23 @@ const text = (
   color, backgroundColor: null, ...opts,
 });
 
-function buildFront(src: string, zone: Zone, layout: string) {
-  const box = zoneBox(zone);
-  const light = !DARK_TYPE_LAYOUTS.has(layout);
+function buildFront(
+  src: string,
+  place: { x: number; y: number; w: number; h: number; light: boolean; variance: number }
+) {
+  const box = { x: place.x * W, y: place.y * H, w: place.w * W };
+
+  /*
+   * Some layouts have no flat area to find.
+   *
+   * duotone and macro-texture are full-bleed photography by definition, so the "emptiest" region is
+   * still photographic detail - an audit put 27 of 77 cards above a variance of 400, which is type
+   * sitting on a picture. Where that happens the card gets a scrim: a soft dark panel behind the
+   * type only. It is what a designer would do, it costs nothing, and it makes the result independent
+   * of how cooperative the generated image was.
+   */
+  const needsScrim = place.variance > 300;
+  const light = needsScrim ? true : place.light;
   const ink = light ? "#FFFFFF" : "#111111";
   const muted = light ? "#E6E6E6" : "#444444";
 
@@ -119,17 +109,52 @@ function buildFront(src: string, zone: Zone, layout: string) {
         rotation: 0, opacity: 1, locked: true, visible: true,
         name: "Background",
       },
-      text("name", "Your Name", box, 0, 13, "900", ink),
-      text("role", "Your Title", box, 0.26, 8.5, "600", muted, { textTransform: "uppercase", letterSpacing: 0.06 }),
-      text("phone", "(816) 555-0100", box, 0.56, 8, "400", ink),
-      text("email", "hello@yourbusiness.com", box, 0.74, 8, "400", ink),
-      text("web", "yourbusiness.com", box, 0.92, 8, "400", muted),
+      ...(needsScrim
+        ? [{
+            id: "scrim",
+            type: "shape" as const,
+            shape: "rect" as const,
+            // Generous around the type block so the panel reads as deliberate rather than as a
+            // label stuck on the photograph.
+            x: Math.max(0, box.x - 0.16),
+            y: Math.max(0, place.y * H - 0.14),
+            width: Math.min(W - Math.max(0, box.x - 0.16), box.w + 0.32),
+            height: Math.min(H - Math.max(0, place.y * H - 0.14), place.h * H + 0.28),
+            cornerRadiusIn: 0.06,
+            fill: "#0B0B0C",
+            gradient: null,
+            stroke: null,
+            strokeWidthPx: 0,
+            rotation: 0,
+            opacity: 0.55,
+            locked: true,
+            visible: true,
+            name: "Text panel",
+          }]
+        : []),
+      // Every line is sized to the measured box, so a narrow flat panel gets smaller type rather
+      // than type that overruns the panel onto the photograph.
+      ...(() => {
+        const namePt = fitPt("Your Name", box.w, 15);
+        const bodyPt = fitPt("hello@yourbusiness.com", box.w, 8.5);
+        const rolePt = fitPt("YOUR TITLE", box.w, bodyPt * 1.05);
+        const lh = bodyPt / 72 * 1.55;
+        let y = 0;
+        const rows = [
+          text("name", "Your Name", box, y, namePt, "900", ink),
+          text("role", "Your Title", box, (y += namePt / 72 * 1.35), rolePt, "600", muted,
+            { textTransform: "uppercase", letterSpacing: 0.05 }),
+          text("phone", "(816) 555-0100", box, (y += rolePt / 72 * 2.3), bodyPt, "400", ink),
+          text("email", "hello@yourbusiness.com", box, (y += lh), bodyPt, "400", ink),
+          text("web", "yourbusiness.com", box, (y += lh), bodyPt, "400", muted),
+        ];
+        return rows;
+      })(),
     ],
   };
 }
 
-function buildBack(layout: string) {
-  const light = !DARK_TYPE_LAYOUTS.has(layout);
+function buildBack(light: boolean) {
   return {
     physicalWidthIn: W, physicalHeightIn: H, bleedIn: 0.125, safeZoneInsetIn: 0.125,
     shapeMask: "rectangle" as const,
@@ -162,8 +187,7 @@ async function main() {
       const m = file.match(/^(\d+)-(.+)\.webp$/);
       if (!m) { skipped++; continue; }
       const [, idx, layout] = m;
-      const zone = ZONE_BY_LAYOUT[layout];
-      if (!zone) { console.warn(`  unknown layout ${layout}`); skipped++; continue; }
+      void layout;
 
       // Crop the model's own card border away, then re-fit to the authored bleed proportions.
       /*
@@ -176,7 +200,7 @@ async function main() {
        */
       const artRel = `/images/card-art/${industry}/${idx}-${layout}.jpg`;
       const artAbs = path.join(OUT_DIR, industry, `${idx}-${layout}.jpg`);
-      if (!dry && !fs.existsSync(artAbs)) {
+      if (!fs.existsSync(artAbs)) {
         const srcAbs = path.join(BEDS_DIR, industry, file);
         const meta = await sharp(srcAbs).metadata();
         const iw = meta.width ?? 1125, ih = meta.height ?? 675;
@@ -189,6 +213,10 @@ async function main() {
           .toBuffer()
           .then((b) => fs.writeFileSync(artAbs, b));
       }
+
+      // Measured on the cropped artwork, so the box reflects what the card actually looks like
+      // rather than what the generation prompt asked for.
+      const place = await findTextBox(artAbs);
 
       const slug = `photo-${industry}-${idx}-${layout}`;
       const row = {
@@ -205,8 +233,8 @@ async function main() {
         fontFamilies: ["Inter"],
         thumbnailFront: null,
         thumbnailBack: null,
-        front: buildFront(artRel, zone, layout) as unknown as object,
-        back: buildBack(layout) as unknown as object,
+        front: buildFront(artRel, place) as unknown as object,
+        back: buildBack(place.light) as unknown as object,
         source: "MANUAL" as const,
         active: true,
       };

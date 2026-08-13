@@ -21,6 +21,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
+import { EXTRA_CATEGORIES } from "./card-bed-categories";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 const MODEL = "google/gemini-3-pro-image";
@@ -136,7 +137,7 @@ const LAYOUTS: Layout[] = [
 interface Industry {
   slug: string;
   label: string;
-  phase: 1 | 2;
+  phase: 1 | 2 | 3 | 4;
   subjects: string[];
   palette: string;
 }
@@ -384,6 +385,7 @@ const INDUSTRIES: Industry[] = [
       "architectural shadow patterns across a plain wall",
     ],
   },
+  ...EXTRA_CATEGORIES,
 ];
 
 async function generate(prompt: string, apiKey: string): Promise<Buffer> {
@@ -412,7 +414,7 @@ async function generate(prompt: string, apiKey: string): Promise<Buffer> {
 
 interface Job { industry: Industry; layout: Layout; index: number; file: string }
 
-function buildJobs(phase: 1 | 2): Job[] {
+function buildJobs(phase: number): Job[] {
   const jobs: Job[] = [];
   for (const industry of INDUSTRIES.filter((i) => i.phase === phase)) {
     industry.subjects.forEach((_, i) => {
@@ -443,7 +445,7 @@ async function main() {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not set");
 
-  const phase = (process.argv[2] === "phase2" ? 2 : 1) as 1 | 2;
+  const phase = Number(String(process.argv[2] ?? "phase1").replace("phase", "")) as 1 | 2 | 3 | 4;
   const onlyIdx = process.argv.indexOf("--only");
   const only = onlyIdx > -1 ? process.argv[onlyIdx + 1] : null;
 

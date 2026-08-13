@@ -58,3 +58,4 @@ test-results/
 # local server log
 .next-start.log
 .card-beds-*.log
+.card-beds-all.log

@@ -22,6 +22,36 @@ import sharp from "sharp";
 import { db } from "../lib/prisma";
 import { findTextBox } from "./lib-place-text";
 import { termsForCategory } from "../lib/business-card/templates/occupations";
+import { refitSide } from "../lib/business-card/refit";
+import { defaultSizeFor, PRODUCT_DB_VALUE, type DesignProduct } from "../lib/business-card/print-spec";
+
+/**
+ * The same artwork, refitted for every product.
+ *
+ * The beds are photographs and flat colour panels, not card-shaped objects, so they carry over to a
+ * postcard or a banner without regenerating anything: refitSide covers the background to the new
+ * aspect and clamps the type back inside the new safe area. Business cards keep all ten layouts;
+ * the others take a spread of three so every category is represented on every product without the
+ * gallery becoming four thousand near-identical rows.
+ */
+const PRODUCTS: { product: DesignProduct; layoutsPerCategory: number }[] = [
+  { product: "business-card", layoutsPerCategory: 10 },
+  { product: "postcard", layoutsPerCategory: 2 },
+  { product: "banner", layoutsPerCategory: 2 },
+  { product: "rigid-sign", layoutsPerCategory: 2 },
+  { product: "window-decal", layoutsPerCategory: 2 },
+];
+
+/** Finished size including bleed for a product's default preset. */
+function docSizeFor(product: DesignProduct) {
+  const p = defaultSizeFor(product);
+  return {
+    widthIn: p.trimWidthIn + p.bleedIn * 2,
+    heightIn: p.trimHeightIn + p.bleedIn * 2,
+    bleedIn: p.bleedIn,
+    safeZoneInsetIn: p.safeZoneInsetIn,
+  };
+}
 
 const BEDS_DIR = path.join(process.cwd(), "public", "images", "card-beds");
 const OUT_DIR = path.join(process.cwd(), "public", "images", "card-art");
@@ -169,6 +199,14 @@ function buildBack(light: boolean) {
   };
 }
 
+const PRODUCT_LABEL: Record<DesignProduct, string> = {
+  "business-card": "business card",
+  postcard: "postcard",
+  banner: "banner",
+  "rigid-sign": "rigid sign",
+  "window-decal": "window decal",
+};
+
 const titleCase = (s: string) =>
   s.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
@@ -219,37 +257,56 @@ async function main() {
       // rather than what the generation prompt asked for.
       const place = await findTextBox(artAbs);
 
-      const slug = `photo-${industry}-${idx}-${layout}`;
-      const row = {
-        schemaVersion: 1,
-        product: "BUSINESS_CARD" as const,
-        slug,
-        title: `${titleCase(industry)} ${titleCase(layout)}`,
-        description: `A photographic ${layout.replace(/-/g, " ")} business card for ${titleCase(industry).toLowerCase()}.`,
-        industry,
-        style: layout,
-        // Occupation terms live in the row's tags too, so a plain `tags has` query and any future
-        // search that does not go through categoriesForQuery still finds the trade.
-        tags: [industry, layout, "photo", "premium", ...termsForCategory(industry)],
-        orientation: "landscape",
-        palette: [] as string[],
-        fontFamilies: ["Inter"],
-        thumbnailFront: null,
-        thumbnailBack: null,
-        front: buildFront(artRel, place) as unknown as object,
-        back: buildBack(place.light) as unknown as object,
-        source: "MANUAL" as const,
-        active: true,
-      };
+      const bcFront = buildFront(artRel, place) as unknown as Parameters<typeof refitSide>[0];
+      const bcBack = buildBack(place.light) as unknown as Parameters<typeof refitSide>[0];
+      const layoutIndex = Number(idx) - 1;
 
-      if (!dry) {
-        await db.cardTemplate.upsert({ where: { slug }, update: row, create: row });
+      for (const { product, layoutsPerCategory } of PRODUCTS) {
+        // A spread across the ten layouts rather than the first three, so the non-card products do
+        // not all end up showing the same three compositions in every category.
+        const step = Math.max(1, Math.round(10 / layoutsPerCategory));
+        if (layoutsPerCategory < 10 && layoutIndex % step !== 0) continue;
+
+        const doc = docSizeFor(product);
+        const isCard = product === "business-card";
+        const front = isCard ? bcFront : refitSide(bcFront, doc);
+        const back = isCard ? bcBack : refitSide(bcBack, doc);
+        const slug = isCard
+          ? `photo-${industry}-${idx}-${layout}`
+          : `photo-${product}-${industry}-${idx}-${layout}`;
+
+        const row = {
+          schemaVersion: 1,
+          product: PRODUCT_DB_VALUE[product] as "BUSINESS_CARD",
+          slug,
+          title: `${titleCase(industry)} ${titleCase(layout)}`,
+          description: `A photographic ${layout.replace(/-/g, " ")} ${PRODUCT_LABEL[product]} for ${titleCase(industry).toLowerCase()}.`,
+          industry,
+          style: layout,
+          // Occupation terms live in the row's tags too, so a plain `tags has` query and any future
+          // search that does not go through categoriesForQuery still finds the trade.
+          tags: [industry, layout, "photo", "premium", ...termsForCategory(industry)],
+          orientation: front.physicalHeightIn > front.physicalWidthIn ? "portrait" : "landscape",
+          palette: [] as string[],
+          fontFamilies: ["Inter"],
+          thumbnailFront: null,
+          thumbnailBack: null,
+          front: front as unknown as object,
+          back: back as unknown as object,
+          source: "MANUAL" as const,
+          active: true,
+        };
+
+        if (!dry) {
+          await db.cardTemplate.upsert({ where: { slug }, update: row, create: row });
+        }
+        made++;
       }
       made++;
     }
   }
 
-  console.log(`${dry ? "[dry] " : ""}${made} templates, ${skipped} skipped`);
+  console.log(`${dry ? "[dry] " : ""}${made} templates across ${PRODUCTS.length} products, ${skipped} skipped`);
   if (!dry) {
     const n = await db.cardTemplate.count({ where: { product: "BUSINESS_CARD", active: true } });
     console.log(`BUSINESS_CARD active total: ${n}`);

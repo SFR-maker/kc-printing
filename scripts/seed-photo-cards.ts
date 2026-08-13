@@ -21,6 +21,7 @@ import path from "node:path";
 import sharp from "sharp";
 import { db } from "../lib/prisma";
 import { findTextBox } from "./lib-place-text";
+import { termsForCategory } from "../lib/business-card/templates/occupations";
 
 const BEDS_DIR = path.join(process.cwd(), "public", "images", "card-beds");
 const OUT_DIR = path.join(process.cwd(), "public", "images", "card-art");
@@ -227,7 +228,9 @@ async function main() {
         description: `A photographic ${layout.replace(/-/g, " ")} business card for ${titleCase(industry).toLowerCase()}.`,
         industry,
         style: layout,
-        tags: [industry, layout, "photo", "premium"],
+        // Occupation terms live in the row's tags too, so a plain `tags has` query and any future
+        // search that does not go through categoriesForQuery still finds the trade.
+        tags: [industry, layout, "photo", "premium", ...termsForCategory(industry)],
         orientation: "landscape",
         palette: [] as string[],
         fontFamilies: ["Inter"],

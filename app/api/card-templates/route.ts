@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
+import { categoriesForQuery } from "@/lib/business-card/templates/occupations";
 
 const PRODUCT_MAP: Record<string, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN" | "WINDOW_DECAL"> = {
   "business-card": "BUSINESS_CARD",
@@ -24,12 +25,16 @@ export async function GET(req: Request) {
       ...(industry && industry !== "all" ? { industry } : {}),
       ...(style && style !== "all" ? { style } : {}),
       ...(orientation ? { orientation } : {}),
+      // Occupation terms are expanded to categories here as well as on the client, so a
+      // server-filtered fetch and the in-page filter cannot disagree about what "plumber" means.
       ...(q
         ? {
             OR: [
               { title: { contains: q, mode: "insensitive" } },
               { description: { contains: q, mode: "insensitive" } },
+              { industry: { contains: q, mode: "insensitive" } },
               { tags: { has: q.toLowerCase() } },
+              ...(categoriesForQuery(q).length ? [{ industry: { in: categoriesForQuery(q) } }] : []),
             ],
           }
         : {}),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { categoriesForQuery } from "@/lib/business-card/templates/occupations";
 import Link from "next/link";
 import { Search, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -126,7 +127,22 @@ export function TemplateGallery({
       if (style !== "all" && t.style !== style) return false;
       if (q.trim()) {
         const needle = q.trim().toLowerCase();
-        if (!t.title.toLowerCase().includes(needle) && !t.description.toLowerCase().includes(needle) && !t.tags.some((tag) => tag.includes(needle))) return false;
+        /*
+         * Match the job as well as the words on the card.
+         *
+         * Categories are the shop's filing system, not the words customers use: "plumber" did not
+         * match the `plumbing` category and "hairdresser" matched nothing at all, so the gallery
+         * looked empty for trades that had dozens of cards. categoriesForQuery expands the query
+         * into the categories an occupation belongs to.
+         */
+        const viaOccupation = new Set(categoriesForQuery(needle));
+        const hit =
+          t.title.toLowerCase().includes(needle) ||
+          t.description.toLowerCase().includes(needle) ||
+          t.tags.some((tag) => tag.toLowerCase().includes(needle)) ||
+          t.industry.toLowerCase().includes(needle) ||
+          viaOccupation.has(t.industry);
+        if (!hit) return false;
       }
       return true;
     });

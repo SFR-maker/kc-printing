@@ -24,7 +24,19 @@ import sharp from "sharp";
 import { EXTRA_CATEGORIES } from "./card-bed-categories";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
-const MODEL = "google/gemini-3-pro-image";
+/*
+ * Chosen by a bake-off against the same prompt, not by reputation.
+ *
+ *   gemini-3-pro-image          ~$0.58/image   (what phase 1 used, and what exhausted the grant)
+ *   openai/gpt-5-image-mini      $0.049        and 89 seconds per image
+ *   google/gemini-2.5-flash-image $0.0388
+ *   gemini-3.1-flash-lite-image  $0.0336       8 seconds
+ *
+ * flash-lite is 17x cheaper than the model phase 1 used and it won on quality too: the diagonal
+ * split was cleaner, the colour panel genuinely flat and empty, and it did not add the dark
+ * card-shaped border that every phase 1 bed had to be cropped to remove.
+ */
+const MODEL = process.env.BED_MODEL ?? "google/gemini-3.1-flash-lite-image";
 const OUT_DIR = path.join(process.cwd(), "public", "images", "card-beds");
 
 /** Concurrency. The image endpoint is slow and rate limits above roughly this. */

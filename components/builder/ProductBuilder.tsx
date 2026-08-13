@@ -880,8 +880,17 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       : "Your artwork will appear here";
 
   return (
-    <div className="section-pad container-tight max-w-6xl">
-      <div className="mb-8">
+    <div
+      className={cn(
+        "mx-auto",
+        // The configurator earns the extra width: at max-w-6xl the options column was 460px, which
+        // truncated "Horizontal" to "Horizont" and wrapped the size cards into a ragged 2+2. And
+        // section-pad put 200px of nothing above the H1, so on a 900px laptop a third of the first
+        // screen was empty before the product appeared.
+        isConfigurator ? "max-w-[1480px] px-4 pb-16 pt-6 sm:px-6 lg:px-8" : "section-pad max-w-6xl"
+      )}
+    >
+      <div className={cn(isConfigurator ? "mb-5" : "mb-8")}>
         <h1 className="text-3xl font-black text-kc-dark mb-2">Order {service.name}</h1>
         {testCode && (
           // Deliberately loud. This mode reaches live Stripe and creates a real order row, so it
@@ -959,13 +968,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         className={cn(
           "grid grid-cols-1 gap-8",
           isConfigurator
-            ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-10"
+            // grid-rows auto/1fr matters: the options column spans both rows, and without it the
+            // browser shares its height evenly, stretching row 1 and stranding the price panel ~370px
+            // below the preview - off screen on a laptop, on the page whose whole point is the price.
+            ? "lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-6 xl:grid-cols-[minmax(0,640px)_minmax(0,1fr)]"
             : showSummaryPanel && "lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10"
         )}
       >
       {isConfigurator && (
         <ProductPreviewPane
-          className="lg:col-start-1 lg:row-start-1 lg:row-span-2"
+          className="lg:col-start-1 lg:row-start-1"
           svg={summaryPreviewSvg}
           fileUrl={summaryPreviewFile}
           fileName={artwork.front.fileName ?? null}
@@ -977,7 +989,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         />
       )}
       <form
-        className={cn(isConfigurator && "lg:col-start-2 lg:row-start-1")}
+        className={cn(isConfigurator && "lg:col-start-2 lg:row-start-1 lg:row-span-2")}
         onSubmit={handleSubmit(onSubmit, (invalid) => {
           // A submit button that does nothing is worse than one that explains itself. Validation can
           // only fail here on a field rendered by another step, so name it rather than going quiet.
@@ -1871,7 +1883,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
 
       {showSummaryPanel && (
         <OrderSummaryPanel
-          className={cn(isConfigurator && "lg:col-start-2 lg:row-start-2")}
+          className={cn(isConfigurator && "lg:col-start-1 lg:row-start-2 lg:-mt-2")}
           // The preview has a column of its own on this step; repeating it in the rail would show
           // the same card twice on one screen at two different sizes.
           showPreview={!isConfigurator}

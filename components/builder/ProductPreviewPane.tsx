@@ -77,7 +77,7 @@ export function ProductPreviewPane({
       >
         {/* A tint behind the artwork, so a white card on a white page still reads as an object. */}
         <div className="absolute inset-0 bg-[linear-gradient(135deg,#F7F7F8_0%,#EFEFF1_100%)]" />
-        <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-6">
+        <div className="relative flex h-full w-full items-center justify-center">
           <PreviewBody
             svg={svg}
             fileUrl={fileUrl}
@@ -100,7 +100,7 @@ function PreviewBody({
       <div
         // The SVG carries pixel width/height at its render DPI, which would overflow the frame; the
         // viewBox is in inches, so constraining both axes shows the whole piece at true proportions.
-        className="h-full w-full [&>svg]:h-full [&>svg]:w-full [&>svg]:object-contain drop-shadow-[0_8px_24px_rgba(12,10,9,0.18)]"
+        className="h-full w-full p-4 sm:p-6 [&>svg]:h-full [&>svg]:w-full [&>svg]:object-contain drop-shadow-[0_8px_24px_rgba(12,10,9,0.18)]"
         role="img"
         aria-label={alt}
         dangerouslySetInnerHTML={{ __html: svg }}
@@ -119,7 +119,13 @@ function PreviewBody({
     <img
       src={src}
       alt={alt}
-      className="max-h-full max-w-full object-contain drop-shadow-[0_8px_24px_rgba(12,10,9,0.18)]"
+      className={cn(
+        // Stock product photography fills the frame; a customer's own artwork is contained, because
+        // cropping someone's card to fit a box is not a preview of anything.
+        fileUrl
+          ? "max-h-full max-w-full object-contain drop-shadow-[0_8px_24px_rgba(12,10,9,0.18)]"
+          : "h-full w-full object-cover"
+      )}
     />
   );
 }
@@ -181,7 +187,7 @@ function PdfPreview({ url, alt }: { url: string; alt: string }) {
   }, [url]);
 
   return (
-    <div ref={boxRef} className="relative flex h-full w-full items-center justify-center">
+    <div ref={boxRef} className="relative flex h-full w-full items-center justify-center p-4 sm:p-6">
       <canvas
         ref={canvasRef}
         aria-label={alt}

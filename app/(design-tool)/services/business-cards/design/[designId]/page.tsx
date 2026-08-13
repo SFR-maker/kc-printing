@@ -7,8 +7,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function BusinessCardEditorPage({ params }: { params: Promise<{ designId: string }> }) {
+/** `?w=` and `?h=` carry the finished size chosen in the order flow, so a template opens at the
+ * size the customer is actually buying rather than the one it was authored at. */
+function targetFrom(sp: Record<string, string | string[] | undefined>) {
+  const n = (v: string | string[] | undefined) => (Array.isArray(v) ? Number(v[0]) : Number(v));
+  const w = n(sp.w), h = n(sp.h);
+  return Number.isFinite(w) && Number.isFinite(h) && w > 0 && h > 0 ? { widthIn: w, heightIn: h } : undefined;
+}
+
+export default async function BusinessCardEditorPage({ params, searchParams }: { params: Promise<{ designId: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { designId: rawId } = await params;
-  const { initialDesign, savedDesignId, templatePalette, isSignedIn } = await loadEditorDesign(rawId, "business-card");
+  const { initialDesign, savedDesignId, templatePalette, isSignedIn } = await loadEditorDesign(rawId, "business-card", targetFrom(await searchParams));
   return <CardEditor initialDesign={initialDesign} designId={savedDesignId} isSignedIn={isSignedIn} templatePalette={templatePalette} product="business-card" />;
 }

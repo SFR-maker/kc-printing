@@ -1195,7 +1195,20 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                       : backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)
                 }
                 spec={artworkSpec}
-                designHref={`/services/${service.slug}/design`}
+                /*
+                 * Carry the chosen finished size into the studio.
+                 *
+                 * Templates are authored at one geometry, so without this someone who picked a
+                 * vertical card was handed artwork built for a landscape one: background stretched,
+                 * text off its panel, type sized for a card twice as wide. The editor refits the
+                 * template to these dimensions on load. artworkSpec is the same source the upload
+                 * step quotes, so the studio and the upload path cannot disagree about the size.
+                 */
+                designHref={
+                  artworkSpec
+                    ? `/services/${service.slug}/design?w=${artworkSpec.trimWidthIn + artworkSpec.bleedIn * 2}&h=${artworkSpec.trimHeightIn + artworkSpec.bleedIn * 2}`
+                    : `/services/${service.slug}/design`
+                }
               />
                 </>
               )}

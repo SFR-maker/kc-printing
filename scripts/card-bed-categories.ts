@@ -11,7 +11,7 @@
 export interface BedCategory {
   slug: string;
   label: string;
-  phase: 1 | 2 | 3 | 4;
+  phase: 1 | 2 | 3 | 4 | 5;
   subjects: string[];
   palette: string;
 }

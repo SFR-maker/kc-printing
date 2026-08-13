@@ -22,6 +22,7 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { EXTRA_CATEGORIES } from "./card-bed-categories";
+import { TRADE_CATEGORIES } from "./card-bed-trades";
 
 const OPENROUTER_BASE = "https://openrouter.ai/api/v1";
 /*
@@ -149,7 +150,7 @@ const LAYOUTS: Layout[] = [
 interface Industry {
   slug: string;
   label: string;
-  phase: 1 | 2 | 3 | 4;
+  phase: 1 | 2 | 3 | 4 | 5;
   subjects: string[];
   palette: string;
 }
@@ -398,6 +399,7 @@ const INDUSTRIES: Industry[] = [
     ],
   },
   ...EXTRA_CATEGORIES,
+  ...TRADE_CATEGORIES,
 ];
 
 async function generate(prompt: string, apiKey: string): Promise<Buffer> {
@@ -457,7 +459,7 @@ async function main() {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error("OPENROUTER_API_KEY is not set");
 
-  const phase = Number(String(process.argv[2] ?? "phase1").replace("phase", "")) as 1 | 2 | 3 | 4;
+  const phase = Number(String(process.argv[2] ?? "phase1").replace("phase", "")) as 1 | 2 | 3 | 4 | 5;
   const onlyIdx = process.argv.indexOf("--only");
   const only = onlyIdx > -1 ? process.argv[onlyIdx + 1] : null;
 

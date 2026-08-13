@@ -161,9 +161,6 @@ export default async function HomePage() {
                     Browse products <ArrowRight className="ml-2 h-4 w-4" strokeWidth={2} />
                   </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className={BTN_SECONDARY}>
-                  <Link href="/services/business-cards/design">Start designing</Link>
-                </Button>
               </div>
             </Reveal>
           </div>
@@ -309,7 +306,7 @@ export default async function HomePage() {
               picturing, upload a logo or a few references, and a real person builds the layout.
             </p>
             <Button asChild size="lg" className={`${BTN_PRIMARY} mt-8`}>
-              <Link href="/services/business-cards/design">Start designing</Link>
+              <Link href="/contact">Talk to a designer</Link>
             </Button>
           </Reveal>
         </div>

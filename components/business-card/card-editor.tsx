@@ -49,6 +49,8 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  /** Surfaced on the proof screen when the save that must precede checkout fails. */
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [resumeAvailable, setResumeAvailable] = useState(false);
   const [propertiesSheetOpen, setPropertiesSheetOpen] = useState(false);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -95,14 +97,25 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
     return () => window.removeEventListener("beforeunload", beforeUnload);
   }, [dirty]);
 
-  const handleSave = useCallback(async () => {
+  /**
+   * Saves, and returns the id the design actually ended up with.
+   *
+   * It used to return nothing, and the caller read the `designId` prop instead. Arriving from a
+   * template that prop is null - the template is not a saved design - so "Approve and order" sent
+   * the customer to `/order?designId=&proof=approved`. The order page got an empty id, found no
+   * artwork, and the design they had just approved was silently dropped on the way to checkout.
+   */
+  const handleSave = useCallback(async (): Promise<string | null> => {
     setSaving(true);
     saveDesignLocally(LOCAL_KEY, design);
+    let effectiveId = designId ?? null;
     await persist(design, designId, product, (newId) => {
+      if (newId) effectiveId = newId;
       if (!designId && newId) router.replace(`/services/${routeSegment}/design/${newId}`);
     }, true);
     markSaved();
     setSaving(false);
+    return effectiveId;
   }, [design, designId, router, markSaved, product, routeSegment]);
 
   const handleExport = useCallback(async () => {
@@ -149,19 +162,33 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
 
   if (showProof) {
     return (
+      <>
+      {saveError && (
+        <div role="alert" className="border-b border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {saveError}
+        </div>
+      )}
       <ProofScreen
         design={design}
         onBack={() => setShowProof(false)}
         confirming={confirming}
         onConfirm={async () => {
           setConfirming(true);
-          await handleSave();
+          setSaveError(null);
+          const savedId = await handleSave();
+          if (!savedId) {
+            // Better to stay put and say so than to send someone to checkout with no artwork.
+            setConfirming(false);
+            setSaveError("We could not save your design. Please check your connection and try again.");
+            return;
+          }
           // `proof=approved` is only ever set here, after the review checkbox has been ticked, so
           // the order records a real consent rather than assuming one from the design's presence.
-          const params = new URLSearchParams({ designId: designId ?? "", proof: "approved" });
+          const params = new URLSearchParams({ designId: savedId, proof: "approved" });
           router.push(`/services/${routeSegment}/order?${params.toString()}`);
         }}
       />
+      </>
     );
   }
 

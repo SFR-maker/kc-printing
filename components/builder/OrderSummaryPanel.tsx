@@ -44,6 +44,9 @@ export interface OrderSummaryPanelProps {
   ctaDisabled?: boolean;
   /** Shown under the CTA, e.g. that tax and shipping are added at checkout. */
   footnote?: string;
+  className?: string;
+  /** False when a larger preview owns its own column elsewhere on the page. */
+  showPreview?: boolean;
 }
 
 export function OrderSummaryPanel(props: OrderSummaryPanelProps) {
@@ -86,7 +89,7 @@ export function OrderSummaryPanel(props: OrderSummaryPanelProps) {
         and a preview the panel is taller than a 768px viewport, and without them the CTA sits below
         the fold permanently - a sticky summary whose button you cannot reach is worse than no panel.
       */}
-      <aside data-testid="order-summary" aria-label="Order summary" className="hidden lg:block">
+      <aside data-testid="order-summary" aria-label="Order summary" className={cn("hidden lg:block", props.className)}>
         <div className="sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto rounded-2xl border-2 border-kc-border bg-white p-5 shadow-[0_2px_24px_-12px_rgba(12,10,9,0.18)]">
           <SummaryBody {...props} />
         </div>
@@ -100,6 +103,7 @@ export function OrderSummaryPanel(props: OrderSummaryPanelProps) {
 function SummaryBody({
   productName, previewSvg, previewImageUrl, fallbackImageUrl, previewAlt,
   lines, total, loading, unavailableReason, shippingTiers, ctaLabel, onCta, ctaDisabled, footnote,
+  showPreview = true,
 }: OrderSummaryPanelProps) {
   /**
    * The span the offered shipping tiers cover, not the quickest of them.
@@ -117,12 +121,14 @@ function SummaryBody({
 
   return (
     <div className="space-y-4">
-      <Preview
-        svg={previewSvg}
-        imageUrl={previewImageUrl}
-        fallbackImageUrl={fallbackImageUrl}
-        alt={previewAlt ?? `${productName} preview`}
-      />
+      {showPreview && (
+        <Preview
+          svg={previewSvg}
+          imageUrl={previewImageUrl}
+          fallbackImageUrl={fallbackImageUrl}
+          alt={previewAlt ?? `${productName} preview`}
+        />
+      )}
 
       <div>
         <h2 className="text-[17px] font-bold text-kc-dark">{productName}</h2>

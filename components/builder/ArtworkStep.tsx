@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Loader2, Upload, PenLine, FileCheck2, Check } from "lucide-react";
+import { Loader2, Upload, PenLine, FileCheck2, Check, Sparkles, LayoutTemplate } from "lucide-react";
 import { useUploadThing } from "@/lib/uploadthing-client";
 import { docSize, type PrintSpec } from "@/lib/print/spec";
 import type { ArtworkInspection } from "@/lib/business-card/inspect-artwork";
@@ -104,6 +104,7 @@ export function ArtworkStep({
   needsBack,
   backLabel,
   spec,
+  designHref,
 }: {
   value: ArtworkState;
   onChange: (next: ArtworkState) => void;
@@ -113,6 +114,8 @@ export function ArtworkStep({
   needsBack: boolean;
   /** "Back (full colour)" or "Back (grayscale)", so the right file gets supplied. */
   backLabel: string;
+  /** Design studio entry point for this product, e.g. "/services/business-cards/design". */
+  designHref?: string;
   /**
    * Geometry and resolution floors for whatever is being printed.
    *
@@ -164,7 +167,34 @@ export function ArtworkStep({
   }
 
   return (
+    /*
+     * Four ways in, not two.
+     *
+     * This offered only "upload a file" and "have us design it" - so the two things the site is
+     * proudest of, the free design studio and the AI generator, were invisible at the exact moment
+     * the customer is deciding how to get artwork. They existed, but only from the product page,
+     * which is a page this flow replaced. Someone with no logo and no designer had one visible
+     * option here and it cost money.
+     */
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {designHref && (
+        <Choice
+          selected={false}
+          icon={<Sparkles className="h-5 w-5" strokeWidth={1.75} />}
+          title="Create it with AI"
+          body="Describe your business and get four different designs back in about a minute. Free to try, edit any of them afterwards."
+          onClick={() => { window.location.href = `${designHref}?startAi=1`; }}
+        />
+      )}
+      {designHref && (
+        <Choice
+          selected={false}
+          icon={<LayoutTemplate className="h-5 w-5" strokeWidth={1.75} />}
+          title="Start from a template"
+          body="Pick a ready-made layout and change the text, colours and images in our free design studio."
+          onClick={() => { window.location.href = designHref; }}
+        />
+      )}
       <Choice
         selected={false}
         icon={<Upload className="h-5 w-5" strokeWidth={1.75} />}

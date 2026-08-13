@@ -26,6 +26,7 @@ import { bannerTrimInches, orientedSizeLabel } from "@/components/builder/Banner
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
 import { WindowDecalPrintSpec, type WindowDecalPriceState } from "@/components/builder/WindowDecalPrintSpec";
 import { OrderSummaryPanel, type SummaryLine } from "@/components/builder/OrderSummaryPanel";
+import { ProductPreviewPane } from "@/components/builder/ProductPreviewPane";
 import { ArtworkSummary, type ArtworkSource } from "@/components/builder/ArtworkSummary";
 import type { BannerPriceState } from "@/components/builder/BannerPrintSpec";
 
@@ -424,6 +425,41 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   }, [cardDesignId]);
 
   /*
+   * The step lives in the URL, so the browser's own Back button steps back through the order.
+   *
+   * It previously did not: the whole flow was one history entry, so pressing Back - the control
+   * people reach for first, especially on a phone where it is a hardware button - left the site
+   * entirely and took the configuration with it. The in-page Back was also simply disabled on the
+   * first step, which is the "does nothing" people notice.
+   *
+   * replaceState on mount rather than push, so arriving at the page does not put a duplicate entry
+   * behind the customer immediately.
+   */
+  useEffect(() => {
+    const onPop = (e: PopStateEvent) => {
+      const s = (e.state as { orderStep?: number } | null)?.orderStep;
+      if (typeof s === "number") setStep(Math.max(0, Math.min(s, stepKeys.length - 1)));
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [stepKeys.length]);
+
+  const historyStep = useRef<number | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (step === 0) url.searchParams.delete("step");
+    else url.searchParams.set("step", stepKeys[step] ?? String(step));
+
+    if (historyStep.current === null) {
+      window.history.replaceState({ orderStep: step }, "", url);
+    } else if (historyStep.current !== step) {
+      window.history.pushState({ orderStep: step }, "", url);
+    }
+    historyStep.current = step;
+  }, [step, stepKeys]);
+
+  /*
    * Only on an actual change of step, and never on first render: stealing focus the moment the page
    * loads would drag a sighted keyboard user past the header before they had seen it.
    */
@@ -814,6 +850,35 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   const summaryPreviewSvg = designPreview?.front ?? null;
   const summaryPreviewImage = !summaryPreviewSvg && artwork.path === "UPLOAD" ? artwork.front.fileUrl ?? null : null;
 
+  /*
+   * The configurator layout: the first step, and only when there are real print specs to configure.
+   * The package-only products still run as a plain stepped form - there is no size, no orientation
+   * and no paper to show, so a large preview beside four price tiers would be decoration.
+   */
+  const isConfigurator = currentStep === "specs" && hasPrintSpec;
+
+  /** The uploaded file itself, so a PDF can be rasterised properly rather than pointed at. */
+  const summaryPreviewFile = !summaryPreviewSvg ? artwork.front.fileUrl ?? null : null;
+
+  /**
+   * The finished size the preview frame should take.
+   *
+   * This is what makes Horizontal and Vertical visibly different before any artwork exists: the
+   * empty frame itself turns on its end. It reads the same source the artwork spec does, so the
+   * shape on screen and the document the customer is asked to supply cannot drift apart.
+   */
+  const previewTrim = (() => {
+    if (service.slug === "business-cards") return bcTrimInches((values.bcSpec ?? DEFAULT_BC_SPEC).sizeId);
+    if (artworkSpec) return { widthIn: artworkSpec.trimWidthIn, heightIn: artworkSpec.trimHeightIn };
+    return null;
+  })();
+
+  const previewCaption = summaryPreviewSvg
+    ? (designPreview?.back ? "Front - your design" : "Your design")
+    : summaryPreviewFile
+      ? artwork.front.fileName ?? "Your uploaded artwork"
+      : "Your artwork will appear here";
+
   return (
     <div className="section-pad container-tight max-w-6xl">
       <div className="mb-8">
@@ -879,8 +944,40 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         panel renders itself as a bottom sheet instead, so the grid collapses to a single column and
         nothing is squeezed.
       */}
-      <div className={cn("grid grid-cols-1 gap-8", showSummaryPanel && "lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10")}>
+      {/*
+        Two layouts, not one.
+
+        On the first step this is a product page in the sense a customer means it: the piece on the
+        left at a size worth looking at, and every choice on the right next to the price. That is the
+        shape people already know from every print shop they have used, and it replaced a stepped
+        form where the preview was a 260px thumbnail in a side rail.
+
+        From the artwork step on, the work is the form itself - placing a file, writing a brief - so
+        the form takes the wide column back and the summary returns to a narrow rail beside it.
+      */}
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-8",
+          isConfigurator
+            ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,460px)] lg:gap-10"
+            : showSummaryPanel && "lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10"
+        )}
+      >
+      {isConfigurator && (
+        <ProductPreviewPane
+          className="lg:col-start-1 lg:row-start-1 lg:row-span-2"
+          svg={summaryPreviewSvg}
+          fileUrl={summaryPreviewFile}
+          fileName={artwork.front.fileName ?? null}
+          fallbackImageUrl={`/images/print/${service.slug}.webp`}
+          alt={`${service.name} preview`}
+          widthIn={previewTrim?.widthIn}
+          heightIn={previewTrim?.heightIn}
+          caption={previewCaption}
+        />
+      )}
       <form
+        className={cn(isConfigurator && "lg:col-start-2 lg:row-start-1")}
         onSubmit={handleSubmit(onSubmit, (invalid) => {
           // A submit button that does nothing is worse than one that explains itself. Validation can
           // only fail here on a field rendered by another step, so name it rather than going quiet.
@@ -1086,6 +1183,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                       : backArtworkLabel((values.bcSpec ?? DEFAULT_BC_SPEC).colorId)
                 }
                 spec={artworkSpec}
+                designHref={`/services/${service.slug}/design`}
               />
                 </>
               )}
@@ -1721,8 +1819,13 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
           <Button
             type="button"
             variant="outline"
-            onClick={() => setStep((s) => s - 1)}
-            disabled={step === 0}
+            onClick={() => {
+              // Step 0's Back used to be disabled, which reads as broken rather than as "this is the
+              // start". Going through history keeps whatever brought them here - a template gallery,
+              // the products list - instead of guessing a destination.
+              if (step === 0) window.history.back();
+              else setStep((s) => s - 1);
+            }}
             className="border-kc-border"
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
@@ -1768,6 +1871,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
 
       {showSummaryPanel && (
         <OrderSummaryPanel
+          className={cn(isConfigurator && "lg:col-start-2 lg:row-start-2")}
+          // The preview has a column of its own on this step; repeating it in the rail would show
+          // the same card twice on one screen at two different sizes.
+          showPreview={!isConfigurator}
           productName={service.name}
           previewSvg={summaryPreviewSvg}
           previewImageUrl={summaryPreviewImage}

@@ -16,6 +16,14 @@ interface ServicePageContentProps {
   aiDesignHref?: string;
   heroImages?: ProductThumbnail[];
   /**
+   * "details-only" drops the hero and the closing call to action.
+   *
+   * Used where a configurator already opens the page: that configurator is the hero, carries the
+   * price and owns the primary button, so a second hero above it and a second "start your order"
+   * below it would ask for the same decision three times with three different controls.
+   */
+  variant?: "full" | "details-only";
+  /**
    * Photographed variants of the product, where the first decision a customer has to make is which
    * variant they want rather than what size it is.
    *
@@ -74,6 +82,7 @@ export function ServicePageContent({
   heroImages,
   variants,
   locale = "en",
+  variant = "full",
 }: ServicePageContentProps) {
   const t = getDictionary(locale).service;
   const common = getDictionary(locale).common;
@@ -88,6 +97,7 @@ export function ServicePageContent({
   return (
     <>
       {/* ── Hero: h1 carries the product name, tagline drops to subtext ── */}
+      {variant === "full" && (
       <section className="relative bg-kc-bg">
         <div className="reg-bar relative z-20" />
 
@@ -154,6 +164,7 @@ export function ServicePageContent({
           </div>
         </div>
       </section>
+      )}
 
       {/* ── What's included ── */}
       <section className="border-y border-kc-dark/10 bg-kc-bg">
@@ -192,12 +203,28 @@ export function ServicePageContent({
                   {t.startFromDesignBody}
                 </p>
               </div>
-              <Link
-                href={portfolioHref}
-                className="text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
-              >
-                {t.seeAllExamples}
-              </Link>
+              {/*
+                Two links, because they go to two different places and one of them is the studio.
+                Every tile below deep-links to a single template (/design/t-<slug>), so before this
+                there was no link to the studio itself once the hero was gone - on a phone the only
+                way in was a scripted button inside the configurator.
+              */}
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                {designStudioHref && (
+                  <Link
+                    href={designStudioHref}
+                    className="text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+                  >
+                    Open the design studio
+                  </Link>
+                )}
+                <Link
+                  href={portfolioHref}
+                  className="text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
+                >
+                  {t.seeAllExamples}
+                </Link>
+              </div>
             </Reveal>
 
             <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -440,6 +467,7 @@ export function ServicePageContent({
       </section>
 
       {/* ── Closing ink block ── */}
+      {variant === "full" && (
       <section className="bg-kc-ink">
         <div className="reg-bar" />
         <div className="container-tight px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
@@ -470,6 +498,7 @@ export function ServicePageContent({
           </div>
         </div>
       </section>
+      )}
 
       <script
         type="application/ld+json"

@@ -54,3 +54,6 @@ test-results/
 /public/robots.txt
 /public/sitemap.xml
 /public/sitemap-*.xml
+
+# local server log
+.next-start.log

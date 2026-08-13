@@ -16,7 +16,7 @@ import { cn, formatDollars } from "@/lib/utils";
 import { calculatePrice } from "@/lib/pricing";
 import { FREE_TEST_SHIPPING, transitLabel } from "@/lib/shipping/rates";
 import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
-import { calculateBusinessCardPrice, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
+import { calculateBusinessCardPrice, bcTrimInches, BC_SIZES, BC_PAPERS, BC_COLORS } from "@/lib/pricing/business-cards";
 import { BusinessCardPrintSpec, SIDES_LABEL, type BusinessCardSpec } from "@/components/builder/BusinessCardPrintSpec";
 import { BannerPrintSpec, DEFAULT_BANNER_SPEC, type BannerSpec } from "@/components/builder/BannerPrintSpec";
 import {
@@ -534,10 +534,20 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       const size = windowSizeById(spec.material as WindowMaterialId, spec.sizeId);
       return printSpec("window-decals", size?.trimWidthIn ?? 24, size?.trimHeightIn ?? 18);
     }
+    /*
+     * The card the customer actually chose, not the standard one.
+     *
+     * This used to be PRINT_SPEC's constants, which are the 3.5 x 2 US standard - so all four sizes
+     * and both orientations produced the same document. Someone ordering a vertical 1.75" x 3" card
+     * was shown "Size 1.75in x 3in, Vertical" in the summary and asked to upload a 3.6 x 2.1
+     * landscape file in the same breath, then proofed against it.
+     */
+    const bcTrim = bcTrimInches((values.bcSpec ?? DEFAULT_BC_SPEC).sizeId)
+      ?? { widthIn: PRINT_SPEC.trimWidthIn, heightIn: PRINT_SPEC.trimHeightIn };
     return printSpec(
       "business-cards",
-      PRINT_SPEC.trimWidthIn,
-      PRINT_SPEC.trimHeightIn,
+      bcTrim.widthIn,
+      bcTrim.heightIn,
       values.bcSpec?.roundCorners ? BUSINESS_CARD_BLEED.rounded : BUSINESS_CARD_BLEED.square
     );
   })();

@@ -120,7 +120,15 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${design.title.replace(/\s+/g, "-").toLowerCase()}.pdf`;
+      /*
+       * Honour the filename the server chose.
+       *
+       * A watermarked export is named "-proof" precisely so it cannot be mistaken for the final
+       * artwork. Overwriting that with the design title handed the customer a file that looked
+       * like the real thing and was not.
+       */
+      const serverName = res.headers.get("content-disposition")?.match(/filename="?([^\";]+)"?/)?.[1];
+      a.download = serverName ?? `${design.title.replace(/\s+/g, "-").toLowerCase()}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

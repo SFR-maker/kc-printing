@@ -44,6 +44,31 @@ export const BC_PAPERS: BcPaper[] = data.papers;
 export const BC_COLORS: BcColor[] = data.colors;
 export const BC_ALL_QUANTITIES: number[] = data.quantities;
 
+/**
+ * Finished size of a business card size id, in inches, with its orientation applied.
+ *
+ * The catalogue states dimensions only in the label ("2\" x 3.5\" Horizontal U.S. Standard") - the
+ * `width`/`height` fields are absent from the data - so they are parsed from it. Orientation decides
+ * which of the two numbers is the width.
+ *
+ * This exists because the artwork step used a single pair of constants for every card. Choosing
+ * 1.75" x 3", or any vertical card, left the customer being asked to upload a 3.5 x 2 landscape
+ * document while the order summary beside it said something else entirely.
+ */
+export function bcTrimInches(sizeId: number): { widthIn: number; heightIn: number } | null {
+  const size = BC_SIZES.find((s) => s.id === sizeId);
+  if (!size) return null;
+  const nums = (size.label.match(/[\d.]+/g) ?? []).map(Number).filter((n) => Number.isFinite(n));
+  if (nums.length < 2) return null;
+  const [a, b] = nums;
+  const short = Math.min(a, b);
+  const long = Math.max(a, b);
+  // orientation 1 is Horizontal, 2 is Vertical.
+  return size.orientation === 2
+    ? { widthIn: short, heightIn: long }
+    : { widthIn: long, heightIn: short };
+}
+
 const ROUND_CORNERS_PRICE: Record<number, number> = {
   25: 5, 50: 5, 100: 6, 250: 8, 500: 14, 1000: 24, 2500: 58, 5000: 111, 10000: 181,
   15000: 251, 20000: 321, 25000: 391, 30000: 461, 35000: 531, 40000: 601, 45000: 671,

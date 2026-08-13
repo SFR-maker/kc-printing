@@ -1,132 +1,132 @@
 {
   "base": "https://611printing.com",
-  "at": "2026-08-07T15:16:18.962Z",
+  "at": "2026-08-07T15:27:00.725Z",
   "results": [
     {
       "n": 1,
       "area": "pages",
       "name": "/ responds",
       "status": "PASS",
-      "detail": "200 in 221ms"
+      "detail": "200 in 380ms"
     },
     {
       "n": 2,
       "area": "pages",
       "name": "/services responds",
       "status": "PASS",
-      "detail": "200 in 346ms"
+      "detail": "200 in 337ms"
     },
     {
       "n": 3,
       "area": "pages",
       "name": "/services/business-cards responds",
       "status": "PASS",
-      "detail": "200 in 75ms"
+      "detail": "200 in 350ms"
     },
     {
       "n": 4,
       "area": "pages",
       "name": "/services/postcards responds",
       "status": "PASS",
-      "detail": "200 in 113ms"
+      "detail": "200 in 257ms"
     },
     {
       "n": 5,
       "area": "pages",
       "name": "/services/banners responds",
       "status": "PASS",
-      "detail": "200 in 171ms"
+      "detail": "200 in 296ms"
     },
     {
       "n": 6,
       "area": "pages",
       "name": "/services/rigid-signs responds",
       "status": "PASS",
-      "detail": "200 in 179ms"
+      "detail": "200 in 355ms"
     },
     {
       "n": 7,
       "area": "pages",
       "name": "/services/business-cards/order responds",
       "status": "PASS",
-      "detail": "200 in 245ms"
+      "detail": "200 in 517ms"
     },
     {
       "n": 8,
       "area": "pages",
       "name": "/services/postcards/order responds",
       "status": "PASS",
-      "detail": "200 in 233ms"
+      "detail": "200 in 320ms"
     },
     {
       "n": 9,
       "area": "pages",
       "name": "/services/banners/order responds",
       "status": "PASS",
-      "detail": "200 in 116ms"
+      "detail": "200 in 139ms"
     },
     {
       "n": 10,
       "area": "pages",
       "name": "/services/rigid-signs/order responds",
       "status": "PASS",
-      "detail": "200 in 123ms"
+      "detail": "200 in 142ms"
     },
     {
       "n": 11,
       "area": "pages",
       "name": "/pricing responds",
       "status": "PASS",
-      "detail": "200 in 69ms"
+      "detail": "200 in 362ms"
     },
     {
       "n": 12,
       "area": "pages",
       "name": "/portfolio responds",
       "status": "PASS",
-      "detail": "200 in 106ms"
+      "detail": "200 in 261ms"
     },
     {
       "n": 13,
       "area": "pages",
       "name": "/contact responds",
       "status": "PASS",
-      "detail": "200 in 83ms"
+      "detail": "200 in 199ms"
     },
     {
       "n": 14,
       "area": "pages",
       "name": "/faq responds",
       "status": "PASS",
-      "detail": "200 in 186ms"
+      "detail": "200 in 344ms"
     },
     {
       "n": 15,
       "area": "pages",
       "name": "/about responds",
       "status": "PASS",
-      "detail": "200 in 70ms"
+      "detail": "200 in 206ms"
     },
     {
       "n": 16,
       "area": "pages",
       "name": "/terms responds",
       "status": "PASS",
-      "detail": "200 in 72ms"
+      "detail": "200 in 220ms"
     },
     {
       "n": 17,
       "area": "pages",
       "name": "/privacy responds",
       "status": "PASS",
-      "detail": "200 in 64ms"
+      "detail": "200 in 220ms"
     },
     {
       "n": 18,
       "area": "pages",
       "name": "/refund-policy responds",
       "status": "PASS",
-      "detail": "200 in 70ms"
+      "detail": "200 in 180ms"
     },
     {
       "n": 19,
@@ -923,7 +923,7 @@
       "area": "perf",
       "name": "/ responds under 2s",
       "status": "PASS",
-      "detail": "195ms"
+      "detail": "186ms"
     },
     {
       "n": 138,
@@ -937,7 +937,7 @@
       "area": "perf",
       "name": "/pricing responds under 2s",
       "status": "PASS",
-      "detail": "96ms"
+      "detail": "118ms"
     },
     {
       "n": 140,
@@ -951,7 +951,7 @@
       "area": "perf",
       "name": "/services/business-cards/order responds under 2s",
       "status": "PASS",
-      "detail": "120ms"
+      "detail": "175ms"
     },
     {
       "n": 142,

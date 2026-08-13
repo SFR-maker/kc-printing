@@ -136,7 +136,21 @@ function withWatermark(svg: string, widthIn: number, heightIn: number, on: boole
 export async function exportSidePng(side: CardSide, watermark = false): Promise<RasterExportResult> {
   const resolved = await resolveSideImages(side);
   const svg = withWatermark(renderSideToSvg(resolved, DPI), side.physicalWidthIn, side.physicalHeightIn, watermark);
-  const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
+  /*
+   * Stamp the real resolution into the file.
+   *
+   * The raster was always 300 DPI by construction, but sharp writes a pHYs chunk of 72 unless told
+   * otherwise - so the PNG *claimed* 72. Opened in any print tool the card came in at 15" x 8.75"
+   * instead of 3.6" x 2.1", and a prepress operator either rescales it by hand or bounces the job.
+   *
+   * Flattened onto white as well: the export carried an alpha channel, and transparency in artwork
+   * sent to a press is an unanswered question about what gets printed there.
+   */
+  const buffer = await sharp(Buffer.from(svg))
+    .flatten({ background: "#FFFFFF" })
+    .withMetadata({ density: DPI })
+    .png()
+    .toBuffer();
   const meta = await sharp(buffer).metadata();
   return {
     buffer,

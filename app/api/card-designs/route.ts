@@ -7,7 +7,9 @@ import { safeClerkUserId } from "@/lib/safe-auth";
 const createSchema = z.object({
   title: z.string().min(1).max(120).default("Untitled Design"),
   templateId: z.string().nullable().optional(),
-  product: z.enum(["BUSINESS_CARD", "POSTCARD", "BANNER", "RIGID_SIGN"]).default("BUSINESS_CARD"),
+  // WINDOW_DECAL was missed when window signage shipped: the studio was live and linked from the
+  // product page, but every save came back 400 and no design could be kept.
+  product: z.enum(["BUSINESS_CARD", "POSTCARD", "BANNER", "RIGID_SIGN", "WINDOW_DECAL"]).default("BUSINESS_CARD"),
   front: CardSideSchema,
   back: CardSideSchema,
   anonymousToken: z.string().optional(),

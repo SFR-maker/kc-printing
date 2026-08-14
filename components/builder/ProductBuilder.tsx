@@ -1211,14 +1211,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                 value={artwork}
                 onChange={(next) => {
                   setValue("artwork", next);
-                  // "Design it for me" then landing on a Free self-serve package contradicts the
-                  // choice just made. Gold is the popular tier, and it stays changeable.
-                  if (next.path === "DESIGN_SERVICE" && !values.selectedPackage) {
-                    const gold = service.packages.find((p) => p.name.toLowerCase() === "gold")
-                      ?? service.packages.find((p) => p.popular)
-                      ?? service.packages[0];
-                    if (gold) setValue("selectedPackage", gold.name);
-                  }
+                  /*
+                   * No package is chosen on the customer's behalf.
+                   *
+                   * This pre-selected Gold, so clicking "Design it for me" and pressing Next moved
+                   * the total from $16.80 to $65.80 with nothing on screen having asked. A
+                   * self-serve option sat unselected beside it. Whatever the intent, silently
+                   * adding $49 to an order is the exact thing a price-sensitive customer is
+                   * watching for, and finding it erodes trust in every other number on the page.
+                   *
+                   * The design-service step presents the tiers and the customer picks one.
+                   */
+                  if (next.path === "DESIGN_SERVICE") setValue("selectedPackage", "");
                   // Switching to upload means they are not buying a design package after all.
                   if (next.path === "UPLOAD" && values.selectedPackage) {
                     setValue("selectedPackage", "");

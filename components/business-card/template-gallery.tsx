@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { categoriesForQuery } from "@/lib/business-card/templates/occupations";
+import { categoriesForQuery, matchesQuery } from "@/lib/business-card/templates/occupations";
 import Link from "next/link";
 import { Search, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -137,10 +137,10 @@ export function TemplateGallery({
          */
         const viaOccupation = new Set(categoriesForQuery(needle));
         const hit =
-          t.title.toLowerCase().includes(needle) ||
-          t.description.toLowerCase().includes(needle) ||
-          t.tags.some((tag) => tag.toLowerCase().includes(needle)) ||
-          t.industry.toLowerCase().includes(needle) ||
+          matchesQuery(t.title, needle) ||
+          matchesQuery(t.description, needle) ||
+          t.tags.some((tag) => matchesQuery(tag, needle)) ||
+          matchesQuery(t.industry, needle) ||
           viaOccupation.has(t.industry);
         if (!hit) return false;
       }

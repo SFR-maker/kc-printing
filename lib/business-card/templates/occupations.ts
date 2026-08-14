@@ -112,17 +112,50 @@ export function normalise(s: string): string {
 export function categoriesForQuery(query: string): string[] {
   const q = normalise(query);
   if (q.length < 2) return [];
+  const tokens = q.split(" ").filter((w) => w.length >= 3);
   const hits: string[] = [];
   for (const [slug, terms] of Object.entries(OCCUPATION_TERMS)) {
+    const nSlug = normalise(slug);
     const match =
-      normalise(slug).includes(q) ||
+      nSlug.includes(q) ||
+      tokens.some((t) => nSlug.includes(t)) ||
       terms.some((t) => {
         const n = normalise(t);
-        return n.includes(q) || q.includes(n);
+        return n.includes(q) || q.includes(n) || tokens.some((tok) => n.includes(tok));
       });
     if (match) hits.push(slug);
   }
   return hits;
+}
+
+/**
+ * Splits a query into meaningful words.
+ *
+ * Customers type phrases, and the matcher only ever compared the whole string. "spring sale"
+ * returned nothing while "sale" returned 26, and "flower shop" returned ten generic retail cards
+ * while "florist" found the right ones. Both are the phrasing a customer reaches for first.
+ *
+ * Very short words are dropped so "a"/"of" do not match everything.
+ */
+export function queryTokens(query: string): string[] {
+  return normalise(query).split(" ").filter((w) => w.length >= 3);
+}
+
+/**
+ * True when `haystack` matches the query, whole-phrase first and then by word.
+ *
+ * Whole-phrase is tried first so an exact match still ranks as a match; falling back to any single
+ * word is what makes a phrase behave like a search rather than an exact lookup.
+ */
+export function matchesQuery(haystack: string, query: string): boolean {
+  const h = normalise(haystack);
+  const q = normalise(query);
+  // Three, not two: "of" is a substring of "roof", so a two-character query matched roofing and
+  // most of the catalogue with it.
+  if (q.length < 3) return false;
+  if (h.includes(q)) return true;
+  const tokens = queryTokens(query);
+  return tokens.length > 0 && tokens.some((t) => h.includes(t));
 }
 
 /** Every search term for a category, for baking into a template's tags at seed time. */

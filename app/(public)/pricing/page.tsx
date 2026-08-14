@@ -67,9 +67,37 @@ export default function PricingPage() {
   return (
     <>
       <PageHeader
-        title="Clear, simple pricing"
-        lead="No hidden fees, no contracts. Every package includes revisions and print-ready file delivery."
+        title="Design packages"
+        lead="These are design fees: what it costs to have a designer build your artwork. Printing is priced separately and shown on each product page."
       />
+
+      {/*
+        Two prices, said plainly.
+        This page listed $39-$69 under the heading "Clear, simple pricing. No hidden fees" while the
+        business cards page quoted $16.80 for 250. Both were true - one is design, one is print - but
+        nothing said so, and a careful customer comparing the two concluded the shop was hiding
+        something. Naming the difference here is the fix; the numbers were never wrong.
+      */}
+      <section className="band-tight bg-kc-bg">
+        <div className="container-tight">
+          <div className="rounded-2xl border-2 border-kc-border bg-white p-6">
+            <h2 className="text-lg font-bold text-kc-dark">Design and printing are priced separately</h2>
+            <p className="mt-2 max-w-2xl text-[16.59px] leading-relaxed text-kc-dark/75">
+              The packages below cover design work only. If you already have artwork, or you use our
+              free design studio, you pay for printing alone. Printing starts at{" "}
+              <strong className="font-semibold text-kc-dark">$9.59 for 50 business cards</strong> and
+              is quoted live on each product page as you choose size, paper and quantity.
+            </p>
+            <p className="mt-3 text-[15px] text-kc-dark/70">
+              Shipping and sales tax are added at checkout. Nothing is added to your order that you
+              have not chosen.
+            </p>
+            <Button asChild className="mt-5 bg-kc-coral text-white hover:bg-kc-coral/90">
+              <Link href="/services/business-cards">See printing prices</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
 
       <section className="band-tight bg-kc-paper">
         <div className="container-tight space-y-16">

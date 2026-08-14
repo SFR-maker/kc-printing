@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { OCCUPATION_TERMS, categoriesForQuery, normalise, termsForCategory } from "@/lib/business-card/templates/occupations";
+import { OCCUPATION_TERMS, categoriesForQuery, normalise, termsForCategory, matchesQuery, queryTokens } from "@/lib/business-card/templates/occupations";
 import { CATEGORIES } from "@/lib/business-card/templates/categories";
 
 /**
@@ -83,5 +83,29 @@ describe("occupation search", () => {
       expect(terms.every((t) => t === t.toLowerCase()), `${slug} has an uppercase term`).toBe(true);
       expect(new Set(terms).size, `${slug} repeats a term`).toBe(terms.length);
     }
+  });
+});
+
+describe("multi-word queries", () => {
+  it("finds a category from a phrase, not just a single word", () => {
+    // "spring sale" returned 0 while "sale" returned 26, and "flower shop" returned generic retail
+    // cards while "florist" found the right ones. Both are what a customer types first.
+    expect(matchesQuery("SALE", "spring sale")).toBe(true);
+    expect(matchesQuery("SPRING SERVICE SALE", "spring sale")).toBe(true);
+    expect(categoriesForQuery("flower shop")).toContain("florist");
+    expect(categoriesForQuery("emergency plumber near me")).toContain("plumbing");
+  });
+
+  it("still matches the whole phrase when it is present", () => {
+    expect(matchesQuery("Grand Opening banner", "grand opening")).toBe(true);
+  });
+
+  it("ignores words too short to be meaningful", () => {
+    expect(queryTokens("a of the sale")).toEqual(["the", "sale"]);
+    expect(matchesQuery("Roof Repair", "of")).toBe(false);
+  });
+
+  it("does not match unrelated text", () => {
+    expect(matchesQuery("Roof Repair", "spring sale")).toBe(false);
   });
 });

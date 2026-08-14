@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
-import { categoriesForQuery } from "@/lib/business-card/templates/occupations";
+import { categoriesForQuery, queryTokens } from "@/lib/business-card/templates/occupations";
 
 const PRODUCT_MAP: Record<string, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN" | "WINDOW_DECAL"> = {
   "business-card": "BUSINESS_CARD",
@@ -27,6 +27,14 @@ export async function GET(req: Request) {
       ...(orientation ? { orientation } : {}),
       // Occupation terms are expanded to categories here as well as on the client, so a
       // server-filtered fetch and the in-page filter cannot disagree about what "plumber" means.
+      /*
+       * Whole phrase first, then each word.
+       *
+       * Matching only the whole string meant "spring sale" found nothing while "sale" found 26, and
+       * "flower shop" missed every florist card. Those are the phrasings customers reach for first,
+       * so a phrase has to behave like a search rather than an exact lookup. Mirrors matchesQuery on
+       * the client so a server-filtered fetch and the in-page filter agree.
+       */
       ...(q
         ? {
             OR: [
@@ -34,6 +42,12 @@ export async function GET(req: Request) {
               { description: { contains: q, mode: "insensitive" } },
               { industry: { contains: q, mode: "insensitive" } },
               { tags: { has: q.toLowerCase() } },
+              ...queryTokens(q).flatMap((t) => [
+                { title: { contains: t, mode: "insensitive" as const } },
+                { description: { contains: t, mode: "insensitive" as const } },
+                { industry: { contains: t, mode: "insensitive" as const } },
+                { tags: { has: t } },
+              ]),
               ...(categoriesForQuery(q).length ? [{ industry: { in: categoriesForQuery(q) } }] : []),
             ],
           }

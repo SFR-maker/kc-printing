@@ -24,7 +24,23 @@ import { CardSideSchema } from "../lib/business-card/schema";
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL ?? "" });
 const db = new PrismaClient({ adapter });
 
-const toDataUri = (buf: Buffer) => `data:image/webp;base64,${buf.toString("base64")}`;
+import fsSync from "node:fs";
+import nodePath from "node:path";
+
+const THUMB_DIR = nodePath.join(process.cwd(), "public", "images", "thumbs");
+
+/**
+ * Writes the thumbnail to disk and returns the path stored on the row.
+ *
+ * These were base64 data URIs in Postgres. At 1,911 templates that was ~107 MB of base64 sitting in
+ * rows that every query reads past. See migrate-thumbnails-to-files.ts.
+ */
+const toStoredPath = (buf: Buffer, slug: string, side: "front" | "back") => {
+  fsSync.mkdirSync(THUMB_DIR, { recursive: true });
+  const name = `${slug}${side === "back" ? "-back" : ""}.webp`;
+  fsSync.writeFileSync(nodePath.join(THUMB_DIR, name), buf);
+  return `/images/thumbs/${name}`;
+};
 
 async function main() {
   const all = process.argv.includes("--all");
@@ -51,11 +67,12 @@ async function main() {
         exportSideThumbnail(back, width),
       ]);
 
-      const thumbnailFront = toDataUri(f);
-      const thumbnailBack = toDataUri(b);
+      const thumbnailFront = toStoredPath(f, row.slug, "front");
+      const thumbnailBack = toStoredPath(b, row.slug, "back");
 
+      // Now measures the image bytes written, not the base64 held in the row.
       beforeBytes += row.thumbnailFront?.length ?? 0;
-      afterBytes += thumbnailFront.length;
+      afterBytes += f.byteLength + b.byteLength;
 
       await db.cardTemplate.update({
         where: { id: row.id },

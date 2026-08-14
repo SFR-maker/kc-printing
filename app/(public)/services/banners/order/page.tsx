@@ -1,18 +1,25 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { SERVICES } from "@/lib/service-data";
-import { ProductBuilder } from "@/components/builder/ProductBuilder";
-import { getPricingSettings } from "@/lib/pricing/settings-server";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Order Banners",
-  description:
-    "Order custom banner design from 611 Printing. Hemmed large-format vinyl and mesh, finished with grommets, delivered print-ready.",
-};
-const service = SERVICES["banners"];
-
-export default async function OrderPage({ searchParams }: { searchParams: Promise<{ package?: string; designId?: string }> }) {
-  if (!service) notFound();
-  const { package: pkg, designId } = await searchParams;
-  return <ProductBuilder service={service} defaultPackage={pkg} cardDesignId={designId} pricing={await getPricingSettings()} />;
+/**
+ * /order is now the same page as the product page.
+ *
+ * The configurator was merged into /services/banners, which left this URL serving a byte-identical
+ * second copy: indexable, uncanonicalised, and linked from the homepage, so the duplicate was
+ * reachable in one click. Redirecting rather than deleting keeps every existing link, bookmark and
+ * email working - including the ones the editor sends after a proof is approved, which carry
+ * designId and proof and must survive the hop.
+ */
+export default async function OrderRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (typeof v === "string") qs.set(k, v);
+    else if (Array.isArray(v) && v[0] !== undefined) qs.set(k, v[0]);
+  }
+  const q = qs.toString();
+  redirect(`/services/banners${q ? `?${q}` : ""}`);
 }

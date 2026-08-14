@@ -34,14 +34,18 @@ test.describe("window decals", () => {
     const problems = watchForErrors(page);
     await page.goto("/services/window-decals");
 
-    await expect(page.getByRole("heading", { level: 1, name: "Window Decals" })).toBeVisible();
+    // The product page IS the configurator now, as it is for every product, so the h1 is the order
+    // heading. The film explainer below it is what this test actually cares about.
+    await expect(page.getByRole("heading", { level: 1, name: /Window Decals/i })).toBeVisible();
+    await expect(page.locator('[data-testid="order-summary"]').first()).toBeAttached();
     // The three-film comparison band is the page's real job.
     await expect(page.getByRole("heading", { name: /Which film do you need/i })).toBeVisible();
     for (const film of ["Window Decal", "Window Cling", "Window Perf"]) {
       await expect(page.getByText(film, { exact: true }).first()).toBeVisible();
     }
-    await expect(page.getByRole("link", { name: /Start designing/i }).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /Order without designing/i }).first()).toBeVisible();
+    // The hero's two calls to action went with the merge: the configurator above is the call to
+    // action, and the studio is still reachable from the template rail below.
+    await expect(page.getByRole("link", { name: /design studio/i }).first()).toBeVisible();
 
     expect(problems).toEqual([]);
   });
@@ -247,9 +251,17 @@ test.describe("spanish site", () => {
     await expect(page).toHaveURL(/\/services\/window-decals$/);
   });
 
-  test("hides the switcher on pages that have no translation", async ({ page }) => {
-    await page.goto("/services/window-decals/order");
-    await expect(page.getByRole("link", { name: /Español/i })).toHaveCount(0);
+  test("the old /order URL redirects to the product page, keeping its parameters", async ({ page }) => {
+    /*
+     * /order used to be a second, byte-identical copy of the configurator. It now redirects, and
+     * the parameters have to survive: the editor sends customers to designId=...&proof=approved
+     * after they approve a proof, and dropping either would lose the design at checkout.
+     */
+    await page.goto("/services/window-decals/order?designId=abc123&proof=approved");
+    const url = new URL(page.url());
+    expect(url.pathname).toBe("/services/window-decals");
+    expect(url.searchParams.get("designId")).toBe("abc123");
+    expect(url.searchParams.get("proof")).toBe("approved");
   });
 
   test("keeps navigation inside the Spanish site", async ({ page }) => {

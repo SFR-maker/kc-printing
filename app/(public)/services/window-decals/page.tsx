@@ -1,18 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SERVICES } from "@/lib/service-data";
+import { ProductBuilder } from "@/components/builder/ProductBuilder";
 import { ServicePageContent } from "@/components/sections/ServicePageContent";
 import { getFeaturedThumbnails } from "@/lib/product-thumbnails";
 import { localeAlternates } from "@/lib/i18n/metadata";
+import { TEST_ORDER_PARAM, isTestOrderCode } from "@/lib/pricing/test-order";
+import { getPricingSettings } from "@/lib/pricing/settings-server";
 
-const service = SERVICES["window-decals"];
-
-/**
- * The three films, photographed doing the thing that distinguishes them.
- *
- * Descriptions match lib/pricing/window-decals' blurbs, which is what the order form shows once a
- * film is selected, so the page and the picker say the same thing.
- */
 const FILMS = [
   {
     name: "Window Decal",
@@ -34,23 +29,59 @@ const FILMS = [
   },
 ];
 
+const service = SERVICES["window-decals"];
+
 export const metadata: Metadata = {
   alternates: localeAlternates("/services/window-decals", "en"),
   title: service?.name ?? "Service",
   description: service?.description ?? "",
 };
 
-export const revalidate = 3600;
-
-export default async function ServicePage() {
+/**
+ * The product page and the order page are one page, as they already are for business cards.
+ *
+ * Clicking this product from the nav used to land on a brochure with the configurator another click
+ * away at /services/window-decals/order, while business cards opened straight into a working
+ * configurator with a price. One nav click gave two different kinds of page depending on which
+ * product you picked, so anyone who learned the site on cards arrived here and found no controls at
+ * all.
+ *
+ * The marketing content stays underneath rather than being deleted: it carries the FAQ, the spec
+ * table and the structured data the page ranks on.
+ */
+export default async function WindowDecalsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ package?: string; designId?: string; test?: string; proof?: string }>;
+}) {
   if (!service) notFound();
-  const heroImages = await getFeaturedThumbnails("window-decals");
+  const params = await searchParams;
+  // Validated during server rendering so TEST_ORDER_CODE never enters the client bundle.
+  const testCode = isTestOrderCode(params[TEST_ORDER_PARAM]) ? params[TEST_ORDER_PARAM] : undefined;
+
   return (
-    <ServicePageContent
-      service={service}
-      designStudioHref="/services/window-decals/design"
-      heroImages={heroImages}
-      variants={FILMS}
-    />
+    <>
+      <ProductBuilder
+        service={service}
+        defaultPackage={params.package}
+        cardDesignId={params.designId}
+        proofApproved={params.proof === "approved"}
+        testCode={testCode}
+        pricing={await getPricingSettings()}
+      />
+      <ServicePageContent
+        service={service}
+        designStudioHref="/services/window-decals/design"
+        aiDesignHref="/services/window-decals/design?startAi=1"
+        // These tiles and the studio link are the page's only real anchors into the editor; the
+        // configurator's artwork cards navigate with script.
+        heroImages={await getFeaturedThumbnails("window-decals")}
+        // The configurator above is already the hero, the pricing and the call to action.
+        // The three-film comparison is this product's real explainer - decal vs cling vs perf is
+        // the first decision a customer has to make - so it survives the merge.
+        variants={FILMS}
+        variant="details-only"
+      />
+    </>
   );
 }

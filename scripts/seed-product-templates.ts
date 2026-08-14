@@ -181,7 +181,7 @@ async function main() {
   const jobs: Job[] = [];
   for (const msg of messages) {
     for (let v = 0; v < variantsPerMessage; v++) {
-      const name = `${msg.key}-${v + 1}.jpg`;
+      const name = `${msg.key}-${v + 1}.webp`;
       jobs.push({ msg, variant: v, file: path.join(outDir, name), rel: `/images/product-art/${product}/${name}` });
     }
   }
@@ -202,7 +202,7 @@ async function main() {
         const prompt = `${STEM} ${model.bedAspect}. ${layout.direction} The photographic element shows ${subject}.`;
         try {
           const raw = await generate(prompt, apiKey);
-          const out = await sharp(raw).resize(1600, Math.round(1600 * (model.heightIn / model.widthIn)), { fit: "cover" }).jpeg({ quality: 86 }).toBuffer();
+          const out = await sharp(raw).resize(1600, Math.round(1600 * (model.heightIn / model.widthIn)), { fit: "cover" }).webp({ quality: 78, effort: 5 }).toBuffer();
           fs.mkdirSync(path.dirname(job.file), { recursive: true });
           fs.writeFileSync(job.file, out);
           console.log(`    ${path.basename(job.file)} (${(out.length / 1024).toFixed(0)}KB)`);
@@ -256,7 +256,20 @@ async function main() {
 
     // Point sizes and the vertical rhythm both scale, so a narrower panel gets a smaller, tighter
     // block rather than an overlapping one.
-    const slots = rawSlots.map((s) => ({ ...s, pt: s.pt * fitScale, dy: s.dy * fitScale }));
+    /*
+     * Fit every front slot to the box, not just scale it.
+     *
+     * fitScale alone assumed the placeholder copy fits and only the panel varies. It does not: the
+     * renderer never wraps, so "SPRING SERVICE SALE" in a 2.31in box printed as "SPRING SERVICE"
+     * with the word SALE entirely off the card, and "HAPPY BIRTHDAY" lost the left half of its H.
+     * About 25 postcards and 29 banners shipped with a word missing from the offer.
+     */
+    const slots = rawSlots.map((s) => {
+      const scaled = s.pt * fitScale;
+      // Headlines may shrink a long way; contact lines have a floor so they stay legible.
+      const floor = s.role === "headline" ? scaled * 0.4 : scaled * 0.75;
+      return { ...s, pt: fitPt(s.text, box.w, scaled, Math.max(8, floor)), dy: s.dy * fitScale };
+    });
     const front = buildSide(model, slots, { src, bg, ink, accent, box });
     /*
      * The message keeps to the left half of the back, and is centred vertically.

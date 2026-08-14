@@ -68,11 +68,18 @@ async function main() {
       ]);
 
       const thumbnailFront = toStoredPath(f, row.slug, "front");
-      const thumbnailBack = toStoredPath(b, row.slug, "back");
+      /*
+       * No back thumbnail file.
+       *
+       * Nothing renders it: the gallery selects `thumbnailBack: false`, and the thumbnail route
+       * only reaches for it if the front is missing, which is never. It was 3,067 files and about
+       * 45MB of a deployment that had grown past what Vercel would accept.
+       */
+      const thumbnailBack = null;
 
       // Now measures the image bytes written, not the base64 held in the row.
       beforeBytes += row.thumbnailFront?.length ?? 0;
-      afterBytes += f.byteLength + b.byteLength;
+      afterBytes += f.byteLength;
 
       await db.cardTemplate.update({
         where: { id: row.id },

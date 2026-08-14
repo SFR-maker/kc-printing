@@ -237,8 +237,8 @@ async function main() {
        * decode WebP there, so the photograph silently vanished and the thumbnail came out as text
        * on a blank card - no error anywhere, the element was simply not drawn.
        */
-      const artRel = `/images/card-art/${industry}/${idx}-${layout}.jpg`;
-      const artAbs = path.join(OUT_DIR, industry, `${idx}-${layout}.jpg`);
+      const artRel = `/images/card-art/${industry}/${idx}-${layout}.webp`;
+      const artAbs = path.join(OUT_DIR, industry, `${idx}-${layout}.webp`);
       if (!fs.existsSync(artAbs)) {
         const srcAbs = path.join(BEDS_DIR, industry, file);
         const meta = await sharp(srcAbs).metadata();
@@ -248,7 +248,7 @@ async function main() {
         await sharp(srcAbs)
           .extract({ left: dx, top: dy, width: iw - dx * 2, height: ih - dy * 2 })
           .resize(1125, 675, { fit: "cover" })
-          .jpeg({ quality: 88, mozjpeg: true })
+          .webp({ quality: 78, effort: 5 })
           .toBuffer()
           .then((b) => fs.writeFileSync(artAbs, b));
       }

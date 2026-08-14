@@ -63,3 +63,6 @@ test-results/
 # QA scratch
 scripts/_audit/
 .walk*.cjs
+
+# Build intermediates: card beds are the raw generations, card-art is what ships
+public/images/card-beds/

@@ -77,10 +77,12 @@ export const PRODUCT_MODELS: Record<string, ProductModel> = {
     ],
     back: [
       { id: "offer", text: "20% off your first service", dy: 0, pt: 34, weight: "900", role: "headline" },
-      { id: "body", text: "Book online or call. Mention this card when you do. New customers only.", dy: 0.22, pt: 15, weight: "400", role: "body" },
+      // Short enough to hold a readable size in the half-width panel. The longer version had to be
+      // shrunk to 8.9pt to fit, which is below what anyone reads off a card held at arm's length.
+      { id: "body", text: "Book online or call today.", dy: 0.22, pt: 15, weight: "400", role: "body" },
       { id: "cta", text: "Call (816) 555-0100", dy: 0.46, pt: 22, weight: "700", role: "cta" },
       { id: "expiry", text: "Offer expires 31 May", dy: 0.62, pt: 13, weight: "400", role: "body" },
-      { id: "address", text: "1200 Main St, Kansas City, MO", dy: 0.76, pt: 13, weight: "400", role: "contact" },
+      { id: "address", text: "1200 Main St, Kansas City", dy: 0.76, pt: 13, weight: "400", role: "contact" },
     ],
   },
 

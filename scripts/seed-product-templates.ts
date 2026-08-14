@@ -102,6 +102,21 @@ async function generate(prompt: string, apiKey: string): Promise<Buffer> {
   return Buffer.from(url.split(",")[1] ?? "", "base64");
 }
 
+/** Approximate width of a character as a fraction of font size, for Inter at these weights. */
+const CHAR_W = 0.52;
+
+/**
+ * Largest point size at which `t` fits `widthIn` on one line.
+ *
+ * The SVG renderer does not wrap, so a string wider than its box simply runs on past it. The
+ * postcard back reserves its right half for the address and postage panel, and without this the
+ * body copy ran straight across that panel - which on a mailed card is the part that must stay
+ * clear.
+ */
+function fitPt(t: string, widthIn: number, max: number, min = 11): number {
+  return Math.max(min, Math.min(max, (widthIn / (t.length * CHAR_W)) * 72));
+}
+
 const text = (
   slot: TextSlot, box: { x: number; y: number; w: number }, scale: number, color: string
 ) => ({
@@ -243,10 +258,30 @@ async function main() {
     // block rather than an overlapping one.
     const slots = rawSlots.map((s) => ({ ...s, pt: s.pt * fitScale, dy: s.dy * fitScale }));
     const front = buildSide(model, slots, { src, bg, ink, accent, box });
-    const back = model.back
-      ? buildSide(model, model.back, {
+    /*
+     * The message keeps to the left half of the back, and is centred vertically.
+     *
+     * A mailed postcard's right half belongs to the address block and the postage indicia; copy
+     * running the full width collides with them the moment the card is actually mailed. The first
+     * version also stacked everything from 16% down, so the content ended at 3.4in on a 6.5in card
+     * and the bottom 45% was empty - it read as unfinished rather than as deliberate space.
+     */
+    const backInset = model.bleedIn + model.safeZoneInsetIn;
+    const lastSlot = model.back?.[model.back.length - 1];
+    const blockHeight = model.back
+      ? (lastSlot!.dy * model.heightIn * model.maxTextHeight) + (lastSlot!.pt / 72) * 1.4
+      : 0;
+    const backW = model.widthIn * 0.52 - backInset;
+    const backSlots = model.back?.map((sl) => ({ ...sl, pt: fitPt(sl.text, backW, sl.pt) }));
+    const back = backSlots
+      ? buildSide(model, backSlots, {
           bg: pal.bg, ink: pal.ink, accent: pal.accent,
-          box: { x: model.bleedIn + model.safeZoneInsetIn, y: model.heightIn * 0.16, w: model.widthIn - (model.bleedIn + model.safeZoneInsetIn) * 2 },
+          box: {
+            x: backInset,
+            y: Math.max(backInset, (model.heightIn - blockHeight) / 2),
+            // Left half only, less a gutter, so the address panel has the right half to itself.
+            w: model.widthIn * 0.52 - backInset,
+          },
         })
       : buildSide(model, [], { bg: "#FFFFFF", ink: "#141414", accent: "#141414", box });
 

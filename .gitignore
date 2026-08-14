@@ -66,3 +66,6 @@ scripts/_audit/
 
 # Build intermediates: card beds are the raw generations, card-art is what ships
 public/images/card-beds/
+
+# agent scratch
+tmp-*.mjs

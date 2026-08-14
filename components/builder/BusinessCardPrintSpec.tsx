@@ -9,7 +9,6 @@ import {
   calculateBusinessCardPrice,
   availableQuantities,
   isComboAvailable,
-  type BcPriceBreakdown,
 } from "@/lib/pricing/business-cards";
 import { DEFAULT_PRICING, type PricingSettings } from "@/lib/pricing/settings";
 
@@ -79,8 +78,6 @@ export function BusinessCardPrintSpec({
 }) {
   const comboOk = isComboAvailable(spec.sizeId, spec.paperId, spec.colorId);
   const quantities = comboOk ? availableQuantities(spec.sizeId, spec.paperId, spec.colorId) : [];
-  const price: BcPriceBreakdown = calculateBusinessCardPrice(spec, pricing);
-
   const current = DISPLAYED_BC_SIZES.find((s) => s.id === spec.sizeId) ?? DISPLAYED_BC_SIZES[0];
   const currentFamily = FAMILIES.find((f) => Object.values(f.byOrientation).includes(spec.sizeId)) ?? FAMILIES[0];
 
@@ -155,9 +152,38 @@ export function BusinessCardPrintSpec({
     label: `${formatQuantity(q)} cards`,
   }));
 
+  /*
+   * What each add-on would cost, priced by the same function that prices the order.
+   *
+   * The prices are not constants anywhere: rush is a percentage of the print run and round corners
+   * is a per-quantity table, both scaled by the margin the owner sets in /admin/pricing. So the only
+   * way to put a number on the label that cannot drift from the number in the total is to ask
+   * calculateBusinessCardPrice for it, with that add-on turned on and the others off.
+   *
+   * Each is quoted independently so an unavailable rush (over 2,500 cards) does not blank out the
+   * other two, which have no such limit.
+   */
+  const rushQuote = calculateBusinessCardPrice({ ...spec, rush: true, roundCorners: false, manualProof: false }, pricing);
+  const cornersQuote = calculateBusinessCardPrice({ ...spec, rush: false, roundCorners: true, manualProof: false }, pricing);
+  const rushPrice = rushQuote.valid ? rushQuote.rushSurcharge : null;
+  const cornersPrice = cornersQuote.valid ? cornersQuote.roundCornersPrice : null;
+  // A flat fee, so it is quotable before a quantity has been chosen. Read from the same settings
+  // object calculateBusinessCardPrice adds to the total, not typed in here.
+  const proofPrice = pricing.manualProofPrice;
+
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      {/*
+        Two groups side by side, but not at every width.
+
+        Size and Orientation are paired here because they answer one question together. The pairing
+        only works while there is room for it: from `lg` the configurator becomes preview + options
+        and the options column is about 350px, so splitting it again gave each group ~165px and each
+        of its two cards ~79px - narrower than the word "Horizontal". So the pair collapses back to
+        one column exactly across the band where the options column is narrow, and returns at `xl`
+        where that column is ~530px.
+      */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         <OptionGroup
           label="Size"
           options={sizeOptions}
@@ -203,32 +229,40 @@ export function BusinessCardPrintSpec({
       {/*
         Add-ons stay checkboxes rather than becoming cards: they are independent yes/no extras, and a
         card grid would imply picking one of them. The running total lives in the order summary, so
-        only the per-add-on deltas are shown here.
+        only the per-add-on deltas are shown here - but they are shown before the box is ticked, not
+        after. Priced only on selection, the customer had to tick each one and watch the total move
+        to find out what it cost.
       */}
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-kc-muted">Optional add-ons</p>
         <div className="divide-y divide-kc-border overflow-hidden rounded-xl border border-kc-border">
+          {/*
+            "Rush printing", not "Rush turnaround" - and deliberately not "Rush Delivery", which is
+            the $49 design add-on on the same order page. This one speeds up the press and is priced
+            off the print run; that one buys designer hours. One name across the two made the shop
+            look like it was quoting the same thing at two prices.
+          */}
           <AddOn
             checked={spec.rush}
             onToggle={() => set("rush", !spec.rush)}
             disabled={spec.quantity > RUSH_MAX_QUANTITY}
-            title="Rush turnaround"
-            note={spec.quantity > RUSH_MAX_QUANTITY ? `Only available up to ${formatQuantity(RUSH_MAX_QUANTITY)} cards.` : "Faster production."}
-            delta={price.valid && spec.rush ? price.rushSurcharge : null}
+            title="Rush printing"
+            note={spec.quantity > RUSH_MAX_QUANTITY ? `Only available up to ${formatQuantity(RUSH_MAX_QUANTITY)} cards.` : "Your cards come off the press sooner."}
+            price={spec.quantity > RUSH_MAX_QUANTITY ? null : rushPrice}
           />
           <AddOn
             checked={spec.roundCorners}
             onToggle={() => set("roundCorners", !spec.roundCorners)}
             title="Round corners"
             note="A softer, more premium edge."
-            delta={price.valid && spec.roundCorners ? price.roundCornersPrice : null}
+            price={cornersPrice}
           />
           <AddOn
             checked={spec.manualProof}
             onToggle={() => set("manualProof", !spec.manualProof)}
             title="Manual proof review"
             note="A person checks your file before print (24 hrs). Instant automated proofing is free and used by default."
-            delta={spec.manualProof ? price.proofPrice : null}
+            price={proofPrice}
           />
         </div>
       </div>
@@ -256,14 +290,16 @@ const SIDES_NOTE: Record<number, string> = {
 };
 
 function AddOn({
-  checked, onToggle, disabled, title, note, delta,
+  checked, onToggle, disabled, title, note, price,
 }: {
   checked: boolean;
   onToggle: () => void;
   disabled?: boolean;
   title: string;
   note: string;
-  delta: number | null;
+  /** What ticking this box adds, shown on the label whether or not it is ticked. `null` only when
+   *  the selection is too incomplete to quote - no quantity chosen yet, or a rush over the cutoff. */
+  price: number | null;
 }) {
   return (
     <label
@@ -284,8 +320,10 @@ function AddOn({
           <span className="block text-[12.5px] leading-snug text-kc-muted">{note}</span>
         </span>
       </span>
-      {delta !== null && delta > 0 && (
-        <span className="shrink-0 font-mono text-[12.5px] text-kc-muted">+{formatDollars(delta)}</span>
+      {price !== null && price > 0 && (
+        <span className={`shrink-0 font-mono text-[12.5px] ${checked ? "text-kc-dark" : "text-kc-muted"}`}>
+          +{formatDollars(price)}
+        </span>
       )}
     </label>
   );

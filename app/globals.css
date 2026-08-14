@@ -183,9 +183,16 @@
   }
   html {
     @apply font-sans;
-    /* Header is `sticky top-0 h-16` — without this, anchor links, validation-error focus, and
-       keyboard-triggered scroll-into-view land content partially hidden underneath it. */
-    scroll-padding-top: 4.5rem;
+    /* The sticky header is `min-h-16` (4rem) plus its 1px rule. Without scroll padding, anchor
+       links, validation-error focus, and keyboard-triggered scroll-into-view land content partially
+       hidden underneath it.
+
+       Expressed against a variable rather than a literal so the clearance and the bar it is
+       clearing cannot drift apart, and rounded up by a full rem so the answer stays right when the
+       bar is a little taller than nominal — a wrapped label, a larger minimum font size, or a
+       browser that rounds a zoomed 4rem up rather than down. */
+    --header-height: 4rem;
+    scroll-padding-top: calc(var(--header-height) + 1rem);
   }
   .skip-link {
     @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-kc-teal focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white;
@@ -320,6 +327,45 @@
     font-weight: 700;
     letter-spacing: -0.035em;
     line-height: 0.98;
+  }
+
+  /* ── Option tiles (components/builder/OptionGroup) ─────────────────────────
+     Three rules that keep a tile honest at any width. They live here rather than on the component
+     because they are about the tile surviving a container narrower than its own text — a condition
+     the component cannot see — and they are written against the radiogroup's own ARIA structure, so
+     they hold for every product picker without a new class having to be threaded through.
+
+     1. min-width: 0 — a tile is a grid item, and a grid item defaults to min-width: auto, i.e. it
+        refuses to be narrower than its longest word. That is what pushed the label past the tile's
+        border: "Horizontal" simply would not fit in the 79px cell it had been given and spilled out
+        of the right-hand edge as "Horizo|ntal".
+     2. overflow-wrap: anywhere — the escape hatch of last resort. It also lowers the min-content
+        width of the text, which is what actually lets rule 1 take effect.
+     3. padding-right on the first row — the selected tick is absolutely positioned at the top-right
+        corner and was printing straight over the end of the word ("Horizontal", "Front + grey
+        back"). The reserve is on every tile rather than only the selected one, so choosing an
+        option does not reflow the row it is in; and only on the first row, because the tick is 20px
+        tall and never reaches the sublabel. */
+  [role="radiogroup"] [role="radio"] {
+    min-width: 0;
+  }
+  [role="radiogroup"] [role="radio"] span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  /* right-2.5 + h-5 = the tick ends 30px in from the tile edge; the row's own edge is already 14px
+     in (px-3.5), so 24px of reserve leaves an 8px gap between tick and text. */
+  [role="radiogroup"] [role="radio"] > span:first-child {
+    padding-right: 1.5rem;
+  }
+
+  /* A select trigger is `w-fit whitespace-nowrap`, so a long option value ("13 oz. Premium Scrim
+     Glossy Vinyl") made the control wider than the column holding it and pushed the whole document
+     sideways. Clamping to the container costs nothing where the value already fits, and the value
+     itself is `line-clamp-1`, so the overflow becomes an ellipsis instead of a scrollbar. */
+  [data-slot="select-trigger"] {
+    max-width: 100%;
+    min-width: 0;
   }
 
   /* Section rhythm for the redesigned marketing pages */

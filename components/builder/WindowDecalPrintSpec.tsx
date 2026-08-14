@@ -97,11 +97,21 @@ export function WindowDecalPrintSpec({
 
   return (
     <div className="rounded-xl border-2 border-kc-coral/40 p-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-kc-border p-4">
+      {/*
+        One column while the options column is narrow, two again at `xl`, and every cell and trigger
+        told it may be narrower than its own text.
+
+        From `lg` this grid lives in about 350px, so two columns left each select ~168px to hold
+        "Perforated Window Vinyl" or a 23.6″ × 23.6″ size label. A select trigger is `w-fit
+        whitespace-nowrap` and a grid item defaults to min-width: auto, so neither would truncate -
+        the control grew, its track grew, and the document scrolled sideways. See the banner picker,
+        which had the same fault and the same fix.
+      */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Film</Label>
           <Select value={spec.material} onValueChange={(v) => v && set("material", v as WindowMaterialId)}>
-            <SelectTrigger aria-label="Film" className="border-kc-border"><SelectValue>{materialLabel(spec.material)}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Film" className="w-full min-w-0 border-kc-border"><SelectValue>{materialLabel(spec.material)}</SelectValue></SelectTrigger>
             <SelectContent>
               {WINDOW_MATERIALS.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
@@ -113,10 +123,10 @@ export function WindowDecalPrintSpec({
           </p>
         </div>
 
-        <div className="rounded-lg border border-kc-border p-4">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Shape</Label>
           <Select value={String(spec.shapeId)} onValueChange={(v) => v && set("shapeId", Number(v))}>
-            <SelectTrigger aria-label="Shape" className="border-kc-border"><SelectValue>{shapeLabel(spec.material, spec.shapeId)}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Shape" className="w-full min-w-0 border-kc-border"><SelectValue>{shapeLabel(spec.material, spec.shapeId)}</SelectValue></SelectTrigger>
             <SelectContent>
               {shapes.map((s) => (
                 <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
@@ -125,10 +135,10 @@ export function WindowDecalPrintSpec({
           </Select>
         </div>
 
-        <div className="rounded-lg border border-kc-border p-4">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
           <Select value={String(spec.sizeId)} onValueChange={(v) => v && set("sizeId", Number(v))}>
-            <SelectTrigger aria-label="Size" className="border-kc-border"><SelectValue>{size?.label ?? ""}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Size" className="w-full min-w-0 border-kc-border"><SelectValue>{size?.label ?? ""}</SelectValue></SelectTrigger>
             <SelectContent>
               {sizes.map((s) => (
                 <SelectItem key={s.id} value={String(s.id)}>{s.label}</SelectItem>
@@ -140,10 +150,10 @@ export function WindowDecalPrintSpec({
           )}
         </div>
 
-        <div className="rounded-lg border border-kc-border p-4">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
           <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger aria-label="Quantity" className="border-kc-border">
+            <SelectTrigger aria-label="Quantity" className="w-full min-w-0 border-kc-border">
               <SelectValue placeholder="Choose a quantity">{spec.quantity ? unit(spec.quantity) : undefined}</SelectValue>
             </SelectTrigger>
             <SelectContent>

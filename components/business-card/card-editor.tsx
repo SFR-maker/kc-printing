@@ -1,9 +1,9 @@
 "use client";
 
 import "@/app/(public)/services/business-cards/design/editor-fonts.css";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, UserRoundX } from "lucide-react";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import type { CardDesign } from "@/lib/business-card/schema";
 import { validateDesign } from "@/lib/business-card/validate";
@@ -21,9 +21,31 @@ import { MobileTopBar } from "./mobile/mobile-top-bar";
 import { MobileAddBar } from "./mobile/mobile-add-bar";
 import { MobilePropertiesSheet } from "./mobile/mobile-properties-sheet";
 import { MobileZoomPill } from "./mobile/mobile-zoom-pill";
+import { baselineFromDesign, findPlaceholderDetails, placeholderLabel, type TemplateBaseline } from "./placeholder-details";
 
 const LOCAL_KEY = "draft";
 const AUTOSAVE_DEBOUNCE_MS = 1500;
+
+/**
+ * What the save indicator is actually saying.
+ *
+ * It used to be derived inline from `dirty` and `isSignedIn`, which gave one slot two meanings: a
+ * guest with unsaved work read "Unsaved changes", and the same guest a moment later read "Saved as
+ * guest" — while a *failed* save also read "Saved as guest", because the autosave marked the design
+ * clean whether or not the request had succeeded. A design that only exists in this browser must
+ * never be described as saved.
+ */
+type SaveStatus = "saving" | "unsaved" | "saved" | "failed";
+
+/** Where a template's original wording is parked so it survives the t-{slug} → design-id remount. */
+function baselineKey(templateId: string): string {
+  return `kc-template-baseline-${templateId}`;
+}
+
+function truncate(text: string, max = 24): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  return clean.length > max ? `${clean.slice(0, max)}...` : clean;
+}
 
 interface CardEditorProps {
   initialDesign: CardDesign;
@@ -44,6 +66,9 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const markSaved = useCardEditorStore((s) => s.markSaved);
   const selectedIds = useCardEditorStore((s) => s.selectedIds);
   const clearSelection = useCardEditorStore((s) => s.clearSelection);
+  const setSelected = useCardEditorStore((s) => s.setSelected);
+  const setActiveSide = useCardEditorStore((s) => s.setActiveSide);
+  const requestEditText = useCardEditorStore((s) => s.requestEditText);
 
   const [showProof, setShowProof] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -51,8 +76,12 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const [confirming, setConfirming] = useState(false);
   /** Surfaced on the proof screen when the save that must precede checkout fails. */
   const [saveError, setSaveError] = useState<string | null>(null);
+  /** True when the last attempt to save to the server did not succeed — see SaveStatus. */
+  const [saveFailed, setSaveFailed] = useState(false);
   const [resumeAvailable, setResumeAvailable] = useState(false);
   const [propertiesSheetOpen, setPropertiesSheetOpen] = useState(false);
+  const [templateBaseline, setTemplateBaseline] = useState<TemplateBaseline | null>(null);
+  const [placeholderPromptDismissed, setPlaceholderPromptDismissed] = useState(false);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -63,6 +92,8 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (local) setResumeAvailable(true);
     }
+    // sessionStorage is unavailable during SSR too, so the baseline can only be resolved post-mount.
+    setTemplateBaseline(rememberTemplateBaseline(initialDesign, initialDesignId));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -75,10 +106,14 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       // POST) — gating this on isSignedIn meant anonymous users' designs never got a real
       // server-side id, so designId stayed null and the "order this design" handoff silently
       // broke (empty designId in the URL, no prefill, no "using your design" banner).
-      await persist(design, designId, product, (newId) => {
+      const saved = await persist(design, designId, product, (newId) => {
         if (!designId && newId) router.replace(`/services/${routeSegment}/design/${newId}`);
-      }, false);
-      markSaved();
+      });
+      // Only a save that actually happened clears the flag. markSaved() used to run either way, so
+      // a dropped connection produced a design the editor described as saved and the server had
+      // never heard of.
+      setSaveFailed(!saved);
+      if (saved) markSaved();
     }, AUTOSAVE_DEBOUNCE_MS);
     return () => {
       if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
@@ -109,13 +144,16 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
     setSaving(true);
     saveDesignLocally(LOCAL_KEY, design);
     let effectiveId = designId ?? null;
-    await persist(design, designId, product, (newId) => {
+    const saved = await persist(design, designId, product, (newId) => {
       if (newId) effectiveId = newId;
       if (!designId && newId) router.replace(`/services/${routeSegment}/design/${newId}`);
-    }, true);
-    markSaved();
+    });
+    setSaveFailed(!saved);
+    // The design is only clean once the server has it. Marking it saved regardless was what let the
+    // indicator say "Saved" over work that existed nowhere but this browser.
+    if (saved) markSaved();
     setSaving(false);
-    return effectiveId;
+    return saved ? effectiveId : null;
   }, [design, designId, router, markSaved, product, routeSegment]);
 
   const handleExport = useCallback(async () => {
@@ -160,6 +198,21 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const warnings = validateDesign(design.front, design.back);
   const errorCount = warnings.filter((w) => w.severity === "error").length;
 
+  const saveStatus: SaveStatus = saving ? "saving" : saveFailed ? "failed" : dirty ? "unsaved" : "saved";
+
+  const placeholders = useMemo(
+    () => findPlaceholderDetails(design, templateBaseline),
+    [design, templateBaseline]
+  );
+  const firstPlaceholder = placeholders[0];
+
+  /** Takes the customer straight to the offending words, on the right side, ready to type over. */
+  function fixPlaceholder(side: "front" | "back", elementId: string) {
+    setActiveSide(side);
+    setSelected([elementId]);
+    requestEditText(elementId);
+  }
+
   if (showProof) {
     return (
       <>
@@ -170,6 +223,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       )}
       <ProofScreen
         design={design}
+        templateBaseline={templateBaseline}
         onBack={() => setShowProof(false)}
         confirming={confirming}
         onConfirm={async () => {
@@ -207,7 +261,45 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       {isMobile ? (
         <MobileTopBar onSave={handleSave} saving={saving} onExport={handleExport} exporting={exporting} onContinue={() => setShowProof(true)} />
       ) : (
-        <TopCommandBar onSave={handleSave} saving={saving} onExport={handleExport} exporting={exporting} onContinue={() => setShowProof(true)} isSignedIn={isSignedIn} />
+        <TopCommandBar onSave={handleSave} saving={saving} saveStatus={saveStatus} onExport={handleExport} exporting={exporting} onContinue={() => setShowProof(true)} isSignedIn={isSignedIn} />
+      )}
+
+      {/*
+        Templates arrive filled in with a made-up florist's name, phone and email, because an empty
+        card is impossible to judge in the gallery. Nothing used to say so, and a tester reached the
+        proof with a stranger's phone number on her card. Said plainly, once, with a button that puts
+        the cursor in the offending words - and it clears itself as soon as they are replaced.
+      */}
+      {firstPlaceholder && !placeholderPromptDismissed && (
+        <div
+          data-testid="placeholder-prompt"
+          className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-900 sm:text-sm"
+        >
+          <span className="flex items-center gap-2">
+            <UserRoundX className="h-4 w-4 shrink-0" />
+            <span>
+              <strong className="font-semibold">This template came filled in with a made-up business.</strong>{" "}
+              {placeholders.length === 1
+                ? `One sample detail is still on your card — the ${placeholderLabel(firstPlaceholder.kind)}.`
+                : `${placeholders.length} sample details are still on your card, starting with the ${placeholderLabel(firstPlaceholder.kind)}.`}{" "}
+              Replace them with your own name, phone number and email before you order.
+            </span>
+          </span>
+          <div className="flex shrink-0 gap-2">
+            <button
+              onClick={() => fixPlaceholder(firstPlaceholder.side, firstPlaceholder.elementId)}
+              className="rounded-md bg-amber-800 px-3 py-1 text-xs font-semibold text-white"
+            >
+              Change &ldquo;{truncate(firstPlaceholder.text)}&rdquo;
+            </button>
+            <button
+              onClick={() => setPlaceholderPromptDismissed(true)}
+              className="rounded-md border border-amber-300 px-3 py-1 text-xs font-semibold"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
       )}
 
       {errorCount > 0 && (
@@ -256,44 +348,73 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   );
 }
 
+/**
+ * Saves to the server, and says whether it worked.
+ *
+ * It used to swallow every failure and tell the caller nothing, so both callers marked the design
+ * clean on the way past — a dropped connection or a 500 left the customer looking at an editor that
+ * claimed their work was saved. Returning the outcome is what makes an honest indicator possible.
+ */
 async function persist(
   design: CardDesign,
   designId: string | null,
   product: DesignProduct,
-  onNewId: (id: string) => void,
-  throwOnError: boolean
-) {
+  onNewId: (id: string) => void
+): Promise<boolean> {
   try {
     const anonymousToken = getAnonymousToken();
     if (designId) {
       // The token identifies an anonymous author on write as well as on read; without it every
       // autosave answered 401 and the work never left the browser.
-      await fetch(`/api/card-designs/${designId}?anonymousToken=${encodeURIComponent(anonymousToken)}`, {
+      const res = await fetch(`/api/card-designs/${designId}?anonymousToken=${encodeURIComponent(anonymousToken)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title: design.title, front: design.front, back: design.back }),
       });
-    } else {
-      const res = await fetch("/api/card-designs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: design.title,
-          templateId: design.templateId,
-          product: PRODUCT_DB_VALUE[product],
-          front: design.front,
-          back: design.back,
-          anonymousToken,
-        }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.id) onNewId(data.id);
-      } else if (throwOnError) {
-        throw new Error("save failed");
-      }
+      return res.ok;
     }
-  } catch (e) {
-    if (throwOnError) throw e;
+    const res = await fetch("/api/card-designs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: design.title,
+        templateId: design.templateId,
+        product: PRODUCT_DB_VALUE[product],
+        front: design.front,
+        back: design.back,
+        anonymousToken,
+      }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (data.id) onNewId(data.id);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Reads — or, on the first visit from a template, records — what the template originally said.
+ *
+ * Kept in sessionStorage because the first autosave rewrites the URL from `/design/t-{slug}` to
+ * `/design/{id}`, which remounts this editor with the saved design as its starting point. Without
+ * somewhere to park it, the only record of the template's own wording would be gone by the time the
+ * customer reached the proof.
+ */
+function rememberTemplateBaseline(design: CardDesign, designId: string | null): TemplateBaseline | null {
+  const templateId = design.templateId;
+  if (!templateId || typeof window === "undefined") return null;
+  try {
+    const key = baselineKey(templateId);
+    if (!designId) {
+      const baseline = baselineFromDesign(design);
+      window.sessionStorage.setItem(key, JSON.stringify(baseline));
+      return baseline;
+    }
+    const stored = window.sessionStorage.getItem(key);
+    return stored ? (JSON.parse(stored) as TemplateBaseline) : null;
+  } catch {
+    return null;
   }
 }

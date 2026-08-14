@@ -202,6 +202,9 @@ export async function POST(req: Request) {
   }, 0);
 
   let printPrice = 0;
+  /** Products whose price comes from a spec table rather than a design package. */
+  const SPEC_PRICED_SERVICES = new Set(["business-cards", "postcards", "banners", "rigid-signs", "window-decals"]);
+
   let orderQuantity = quantity;
 
   if (service === "postcards" && postcardSpec) {
@@ -247,6 +250,19 @@ export async function POST(req: Request) {
     if (!priced.valid) return NextResponse.json({ error: priced.error ?? "Invalid print specifications" }, { status: 400 });
     printPrice = priced.total;
     orderQuantity = bcSpec.quantity;
+  } else if (SPEC_PRICED_SERVICES.has(service)) {
+    /*
+     * A spec-priced product without its spec is a malformed order, not a package order.
+     *
+     * Omitting the spec used to fall through to the package branch, so an order could be recorded
+     * at the design-fee price with whatever top-level quantity was sent: banners x 999999 at $79,
+     * postcards x 1000000000 at $49. The money was a real package price so the shop was not
+     * underpaid, but price and quantity were decoupled and the production record was nonsense.
+     */
+    return NextResponse.json(
+      { error: "This product needs its print specifications. Please choose size, options and quantity." },
+      { status: 400 },
+    );
   } else {
     // Every other service still requires choosing a package — its price is the whole product cost.
     if (!packageTier) return NextResponse.json({ error: "Package not found" }, { status: 404 });

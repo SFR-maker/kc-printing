@@ -87,6 +87,23 @@ function ElementContent({ el, widthPx, heightPx, pxPerIn }: { el: CardElement; w
           text={text || " "}
           width={widthPx}
           height={heightPx}
+          /*
+           * The whole box is clickable, not just the ink.
+           *
+           * Konva hit-tests text by drawing the glyphs themselves onto the hit canvas, so a click
+           * that lands in the counter of an "o", in the gap between two words, or in the empty part
+           * of a box wider than its line falls straight through to whatever is underneath - which on
+           * a template is nearly always the shape the text is sitting on. The customer clicks the
+           * name on their card, gets "Fill / Stroke / Corner radius", and concludes the text cannot
+           * be edited at all. Filling the element's own box instead is what every design tool does
+           * and what "I clicked the text" means.
+           */
+          hitFunc={(ctx: Konva.Context, shape: Konva.Shape) => {
+            ctx.beginPath();
+            ctx.rect(0, 0, widthPx, heightPx);
+            ctx.closePath();
+            ctx.fillStrokeShape(shape);
+          }}
           fontSize={fontSizePx}
           fontFamily={el.fontFamily}
           fontStyle={`${el.italic ? "italic" : "normal"} ${["700", "800", "900"].includes(el.fontWeight) ? "bold" : ""}`.trim()}

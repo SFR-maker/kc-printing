@@ -57,6 +57,31 @@ export function ElementPropertiesContent() {
         <IconBtn label="Send to back" onClick={() => reorderSelected("back")}><SendToBack className="h-3.5 w-3.5" /></IconBtn>
       </div>
 
+      {/*
+        The words on the card come first, before anything else in this panel.
+
+        They used to sit below X, Y, Width, Height, Rotation and Opacity, which at 125% zoom put the
+        one control most people open this panel for below the fold - so "change the name on the card"
+        looked impossible while six numbers nobody needed sat in view. Position and size are the
+        fine-tuning; the text is the point.
+      */}
+      {single?.type === "text" && (
+        <div className="space-y-1.5 rounded-lg border border-kc-teal/30 bg-kc-teal/5 p-3">
+          <Label htmlFor="element-text" className="text-xs font-semibold text-kc-dark">
+            Text on the card
+          </Label>
+          <textarea
+            id="element-text"
+            aria-label="Text on the card"
+            value={single.text}
+            onChange={(e) => patch({ text: e.target.value })}
+            rows={3}
+            className="w-full rounded-md border border-kc-border bg-white px-2 py-1.5 text-sm"
+          />
+          <p className="text-[11px] leading-snug text-kc-muted">Type here to change the wording. You can also double-click the text on the card.</p>
+        </div>
+      )}
+
       <div className="border-t border-kc-border pt-3">
         <AlignTools />
       </div>
@@ -82,17 +107,11 @@ export function ElementPropertiesContent() {
   );
 }
 
+/** Styling only — the wording itself is edited at the top of the panel, where it is the first thing
+ * in view rather than the seventh. */
 function TextProps({ el, patch }: { el: TextElement; patch: (p: Partial<TextElement>) => void }) {
   return (
     <div className="space-y-3 border-t border-kc-border pt-3">
-      <Field label="Text">
-        <textarea
-          value={el.text}
-          onChange={(e) => patch({ text: e.target.value })}
-          rows={2}
-          className="w-full rounded-md border border-kc-border px-2 py-1.5 text-sm"
-        />
-      </Field>
       <Field label="Font">
         <Select value={el.fontFamily} onValueChange={(v) => v && patch({ fontFamily: v })}>
           <SelectTrigger aria-label="Font"><SelectValue /></SelectTrigger>

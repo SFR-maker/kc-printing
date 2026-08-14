@@ -308,6 +308,15 @@ export function CardCanvas() {
       const stage = stageRef.current;
       if (!node || !stage) return;
       const box = node.getClientRect({ relativeTo: stage });
+      /*
+       * Editing the text also selects it.
+       *
+       * Double-clicking a name on a template could leave the *shape* behind it selected - the first
+       * click of the pair lands on whatever Konva hit-tested, which for text is the glyphs only - so
+       * the properties panel answered "Fill / Stroke / Corner radius" to "I want to change this
+       * word". Whatever we are about to let them type into is what the panel should be describing.
+       */
+      setSelected([id]);
       setEditingTextId(id);
       setEditingValue(el.text);
       setEditingRect({
@@ -319,7 +328,7 @@ export function CardCanvas() {
         el,
       });
     },
-    [side.elements, zoom]
+    [side.elements, zoom, setSelected]
   );
 
   /** The "Edit text" button in the quick toolbar, which has no way to reach startEditText directly. */

@@ -356,8 +356,8 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   // Add-ons that only make sense when our designers are doing the work. On the upload path the
   // customer has supplied finished artwork, so a design rush, an extra layout concept, or us adding
   // a QR code to a design we aren't making have nothing to attach to. Print turnaround is a separate
-  // control in the print specs, which is why "Rush Delivery" is hidden here rather than merged.
-  const DESIGN_ONLY_ADDONS = new Set(["Rush Delivery", "QR Code", "Extra Concept"]);
+  // control in the print specs, which is why "Rush Design" is hidden here rather than merged.
+  const DESIGN_ONLY_ADDONS = new Set(["Rush Design", "QR Code", "Extra Concept"]);
   const availableAddOns =
     isBusinessCards && artwork.path === "UPLOAD"
       ? service.addOns.filter((a) => !DESIGN_ONLY_ADDONS.has(a.name))
@@ -1325,11 +1325,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
 
             {/* Add-ons: plain and low-key on purpose — optional extras, not a second set of
                 decisions competing with the package choice above. */}
-            {service.addOns.length > 0 && (
+            {availableAddOns.length > 0 && (
               <div>
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-kc-muted">Optional add-ons</p>
                 <div className="divide-y divide-kc-border overflow-hidden rounded-lg border border-kc-border">
-                  {service.addOns.map((ao) => {
+                  {availableAddOns.map((ao) => {
                     const isSelected = (values.selectedAddOns ?? []).includes(ao.name);
                     return (
                       <label key={ao.name} className="flex cursor-pointer items-center justify-between gap-3 p-3 hover:bg-kc-bg">
@@ -1348,7 +1348,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                             <span className="block text-xs text-kc-muted">{ao.desc}</span>
                           </span>
                         </span>
-                        {isSelected && <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(ao.price)}</span>}
+                        {/* Shown whether or not it is ticked. Revealing the price only on selection
+                            made the customer tick a box to find out what it costs, and then untick
+                            it - the price is the thing they are deciding on. */}
+                        <span className="shrink-0 text-xs text-kc-muted">+{formatDollars(ao.price)}</span>
                       </label>
                     );
                   })}
@@ -1407,11 +1410,11 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
               ))}
             </div>
 
-            {service.addOns.length > 0 && (
+            {availableAddOns.length > 0 && (
               <div className="mt-6">
                 <h3 className="font-semibold text-kc-dark mb-3">Add-Ons (optional)</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {service.addOns.map((ao) => {
+                  {availableAddOns.map((ao) => {
                     const isSelected = (values.selectedAddOns ?? []).includes(ao.name);
                     return (
                       <button

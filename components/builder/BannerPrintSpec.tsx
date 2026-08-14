@@ -168,11 +168,25 @@ export function BannerPrintSpec({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-kc-border p-4">
+      {/*
+        Two columns, but not while the options column is itself a column.
+
+        From `lg` the page is preview + options and this grid is living in about 350px, so splitting
+        it again left each select ~168px to hold "13 oz. Premium Scrim Glossy Vinyl". A select
+        trigger is `w-fit whitespace-nowrap`, so it did not truncate - it grew, pushed its grid track
+        wide, and took the whole document with it: 1,116px of content in a 1,024px window. One
+        column across that band, two again at `xl`.
+
+        min-w-0 on each cell, w-full on each trigger: a grid item defaults to min-width: auto and so
+        refuses to be narrower than its contents, and a `w-fit` control sizes to its text. Together
+        those two are what let a long value become an ellipsis rather than a sideways scrollbar,
+        whatever the customer picks.
+      */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Size</Label>
           <Select value={spec.size} onValueChange={(v) => v && set("size", v)}>
-            <SelectTrigger aria-label="Size" className="border-kc-border">
+            <SelectTrigger aria-label="Size" className="w-full min-w-0 border-kc-border">
               <SelectValue>{orientedSizeLabel(spec.size, spec.orientation)}</SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -193,10 +207,10 @@ export function BannerPrintSpec({
           </Select>
         </div>
 
-        <div className="rounded-lg border border-kc-border p-4">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Material</Label>
           <Select value={spec.material} onValueChange={(v) => v && set("material", v)}>
-            <SelectTrigger aria-label="Material" className="border-kc-border"><SelectValue /></SelectTrigger>
+            <SelectTrigger aria-label="Material" className="w-full min-w-0 border-kc-border"><SelectValue /></SelectTrigger>
             <SelectContent>
               {BANNER_MATERIALS.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
@@ -212,10 +226,10 @@ export function BannerPrintSpec({
           </p>
         </div>
 
-        <div className="rounded-lg border border-kc-border p-4">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Grommets</Label>
           <Select value={spec.grommets} onValueChange={(v) => v && set("grommets", v)}>
-            <SelectTrigger aria-label="Grommets" className="border-kc-border"><SelectValue>{spec.grommets}</SelectValue></SelectTrigger>
+            <SelectTrigger aria-label="Grommets" className="w-full min-w-0 border-kc-border"><SelectValue>{spec.grommets}</SelectValue></SelectTrigger>
             <SelectContent>
               {GROMMET_OPTIONS.map((g) => (
                 <SelectItem key={g} value={g}>{g}</SelectItem>
@@ -225,10 +239,10 @@ export function BannerPrintSpec({
           <p className="mt-2 text-xs leading-snug text-kc-muted">{grommetNote(spec.grommets)}</p>
         </div>
 
-        <div className="rounded-lg border border-kc-border p-4">
+        <div className="min-w-0 rounded-lg border border-kc-border p-4">
           <Label className="mb-2 block text-xs font-medium uppercase tracking-wide text-kc-muted">Quantity</Label>
           <Select value={spec.quantity ? String(spec.quantity) : ""} onValueChange={(v) => v && set("quantity", Number(v))}>
-            <SelectTrigger aria-label="Quantity" className="border-kc-border"><SelectValue placeholder="Choose a quantity" /></SelectTrigger>
+            <SelectTrigger aria-label="Quantity" className="w-full min-w-0 border-kc-border"><SelectValue placeholder="Choose a quantity" /></SelectTrigger>
             <SelectContent>
               {quantities.map((q) => (
                 <SelectItem key={q} value={String(q)}>{q === 1 ? "1 banner" : `${q} banners`}</SelectItem>
@@ -237,7 +251,7 @@ export function BannerPrintSpec({
           </Select>
         </div>
 
-        <div className="rounded-lg border border-kc-border bg-kc-bg p-4">
+        <div className="min-w-0 rounded-lg border border-kc-border bg-kc-bg p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-kc-muted">Ships as</p>
           <p className="mt-1 text-sm text-kc-dark">
             {parcel.lengthIn}″ tube, {parcel.widthIn}″ across

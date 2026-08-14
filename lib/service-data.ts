@@ -28,7 +28,7 @@ export const SERVICES: Record<string, ServiceDef> = {
     name: "Business Cards",
     tagline: "First impressions that last. Professional cards designed and delivered fast.",
     description:
-      "Custom business card design in standard and specialty shapes. We deliver print-ready files at 300-350 DPI with proper 0.05 in bleed, ready for any commercial printer.",
+      "Custom business card design in every size we print. We deliver print-ready files at 300-350 DPI with proper 0.05 in bleed, ready for any commercial printer.",
     icon: "🪪",
     specs: [
       { label: "Standard Size", value: "2 in x 3.5 in" },
@@ -46,13 +46,22 @@ export const SERVICES: Record<string, ServiceDef> = {
     ],
     addOns: [
       { name: "Back Side Design", price: 29, desc: "Full design for the back of your card" },
-      { name: "Rush Delivery", price: 49, desc: "Guaranteed completion within 24 hours" },
+      /*
+       * Named "Rush Design", not "Rush Delivery".
+       *
+       * The print specs step has its own rush control, which speeds up the printing and is priced as
+       * a percentage of the print run (about +$6.78 on 250 U.S. Standard cards). Both used to be
+       * called some form of "rush" on the same order page, so a customer saw $49 next to a number
+       * that was not $49 and reasonably concluded one of them was a trick. They are two different
+       * purchases: this one buys designer time, that one buys press time.
+       */
+      { name: "Rush Design", price: 49, desc: "Your designer finishes in 24 hours. Printing speed is a separate choice in Print Specs." },
       { name: "QR Code", price: 15, desc: "Custom QR code linking to your website or social" },
       { name: "Extra Concept", price: 25, desc: "One additional layout concept to choose from" },
     ],
     faqs: [
-      { q: "What size should my business card be?", a: "The standard size is 2 in x 3.5 in. We also offer square (2.5 x 2.5), slim (1.75 x 3.5), circle (2.5 in diameter), and leaf shapes. Specialty shapes may vary by printer." },
-      { q: "What paper stock do you recommend?", a: "14pt gloss is the most popular choice for vibrant colors. 16pt matte is excellent for a premium feel and easy to write on. Ultra-thick 32pt stock makes a strong impression at networking events." },
+      { q: "What size should my business card be?", a: "The standard size is 2 in x 3.5 in, and it is what most people want. We also print 2 x 3, 1.75 x 3.5, and 1.75 x 3 in, each horizontal or vertical. Those eight are the sizes in the order form; we do not cut circles, squares, or leaf shapes." },
+      { q: "What paper stock do you recommend?", a: "14 pt. Gloss is the most popular choice for vibrant colors. 16 pt. Premium Matte is excellent for a premium feel and easy to write on. The 38 pt. Trifecta stocks, with a velvet finish and a coloured edge, make a strong impression at networking events." },
       { q: "Do I need to provide any files?", a: "Not required. You can upload your existing logo, brand colors, and inspiration images. If starting fresh, our AI brief tool will help capture your brand vision before the designer begins." },
       { q: "How does the bleed work?", a: "We add 0.05 in of bleed on all sides to your design. This ensures that when the card is cut, there are no white edges from printing variance. Your important content stays within the safe zone." },
       { q: "Can I print the file myself or send to my own printer?", a: "Yes. You receive the final print-ready files and can use any commercial printer. Files are supplied at the full bleed size in RGB; if your printer needs CMYK separations, tell us and we will supply them." },
@@ -67,10 +76,10 @@ export const SERVICES: Record<string, ServiceDef> = {
       "Eye-catching postcard designs in multiple sizes. Perfect for EDDM campaigns, client outreach, event promotions, and seasonal marketing. Front and back design available.",
     icon: "📬",
     specs: [
-      { label: "Popular Sizes", value: "3x5, 4x6, 5x7, 5.5x8.5, 6x9, 6x11 in" },
-      { label: "Custom Sizes", value: "2x4 in up to 9x12 in" },
-      { label: "Paper Options", value: "14pt Gloss, 16pt Matte, Smooth White, Pearl, Ultra-Thick" },
-      { label: "Features", value: "Front-only or front-back, rounded corners, EDDM-ready" },
+      { label: "Sizes", value: '4" x 4", 3" x 5", 4" x 6" (standard), 5" x 7", 4" x 9", 5.5" x 8.5", 6" x 9", 6" x 11"' },
+      { label: "Paper Options", value: "12 stocks, from 14 pt. Gloss to 38 pt. Trifecta with a velvet finish" },
+      { label: "Sides", value: "Full colour front only, full colour front with greyscale back, or full colour both sides" },
+      { label: "Features", value: "EDDM-ready layout, mailing panel, front-and-back design" },
       { label: "EDDM", value: "Every Door Direct Mail address panel and postage zone" },
       { label: "Bleed", value: "0.125 in on all sides" },
       { label: "Delivery", value: "Print-ready PDF, JPG, PNG" },
@@ -82,8 +91,8 @@ export const SERVICES: Record<string, ServiceDef> = {
     ],
     addOns: [
       { name: "EDDM Panel", price: 20, desc: "Every Door Direct Mail address area and postage zone" },
-      { name: "Rounded Corners", price: 15, desc: "Rounded corner specification for premium feel" },
-      { name: "Rush Delivery", price: 49, desc: "Guaranteed completion within 24 hours" },
+      { name: "Rounded Corners", price: 15, desc: "A rounded-corner die line in your file, for a printer that offers the cut. Our postcard press cuts square." },
+      { name: "Rush Design", price: 49, desc: "Your designer finishes in 24 hours" },
       { name: "Mailing List Layout", price: 35, desc: "Address block layout formatted for mailing list merge" },
     ],
     faqs: [
@@ -91,8 +100,8 @@ export const SERVICES: Record<string, ServiceDef> = {
       { q: "What is the most popular postcard size?", a: "The 4 x 6 in and 6 x 9 in sizes are the most popular. Larger sizes like 6 x 9 or 6 x 11 tend to have higher open rates and stand out in a mailbox." },
       { q: "Can I get front and back design?", a: "Yes. The Gold and Platinum packages include front and back design. The Silver package covers the front only. Back design is focused on reply info, mailing panel, or additional marketing content." },
       { q: "What file formats are delivered?", a: "You receive a print-ready PDF with proper bleed, a high-resolution JPG, and a PNG. Files are print-ready for any commercial or online printer." },
-      { q: "How long does the design take?", a: "Standard turnaround is 2-4 business days. Rush delivery (24-hour) is available as an add-on for an additional fee." },
-      { q: "Can you design a postcard for any custom size?", a: "Yes. We support custom sizes from 2 x 4 in up to 9 x 12 in. Specify your size in the order notes and we will match it precisely." },
+      { q: "How long does the design take?", a: "Standard turnaround is 2-4 business days. Rush Design (24-hour) is available as an add-on for an additional fee." },
+      { q: "Can you design a postcard for any custom size?", a: "We print eight sizes, from 4 x 4 in to 6 x 11 in, and those are the ones in the order form. If you need artwork at a size outside that list for a printer of your own, say so in the order notes: we will design and deliver it, but we cannot print it here." },
     ],
   },
   "banners": {
@@ -104,12 +113,12 @@ export const SERVICES: Record<string, ServiceDef> = {
     icon: "🎯",
     specs: [
       { label: "Banner Type", value: "Hemmed vinyl or wind-through mesh" },
-      { label: "Materials", value: "13 oz. scrim vinyl (glossy or matte), 8 oz. mesh" },
-      { label: "Vinyl Sizes", value: "2x4 ft up to 4x10 ft, custom sizes up to 6x20 ft" },
-      { label: "Vinyl Materials", value: "8oz Mesh, 13oz Scrim Gloss, 13oz Scrim Matte" },
+      { label: "Materials", value: "13 oz. Premium Scrim Glossy Vinyl, 13 oz. Premium Scrim Matte Vinyl, 8 oz. Premium Mesh Vinyl" },
+      { label: "Sizes", value: "1x2 ft up to 6x20 ft, 110 sizes, horizontal or vertical" },
+      { label: "Printing", value: "Full colour on the face. Banners are printed one side only." },
       { label: "Bleed", value: "0.125 in on all sides" },
       { label: "Safe Zone", value: "0.5 in from the trim" },
-      { label: "Finishing", value: "Hemmed four sides, included. Grommets every 2 ft or four corners." },
+      { label: "Finishing", value: "Hemmed four sides, included. Grommets every 2 ft, four corners, or none." },
       { label: "Delivery", value: "Print-ready PDF and high-res PNG" },
     ],
     packages: [
@@ -118,32 +127,42 @@ export const SERVICES: Record<string, ServiceDef> = {
       { name: "Platinum", price: 199, features: ["5 or more images or logos", "Comprehensive copy", "Up to 8 revisions", "Full file bundle", "Three layout concepts", "Priority delivery"] },
     ],
     addOns: [
-      { name: "Rush Delivery", price: 79, desc: "Completed within 24 hours" },
+      { name: "Rush Design", price: 79, desc: "Your designer finishes in 24 hours" },
       { name: "Extra Concept", price: 49, desc: "One additional layout concept" },
       { name: "Matching Business Card", price: 39, desc: "Business card design that matches your banner" },
       { name: "Grommet Spec Sheet", price: 15, desc: "Print-ready grommet placement diagram" },
-      { name: "Double Sided Design", price: 79, desc: "Full design for both sides" },
+      /* Our press prints banners on the face only, so this buys artwork for a reverse we do not
+         print - useful if you are having a double-sided banner made elsewhere, misleading if it is
+         left sounding like a finishing option we sell. */
+      { name: "Second Side Artwork", price: 79, desc: "A second full design for the reverse. Our banner press prints one side only, so this is artwork for a double-sided banner printed elsewhere." },
     ],
     faqs: [
       { q: "Should I choose vinyl or mesh?", a: "Scrim vinyl is the general-purpose choice and what most people want, indoors or out. Mesh is perforated so wind passes through it, which is what you need on a fence, a scaffold, or any exposed wall - a solid vinyl banner in that position acts like a sail and tears at the grommets." },
-      { q: "What is the most common banner size?", a: "3 x 6 ft and 4 x 8 ft cover most storefronts and events. We print from 1 x 2 ft up to 4 x 12 ft, all hemmed on four sides, with grommets every 2 ft or in the four corners." },
+      { q: "What is the most common banner size?", a: "3 x 6 ft and 4 x 8 ft cover most storefronts and events. We print 110 sizes, from 1 x 2 ft up to 6 x 20 ft, all hemmed on four sides, with grommets every 2 ft, in the four corners, or left off entirely." },
       { q: "What bleed and safe zone do I need?", a: "We design with 0.125 in bleed on all sides. Roll-up stands keep important content at least 0.5 in from the edges to account for the retractable base. Vinyl banners include grommet placement guides on request." },
       { q: "What file format does the printer need?", a: "Most printers accept a high-resolution PDF. We deliver a print-ready PDF at the full bleed size, plus a high-resolution PNG." },
       { q: "Can I use my existing brand colors and logo?", a: "Yes. Upload your existing logo and brand guidelines in the order. If you do not have a style guide, fill out the brand questionnaire and our designer will match your colors as closely as possible." },
-      { q: "Can I order a custom vinyl banner size?", a: "Yes. We support custom vinyl banner sizes from 1x2 ft up to 6x20 ft. Specify your dimensions in the order notes and we will match it precisely." },
+      { q: "How wide a range of sizes can I order?", a: "Every size from 1 x 2 ft up to 6 x 20 ft is in the size list on the order page - 110 of them - so there is nothing to request in the notes. Pick the size and the orientation and the price updates with it." },
     ],
   },
   "rigid-signs": {
     slug: "rigid-signs",
     name: "Rigid Signs",
-    tagline: "Die-cut rigid signage in custom shapes and materials: acrylic, aluminum, PVC, foam board, and corrugated plastic.",
+    tagline: "Die-cut rigid signage in custom shapes and materials: aluminium, PVC, foam board, corrugated plastic, and yard sign board.",
     description:
       "Custom rigid sign designs cut to shape (circle, star, arrow, house, or rounded square) in the material that fits your use case. Files include proper bleed and a clean die line for professional cutting.",
     icon: "🪧",
+    /*
+     * Every value here is the picker's own vocabulary, not a paraphrase of it.
+     *
+     * This row previously advertised acrylic, which RIGID_MATERIALS has never sold, and a 48" x 96"
+     * maximum against a catalogue that stops at 24" x 36". Both read as choices the customer would
+     * find on the next screen, and neither was there.
+     */
     specs: [
-      { label: "Shapes", value: "Rectangle, Square, Circle, Oval, Star, Octagon, Arrow, House, Apartment" },
-      { label: "Materials", value: "Yard Sign, Corrugated Plastic, PVC, Foam Board, Aluminium" },
-      { label: "Sizes", value: '6" x 18" up to 48" x 96" depending on material and shape' },
+      { label: "Shapes", value: "Rectangle, Rounded Rectangle, Square, Rounded Square, Circle, Half Circle, Half Arch, Oval, Star, Octagon, Arrow, House, Apartment. Yard signs come in nine of the thirteen." },
+      { label: "Materials", value: "Yard Sign, Corrugated Plastic Board, PVC Board, Foam Board, Aluminium Board" },
+      { label: "Sizes", value: '5" x 18" up to 24" x 36" depending on material and shape' },
       { label: "Bleed", value: "0.125 in on all sides" },
       { label: "Safe Zone", value: "0.25 in from the cut line" },
       { label: "Delivery", value: "Print-ready PDF cut to shape, high-res PNG" },
@@ -154,14 +173,14 @@ export const SERVICES: Record<string, ServiceDef> = {
       { name: "Platinum", price: 149, features: ["5 or more images or logos", "Comprehensive copy", "Up to 8 revisions", "Full file bundle", "Three layout concepts", "Priority delivery"] },
     ],
     addOns: [
-      { name: "Rush Delivery", price: 59, desc: "Completed within 24 hours" },
+      { name: "Rush Design", price: 59, desc: "Your designer finishes in 24 hours" },
       { name: "Extra Concept", price: 39, desc: "One additional layout concept" },
-      { name: "Custom Shape", price: 79, desc: "A die-cut shape beyond the standard set, cut to your outline" },
+      { name: "Custom Shape", price: 79, desc: "A die line drawn to your own outline, delivered in the file. We cut the thirteen catalogue shapes; anything else goes to a printer that cuts custom dies." },
       { name: "Mounting Hardware Spec", price: 15, desc: "Print-ready standoff or bracket placement diagram" },
     ],
     faqs: [
-      { q: "Which material should I choose?", a: "Acrylic and aluminum give a premium, long-lasting look for storefronts and offices. PVC and foam board are lightweight and budget-friendly for indoor use or short-term displays. Corrugated plastic is the most weather-resistant, affordable choice for yard and event signs. Tell us your use case and we'll recommend the right material." },
-      { q: "Can I get a shape that's not in the standard list?", a: "Yes. Add the Custom Shape add-on and describe (or upload) the outline you need. We'll cut a die line to match." },
+      { q: "Which material should I choose?", a: "Aluminium board gives the premium, long-lasting look you want on a storefront or an office wall, and it is the only one of the five that will not soften or warp outdoors over years. PVC board and foam board are lightweight and budget-friendly for indoor use or short-term displays. Corrugated plastic and yard sign board are the affordable, weather-tolerant choice for yard and event signs. Tell us your use case and we'll recommend the right material." },
+      { q: "Can I get a shape that's not in the standard list?", a: "We cut the thirteen shapes in the picker - and yard signs, which are cut on different equipment, offer nine of them. For anything else, add the Custom Shape add-on: we draw the die line to your outline and deliver it in the file, ready for a printer that cuts custom dies." },
       { q: "How does the die line work?", a: "We design on a standard rectangular canvas sized to comfortably contain your chosen shape, then apply the shape as a precise cut line at export. What you design maps exactly onto the final die-cut sign, with 0.125 in bleed so color runs to the edge with no white gaps." },
       { q: "What file format does the printer need?", a: "We deliver a print-ready PDF with the die line marked, plus a high-res JPG preview. Both include bleed and safe-zone guides." },
       { q: "Can I use my existing brand colors and logo?", a: "Yes. Upload your existing logo and brand guidelines in the order. If you do not have a style guide, fill out the brand questionnaire and our designer will match your colors as closely as possible." },
@@ -175,8 +194,10 @@ export const SERVICES: Record<string, ServiceDef> = {
       "Custom window graphics printed on adhesive vinyl, static cling, or see-through perforated film. Cut to eleven shapes in sizes from 6 inches to 5 feet, with no residue on removal.",
     icon: "🪟",
     specs: [
-      { label: "Films", value: "3 mil Adhesive Vinyl, 8 mil White Cling Vinyl, 6 mil 70/30 Perforated" },
-      { label: "Shapes", value: "Rectangle, Rounded Rectangle, Square, Circle, Oval, Star, Octagon, Arrow, House, Apartment" },
+      { label: "Films", value: "3 mil Adhesive Vinyl, 8 mil White Cling Vinyl, 6 mil 70/30 Perforated Window Film" },
+      // Eleven, matching the description above it and shapesFor() below it. The row used to list ten,
+      // silently dropping Rounded Square, while the prose beside it promised eleven.
+      { label: "Shapes", value: "Rectangle, Rounded Rectangle, Square, Rounded Square, Circle, Oval, Star, Octagon, Arrow, House, Apartment" },
       { label: "Sizes", value: '24" x 6" up to 60" x 40", 117 sizes across all shapes' },
       { label: "Printing", value: "Full colour on the face. Eco-solvent inks." },
       { label: "Bleed", value: "0.125 in on all sides" },
@@ -190,7 +211,7 @@ export const SERVICES: Record<string, ServiceDef> = {
       { name: "Platinum", price: 149, features: ["5 or more images or logos", "Comprehensive copy", "Up to 8 revisions", "Full file bundle", "Three layout concepts", "Priority delivery"] },
     ],
     addOns: [
-      { name: "Rush Delivery", price: 59, desc: "Completed within 24 hours" },
+      { name: "Rush Design", price: 59, desc: "Your designer finishes in 24 hours" },
       { name: "Extra Concept", price: 39, desc: "One additional layout concept" },
       { name: "Reverse Reading Setup", price: 25, desc: "Artwork mirrored for second-surface application, applied inside the glass" },
       { name: "Application Guide", price: 15, desc: "Printed placement and squeegee guide sized to your window" },

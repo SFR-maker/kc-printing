@@ -98,12 +98,32 @@ test.describe("Business card design studio", () => {
     await page.goto("/services/business-cards/design/t-real-estate-centered-stack");
     await page.waitForTimeout(500);
     await page.locator("button", { hasText: "Continue" }).click();
-    await expect(page.locator("text=Review Your Design")).toBeVisible();
+    await expect(page.locator("text=Check your card before you order")).toBeVisible();
     await expect(page.locator('input[type="checkbox"]')).toBeVisible();
     const continueBtn = page.locator("button", { hasText: "Confirm and Continue to Order" });
     await expect(continueBtn).toBeDisabled();
     await page.locator('input[type="checkbox"]').check();
+    // This template still carries its sample 555 phone number, which holds the button on its own
+    // until it is either replaced or explicitly claimed as real.
+    await expect(continueBtn).toBeDisabled();
+    await page.locator("text=These really are my details").click();
     await expect(continueBtn).toBeEnabled();
+  });
+
+  test("31b - the review checkbox asks in plain English and only cites notes that are shown", async ({ page }) => {
+    await page.goto("/services/business-cards/design/t-real-estate-centered-stack");
+    await page.waitForTimeout(500);
+    await page.locator("button", { hasText: "Continue" }).click();
+    const consent = page.locator("label", { has: page.locator('input[type="checkbox"]') });
+    await expect(consent).toBeVisible();
+    const text = (await consent.innerText()).toLowerCase();
+    expect(text).not.toContain("bleed");
+    expect(text).not.toContain("safe zone");
+    expect(text).not.toContain("low-resolution");
+    expect(text).toContain("phone number");
+    // "the notes above" is only claimed when there is an amber notes card on screen to read.
+    const notesShown = await page.locator("text=Please fix these before ordering").or(page.locator("text=Worth a look before you order")).count();
+    expect(text.includes("notes above")).toBe(notesShown > 0);
   });
 
   test("32 - business card service page links to the design studio", async ({ page }) => {

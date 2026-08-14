@@ -43,9 +43,17 @@ test.describe("Public pages", () => {
     await expect(page.locator('input[name="name"], input[placeholder*="name" i]').first()).toBeVisible();
   });
 
-  test("5 - pricing page renders package tables", async ({ page }) => {
+  test("5 - pricing page renders package tables and says what they cover", async ({ page }) => {
     await page.goto("/pricing");
-    await expect(page.locator("h1")).toContainText(/pricing/i);
+    await expect(page.locator("h1")).toContainText(/design packages/i);
+    /*
+     * The page listed $39-$69 under "Clear, simple pricing. No hidden fees" while the product pages
+     * quoted $16.80 for 250 cards. Both true - one is design, one is print - but nothing said so,
+     * and a customer comparing them concluded the shop was hiding something. The distinction has to
+     * stay on the page.
+     */
+    await expect(page.getByText(/priced separately/i).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /see printing prices/i }).first()).toBeVisible();
   });
 
   test("6 - portfolio page renders", async ({ page }) => {

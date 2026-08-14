@@ -96,7 +96,17 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-kc-dark/10 bg-kc-bg/90 backdrop-blur-md">
-      <div className="container-tight flex h-16 items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
+      {/*
+        min-h rather than a fixed h-16.
+
+        A sticky bar only stops overlapping the page if the space it reserves in the flow is the
+        space it actually paints. With `h-16` the row was locked to 64px while its contents were
+        free to be taller - at 125% browser zoom the phone number wrapped to three lines and spilled
+        out of the bottom of the bar, over the H1 of whatever page was underneath. `min-h-16` keeps
+        the same 64px bar in every normal case and lets it grow rather than bleed in the ones that
+        do not fit, so content below always clears it at any zoom or text size.
+      */}
+      <div className="container-tight flex min-h-16 items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
         <Link
           href={path("/")}
           className="flex shrink-0 items-center gap-2.5"
@@ -105,7 +115,19 @@ export function Header() {
           <Wordmark />
         </Link>
 
-        <nav className="hidden items-center gap-7 lg:flex">
+        {/*
+          The desktop bar turns on at `xl`, not `lg`.
+
+          Wordmark, six nav links and the action cluster need about 1,050px side by side in English
+          and about 1,140px in Spanish. At the `lg` boundary - which is also what a 1280px laptop
+          window becomes at 125% browser zoom - there were only 960px of content box, so the row was
+          crushed: the phone number wrapped to three lines ("(816)" / "521-" / "0462") on every page,
+          and the Spanish header pushed the whole document 78px sideways. `xl` is the first width
+          where the full bar fits in both languages; below it the same links live in the collapsed
+          menu, which is where they already went below `lg`. This is the same fix that moved the
+          breakpoint from `md` to `lg` - see tests/e2e/11-layout-regression.spec.ts.
+        */}
+        <nav className="hidden items-center gap-7 xl:flex">
           {NAV_LINKS.map((link) => {
             const href = path(link.href);
             // Compared against the localised href so the Spanish nav highlights the Spanish page.
@@ -128,15 +150,17 @@ export function Header() {
           })}
         </nav>
 
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-3 xl:flex">
+          {/* whitespace-nowrap: a phone number is one token. Wrapped, it reads as three numbers and
+              makes the bar taller than the space it reserves. */}
           <a
             href="tel:+18165210462"
-            className="flex items-center gap-1.5 font-mono text-[13.38px] text-kc-dark/70 transition-colors hover:text-kc-magenta-deep"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-mono text-[13.38px] text-kc-dark/70 transition-colors hover:text-kc-magenta-deep"
           >
-            <Phone className="h-3.5 w-3.5" strokeWidth={1.75} />
+            <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
             (816) 521-0462
           </a>
-          <LanguageSwitcher className="flex items-center gap-1.5 text-[13.38px] font-medium text-kc-dark/70 transition-colors hover:text-kc-magenta-deep" />
+          <LanguageSwitcher className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[13.38px] font-medium text-kc-dark/70 transition-colors hover:text-kc-magenta-deep" />
           {CLERK_KEY ? (
             <ClerkAuthDesktop nav={nav} />
           ) : (
@@ -155,7 +179,7 @@ export function Header() {
           aria-label="Toggle navigation"
           aria-expanded={open}
           data-testid="mobile-nav"
-          className="edge p-2 text-kc-dark lg:hidden"
+          className="edge p-2 text-kc-dark xl:hidden"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-5 w-5" strokeWidth={1.75} /> : <Menu className="h-5 w-5" strokeWidth={1.75} />}
@@ -165,7 +189,7 @@ export function Header() {
       {open && (
         <div
           data-testid="mobile-menu"
-          className="border-t border-kc-dark/10 bg-kc-bg px-4 pb-4 pt-2 lg:hidden"
+          className="border-t border-kc-dark/10 bg-kc-bg px-4 pb-4 pt-2 xl:hidden"
         >
           <nav className="flex flex-col">
             {NAV_LINKS.map((link) => (
@@ -186,9 +210,9 @@ export function Header() {
           <div className="mt-4 flex flex-col gap-2">
             <a
               href="tel:+18165210462"
-              className="flex items-center gap-2 py-1 font-mono text-[13.91px] text-kc-dark/70"
+              className="flex items-center gap-2 whitespace-nowrap py-1 font-mono text-[13.91px] text-kc-dark/70"
             >
-              <Phone className="h-4 w-4" strokeWidth={1.75} />
+              <Phone className="h-4 w-4 shrink-0" strokeWidth={1.75} />
               (816) 521-0462
             </a>
             {CLERK_KEY ? (

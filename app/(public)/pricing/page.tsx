@@ -7,6 +7,8 @@ import { ClosingCta } from "@/components/layout/ClosingCta";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { formatDollars } from "@/lib/utils";
 import { localeAlternates } from "@/lib/i18n/metadata";
+import { SERVICES } from "@/lib/service-data";
+import { STARTING_PRICES } from "@/lib/pricing/starting-prices";
 
 export const metadata: Metadata = {
   alternates: localeAlternates("/pricing", "en"),
@@ -15,53 +17,54 @@ export const metadata: Metadata = {
     "Clear, upfront pricing for business cards, postcards, banners, rigid signs, and window decals. No hidden fees. Multiple packages to fit any budget.",
 };
 
-const ALL_SERVICES = [
-  {
-    name: "Business Cards",
-    href: "/services/business-cards",
-    packages: [
-      { name: "Silver", price: 39, features: ["1-2 images", "Up to 4 revisions", "PDF and JPG"] },
-      { name: "Gold", price: 49, popular: true, features: ["3-4 images", "Up to 6 revisions", "PDF, JPG, PNG"] },
-      { name: "Platinum", price: 69, features: ["5+ images", "Up to 8 revisions", "Full bundle"] },
-    ],
-  },
-  {
-    name: "Postcards",
-    href: "/services/postcards",
-    packages: [
-      { name: "Silver", price: 49, features: ["1-2 images", "Up to 4 revisions", "Front only"] },
-      { name: "Gold", price: 69, popular: true, features: ["3-4 images", "Up to 6 revisions", "Front and back"] },
-      { name: "Platinum", price: 89, features: ["5+ images", "Up to 8 revisions", "EDDM-ready"] },
-    ],
-  },
-  {
-    name: "Banners",
-    href: "/services/banners",
-    packages: [
-      { name: "Silver", price: 79, features: ["1-2 images", "Up to 4 revisions", "PDF with bleed"] },
-      { name: "Gold", price: 139, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
-      { name: "Platinum", price: 199, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
-    ],
-  },
-  {
-    name: "Rigid Signs",
-    href: "/services/rigid-signs",
-    packages: [
-      { name: "Silver", price: 59, features: ["1-2 images", "Up to 4 revisions", "PDF with die line"] },
-      { name: "Gold", price: 99, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
-      { name: "Platinum", price: 149, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
-    ],
-  },
-  {
-    name: "Window Decals",
-    href: "/services/window-decals",
-    packages: [
-      { name: "Silver", price: 59, features: ["1-2 images", "Up to 4 revisions", "PDF with cut line"] },
-      { name: "Gold", price: 99, popular: true, features: ["3-4 images", "Up to 6 revisions", "Two concepts"] },
-      { name: "Platinum", price: 149, features: ["5+ images", "Up to 8 revisions", "Three concepts"] },
-    ],
-  },
-];
+/**
+ * The order the products are listed in. Everything else - names, tiers, prices - comes from
+ * lib/service-data.
+ *
+ * This page used to carry its own copy of all fifteen package prices. They happened to agree with
+ * the service pages, but nothing made them: an owner raising the Gold banner package to $149 would
+ * have changed it in one place and left this page quoting $139, with no test and no type error to
+ * say so. A summary of prices has to read them from wherever they are charged.
+ */
+const SERVICE_ORDER = ["business-cards", "postcards", "banners", "rigid-signs", "window-decals"];
+
+/**
+ * The three-word summary of each tier, shortened for a page that shows fifteen cards at once.
+ *
+ * Deliberately not the price and not the tier name - only the wording. Anything a customer could
+ * compare against another page is read from SERVICES.
+ */
+const TIER_BLURBS: Record<string, string[]> = {
+  "business-cards": ["1-2 images", "Up to 4 revisions", "PDF and JPG"],
+  "business-cards:Gold": ["3-4 images", "Up to 6 revisions", "PDF, JPG, PNG"],
+  "business-cards:Platinum": ["5+ images", "Up to 8 revisions", "Full bundle"],
+  postcards: ["1-2 images", "Up to 4 revisions", "Front only"],
+  "postcards:Gold": ["3-4 images", "Up to 6 revisions", "Front and back"],
+  "postcards:Platinum": ["5+ images", "Up to 8 revisions", "EDDM-ready"],
+  banners: ["1-2 images", "Up to 4 revisions", "PDF with bleed"],
+  "banners:Gold": ["3-4 images", "Up to 6 revisions", "Two concepts"],
+  "banners:Platinum": ["5+ images", "Up to 8 revisions", "Three concepts"],
+  "rigid-signs": ["1-2 images", "Up to 4 revisions", "PDF with die line"],
+  "rigid-signs:Gold": ["3-4 images", "Up to 6 revisions", "Two concepts"],
+  "rigid-signs:Platinum": ["5+ images", "Up to 8 revisions", "Three concepts"],
+  "window-decals": ["1-2 images", "Up to 4 revisions", "PDF with cut line"],
+  "window-decals:Gold": ["3-4 images", "Up to 6 revisions", "Two concepts"],
+  "window-decals:Platinum": ["5+ images", "Up to 8 revisions", "Three concepts"],
+};
+
+const ALL_SERVICES = SERVICE_ORDER.map((slug) => {
+  const service = SERVICES[slug];
+  return {
+    name: service.name,
+    href: `/services/${service.slug}`,
+    packages: service.packages.map((pkg) => ({
+      name: pkg.name,
+      price: pkg.price,
+      popular: pkg.popular,
+      features: TIER_BLURBS[`${slug}:${pkg.name}`] ?? TIER_BLURBS[slug],
+    })),
+  };
+});
 
 export default function PricingPage() {
   return (
@@ -85,8 +88,18 @@ export default function PricingPage() {
             <p className="mt-2 max-w-2xl text-[16.59px] leading-relaxed text-kc-dark/75">
               The packages below cover design work only. If you already have artwork, or you use our
               free design studio, you pay for printing alone. Printing starts at{" "}
-              <strong className="font-semibold text-kc-dark">$9.59 for 50 business cards</strong> and
-              is quoted live on each product page as you choose size, paper and quantity.
+              {/* Read from the price tables, not typed. The typed figure here said $9.59 while the
+                  cheapest run of 50 the configurator will actually sell is $8.39, so the page that
+                  exists to explain the two prices was quoting a third one. */}
+              <strong className="font-semibold text-kc-dark">
+                {formatDollars(STARTING_PRICES["business-cards"])} for 50 business cards
+              </strong>{" "}
+              and is quoted live on each product page as you choose size, paper and quantity.
+            </p>
+            <p className="mt-3 text-[15px] text-kc-dark/70">
+              The add-ons on a package - Rush Design, an extra concept, a QR code - buy designer
+              time. How fast your job comes off the press is a separate choice, made with the rest of
+              your print options on the product page.
             </p>
             <p className="mt-3 text-[15px] text-kc-dark/70">
               Shipping and sales tax are added at checkout. Nothing is added to your order that you

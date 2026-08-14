@@ -126,7 +126,13 @@ export function RigidSignPrintSpec({
         columns={3}
       />
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      {/*
+        Paired only where the options column is wide enough to be split. From `lg` the configurator
+        is preview + options and that column is about 350px, so a second split gave each card ~79px
+        and cut its own label in half; it returns at `xl`, where the column is ~530px. Same reason
+        the business-card picker collapses its Size/Orientation pair across the same band.
+      */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         <OptionGroup
           label="Shape"
           options={shapeOptions}
@@ -144,7 +150,7 @@ export function RigidSignPrintSpec({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
         <OptionGroup
           label="Thickness"
           options={thicknessOptions}

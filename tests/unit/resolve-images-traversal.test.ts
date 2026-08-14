@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveSideImages } from "@/lib/business-card/resolve-images-server";
+import { resolveSideImages, isAllowedRemote } from "@/lib/business-card/resolve-images-server";
 import type { CardSide } from "@/lib/business-card/schema";
 
 /**
@@ -45,5 +45,31 @@ describe("image resolution is confined to public/", () => {
   it("leaves data URIs and remote URLs to their own paths", async () => {
     const data = await resolveSideImages(sideWith("data:image/png;base64,AAAA"));
     expect(srcOf(data)).toBe("data:image/png;base64,AAAA");
+  });
+});
+
+describe("remote image srcs are restricted", () => {
+  it("refuses internal, metadata and plaintext hosts", async () => {
+    // The export endpoint is unauthenticated, so an unguarded fetch here was a blind SSRF. The
+    // metadata address is the one that matters: on a cloud host it hands out instance credentials.
+    for (const attack of [
+      "http://169.254.169.254/latest/meta-data/",
+      "https://169.254.169.254/latest/meta-data/",
+      "http://127.0.0.1:9931/canary",
+      "http://localhost/admin",
+      "https://evil.example.com/x.png",
+      "http://utfs.io/legit-but-plaintext.png",
+    ]) {
+      const out = await resolveSideImages(sideWith(attack));
+      expect(srcOf(out), `${attack} was fetched`).toBe(attack);
+      expect(srcOf(out)).not.toMatch(/^data:/);
+    }
+  });
+
+  it("allows the uploader's own https hosts", () => {
+    expect(isAllowedRemote("https://utfs.io/f/abc.png")).toBe(true);
+    expect(isAllowedRemote("https://x.ufs.sh/f/abc.png")).toBe(true);
+    expect(isAllowedRemote("https://evil.example.com/x.png")).toBe(false);
+    expect(isAllowedRemote("not a url")).toBe(false);
   });
 });

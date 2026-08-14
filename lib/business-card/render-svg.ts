@@ -93,8 +93,25 @@ function renderText(el: TextElement): string {
         `<tspan x="${anchorX * K}" y="${(el.y + fontSizeIn * 0.9 + lineHeightIn * i) * K}">${esc(line)}</tspan>`
     )
     .join("");
-  const textEl = `<text font-family="${esc(el.fontFamily)}" font-size="${fontSizeIn * K}" font-weight="${el.fontWeight}" font-style="${el.italic ? "italic" : "normal"}" letter-spacing="${(el.letterSpacing / 72) * K}" fill="${esc(el.color)}" text-anchor="${anchor}"${decoration}>${tspans}</text>`;
+  const textEl = `<text font-family="${esc(fontStack(el.fontFamily))}" font-size="${fontSizeIn * K}" font-weight="${el.fontWeight}" font-style="${el.italic ? "italic" : "normal"}" letter-spacing="${(el.letterSpacing / 72) * K}" fill="${esc(el.color)}" text-anchor="${anchor}"${decoration}>${tspans}</text>`;
   return `${bgRect}<g transform="scale(${1 / K})">${textEl}</g>`;
+}
+
+/**
+ * A font stack, not a bare family name.
+ *
+ * The renderer emitted `font-family="Inter"` alone. Inter is not installed on the machine that
+ * rasterises these, so librsvg fell back - and crucially it fell back DIFFERENTLY per weight: 700
+ * and 900 landed on a bold sans and looked roughly right, while 400 landed on the default serif.
+ * The result was every template in the catalogue rendering its headline in a sans and its phone,
+ * email and website in what looked like Courier, with the fixed glyph advances that gives.
+ *
+ * Naming real fallbacks keeps the whole block in one sans whether or not Inter is present. Ordered
+ * so a machine with Inter still uses it.
+ */
+function fontStack(family: string): string {
+  const quoted = /\s/.test(family) ? `'${family}'` : family;
+  return `${quoted}, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'DejaVu Sans', sans-serif`;
 }
 
 function renderImage(el: ImageElement): string {

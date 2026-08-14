@@ -259,7 +259,14 @@ function TemplateGrid({ templates, product, routeSegment, thumbAspect }: { templ
             */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`/api/card-templates/${encodeURIComponent(t.slug)}/thumbnail`}
+              /*
+              Straight at the file, not through the API route.
+              The route existed to decode a base64 column; the images are files now and the filename
+              is the slug for every row, so the route was doing a 45ms remote database query to
+              learn a name it already had. A gallery of 947 cards meant up to 947 such queries.
+              Measured 50.2ms through the route against 1.56ms for the static file.
+            */
+            src={`/images/thumbs/${encodeURIComponent(t.slug)}.webp`}
               alt={t.title}
               className="h-full w-full object-cover"
               loading="lazy"

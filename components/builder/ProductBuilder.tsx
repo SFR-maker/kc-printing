@@ -21,6 +21,7 @@ import { BusinessCardPrintSpec, SIDES_LABEL, type BusinessCardSpec } from "@/com
 import { BannerPrintSpec, DEFAULT_BANNER_SPEC, type BannerSpec } from "@/components/builder/BannerPrintSpec";
 import {
   PostcardPrintSpec, DEFAULT_POSTCARD_SPEC, postcardBackLabel, postcardNeedsBack, type PostcardSpec,
+  SIDES_LABEL as POSTCARD_SIDES_LABEL,
 } from "@/components/builder/PostcardPrintSpec";
 import { bannerTrimInches, orientedSizeLabel } from "@/components/builder/BannerPrintSpec";
 import { RigidSignPrintSpec, type RigidSignPriceState } from "@/components/builder/RigidSignPrintSpec";
@@ -35,7 +36,7 @@ import { renderSideToSvg } from "@/lib/business-card/render-svg";
 import {
   defaultRigidSpec, rigidNeedsBack, rigidBackLabel, sizeById,
   materialLabel as rigidMaterialLabel, shapeLabel as rigidShapeLabel,
-  type RigidMaterialId, type RigidSignSpec,
+  type RigidMaterialId, type RigidSignSpec, thicknessesFor,
 } from "@/lib/pricing/rigid-signs";
 import {
   defaultWindowDecalSpec, windowNeedsBack, sizeById as windowSizeById,
@@ -216,6 +217,15 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [artworkError, setArtworkError] = useState<string | null>(null);
+  /**
+   * The artwork error's own element, so a refused Continue can scroll to it.
+   *
+   * The message rendered 1,300px below the fold, in the other column, while the button that
+   * triggered it sat in plain view. Pressing Continue looked like pressing a dead button: no
+   * movement, no spinner, no message anywhere on screen. It is the single most expensive defect on
+   * the page, because the reasonable conclusion is that the site is broken.
+   */
+  const artworkErrorRef = useRef<HTMLParagraphElement | null>(null);
   /**
    * Set when a spec change has just thrown away an uploaded file.
    *
@@ -443,6 +453,16 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, [stepKeys.length]);
+
+  useEffect(() => {
+    if (!artworkError) return;
+    const el = artworkErrorRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Focus as well as scroll: a screen reader is told, and a keyboard user carries on from the
+    // thing that stopped them rather than from wherever the button was.
+    el.focus({ preventScroll: true });
+  }, [artworkError]);
 
   const historyStep = useRef<number | null>(null);
   useEffect(() => {
@@ -750,7 +770,20 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
     // Applies to every product with real print specs, not just business cards. Banners and postcards
     // were reaching payment without this, and the package gate below then refused them silently.
     if (hasPrintSpec && currentStep === "specs") {
-      if (!printPrice?.valid) return;
+      if (!printPrice?.valid) {
+        /*
+         * Say why, rather than doing nothing.
+         *
+         * This returned silently, so on four of the five products the first press of Next had no
+         * visible effect at all. Banners escaped only because their default quantity of 1 makes the
+         * price valid - the same code path, hidden by an unrelated default.
+         */
+        setArtworkError(
+          printPrice?.error
+            ?? "Choose a quantity to see your price before continuing."
+        );
+        return;
+      }
       // Either the artwork came from the Design Studio, our designers are doing it, or there is an
       // uploaded file with an approved proof. Without this an unapproved proof could be carried
       // straight to payment.
@@ -825,15 +858,21 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       const pc = values.postcardSpec ?? DEFAULT_POSTCARD_SPEC;
       lines.push({ label: "Size", value: pc.size });
       lines.push({ label: "Paper", value: pc.paper });
-      lines.push({ label: "Sides", value: pc.color });
-      lines.push({ label: "Quantity", value: pc.quantity ? String(pc.quantity) : "Not chosen" });
+      // The picker says "Front only"; this echoed the supplier's "Full Color Front, No Back". The
+      // summary exists to confirm the choice, so it has to use the same words the choice did.
+      lines.push({ label: "Sides", value: POSTCARD_SIDES_LABEL[pc.color] ?? pc.color });
+      lines.push({ label: "Quantity", value: pc.quantity ? `${pc.quantity} postcard${pc.quantity === 1 ? "" : "s"}` : "Not chosen" });
     } else if (isRigidSigns) {
       const r = (values.rigidSpec ?? defaultRigidSpec()) as RigidSignSpec;
       const size = sizeById(r.material as RigidMaterialId, r.sizeId);
       lines.push({ label: "Material", value: rigidMaterialLabel(r.material as RigidMaterialId) });
       lines.push({ label: "Shape", value: rigidShapeLabel(r.material as RigidMaterialId, r.shapeId) });
       lines.push({ label: "Size", value: size?.label ?? "-" });
-      lines.push({ label: "Quantity", value: r.quantity ? String(r.quantity) : "Not chosen" });
+      // Chosen and priced, but previously never shown back to the customer.
+      const th = thicknessesFor(r.material as RigidMaterialId).find((t) => t.value === r.thickness);
+      if (th && th.value !== "-") lines.push({ label: "Thickness", value: th.label });
+      lines.push({ label: "Sides", value: r.color === "3" ? "Both sides" : "Front only" });
+      lines.push({ label: "Quantity", value: r.quantity ? `${r.quantity} sign${r.quantity === 1 ? "" : "s"}` : "Not chosen" });
     } else if (isWindowDecals) {
       const w = (values.windowSpec ?? defaultWindowDecalSpec()) as WindowDecalSpec;
       const size = windowSizeById(w.material as WindowMaterialId, w.sizeId);
@@ -1213,7 +1252,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
                 </>
               )}
               {artworkError && (
-                <p role="alert" className="text-sm text-red-600">{artworkError}</p>
+                <p ref={artworkErrorRef} tabIndex={-1} role="alert" className="scroll-mt-28 text-sm font-semibold text-red-600">{artworkError}</p>
               )}
             </div>
           </div>

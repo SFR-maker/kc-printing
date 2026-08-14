@@ -15,7 +15,19 @@ export async function resolveSideImages(side: CardSide): Promise<CardSide> {
       // against outside a running server request — read it straight off disk instead.
       if (el.src.startsWith("/")) {
         try {
-          const filePath = path.join(process.cwd(), "public", el.src);
+          /*
+           * Confined to public/, and verified after resolution.
+           *
+           * path.join happily normalises "/../.env.local" to a file one level ABOVE public, and the
+           * result was read and base64'd straight into the artwork. A design saved through the
+           * public POST /api/card-designs and then exported returned the contents of any file in
+           * the project - .env.local included, which on this deployment holds a live
+           * VERCEL_OIDC_TOKEN. Resolving first and then checking the prefix is what makes this
+           * safe: checking the raw src for ".." is the version people get wrong.
+           */
+          const root = path.resolve(process.cwd(), "public");
+          const filePath = path.resolve(root, "." + el.src);
+          if (filePath !== root && !filePath.startsWith(root + path.sep)) return el;
           const buf = await fs.readFile(filePath);
           const contentType = MIME_BY_EXT[path.extname(filePath).toLowerCase()] ?? "image/png";
           return { ...el, src: `data:${contentType};base64,${buf.toString("base64")}` };

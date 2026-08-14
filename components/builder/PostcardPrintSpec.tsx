@@ -22,7 +22,8 @@ export const DEFAULT_POSTCARD_SPEC: PostcardSpec = {
 };
 
 /** Plainer wording than the supplier's, matching what business cards call the same three choices. */
-const SIDES_LABEL: Record<string, string> = {
+/** Exported so the order summary echoes the same words the picker used. */
+export const SIDES_LABEL: Record<string, string> = {
   "Full Color Front, No Back": "Front only",
   "Full Color Front, Grayscale Back": "Front + grey back",
   "Full Color Both Sides": "Both sides",

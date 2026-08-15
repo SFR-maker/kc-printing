@@ -40,7 +40,7 @@ export default async function SpanishLayout({ children }: { children: React.Reac
     // grow against, and the footer floats up under short pages instead of sitting at the bottom.
     <div lang="es" className="flex min-h-full flex-1 flex-col">
       <a href="#main-content" className="skip-link">Ir al contenido</a>
-      <PromoBar special={special} />
+      <PromoBar special={special} locale="es" />
       <Header />
       {/* tabIndex -1 so the skip link actually moves the reading position. Without it the
           browser moves its sequential-focus point but activeElement stays on <body>, so a

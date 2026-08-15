@@ -7,7 +7,7 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import type { ServiceDef } from "@/lib/service-data";
 import type { ProductThumbnail } from "@/lib/product-thumbnails";
 import { formatDollars } from "@/lib/utils";
-import { type Locale, localePath } from "@/lib/i18n/config";
+import { type Locale, localePath, SERVICE_SLUG_ES } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
 interface ServicePageContentProps {
@@ -87,9 +87,18 @@ export function ServicePageContent({
   const t = getDictionary(locale).service;
   const common = getDictionary(locale).common;
   const photo = HERO_PHOTO[service.slug] ?? HERO_PHOTO["business-cards"];
-  // The order flow is English-only (see ORDER_FLOW_LOCALE), so this URL is deliberately not
-  // localised. The note under the hero buttons is what tells a Spanish reader so before they click.
-  const orderHref = `/services/${service.slug}/order`;
+  /**
+   * Where a package button sends the reader.
+   *
+   * On the Spanish site that is the Spanish product page, which now opens on the configurator with
+   * the package preselected - not the English /order route. The configurator's own controls are
+   * English either way (see ORDER_FLOW_LOCALE), but there is no reason to throw away the Spanish URL
+   * and the Spanish content around it to get to them.
+   */
+  const orderHref =
+    locale === "es" && SERVICE_SLUG_ES[service.slug]
+      ? `/es/servicios/${SERVICE_SLUG_ES[service.slug]}`
+      : `/services/${service.slug}/order`;
   const contactHref = localePath("/contact", locale);
   const portfolioHref = localePath("/portfolio", locale);
   const lower = service.name.toLowerCase();
@@ -215,7 +224,7 @@ export function ServicePageContent({
                     href={designStudioHref}
                     className="text-[14.98px] font-semibold text-kc-magenta-deep transition-colors hover:text-kc-dark"
                   >
-                    Open the design studio
+                    {t.openStudio}
                   </Link>
                 )}
                 <Link
@@ -369,7 +378,7 @@ export function ServicePageContent({
                       {pkg.name}
                     </span>
                     {pkg.popular && (
-                      <span className="font-mono text-[11.77px] text-white/60">Most popular</span>
+                      <span className="font-mono text-[11.77px] text-white/60">{common.mostPopular}</span>
                     )}
                   </div>
 
@@ -407,7 +416,7 @@ export function ServicePageContent({
                     }
                   >
                     <Link href={`${orderHref}?package=${pkg.name.toLowerCase()}`}>
-                      Select {pkg.name}
+                      {t.selectPackage.replace("{package}", pkg.name)}
                     </Link>
                   </Button>
                 </div>
@@ -418,7 +427,7 @@ export function ServicePageContent({
           {service.addOns.length > 0 && (
             <div className="mt-16">
               <h3 className="display-tight mb-6 text-xl text-kc-dark sm:text-2xl">
-                Available add-ons
+                {t.addOnsAvailable}
               </h3>
               <dl className="grid grid-cols-1 gap-x-12 sm:grid-cols-2">
                 {service.addOns.map((addon) => (

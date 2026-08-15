@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { localePath, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 export interface PortfolioSample {
   slug: string;
@@ -15,8 +17,6 @@ export interface PortfolioSample {
   href: string;
 }
 
-const CATEGORIES = ["All", "Business Cards", "Postcards", "Banners", "Rigid Signs"] as const;
-
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const group: Variants = { hidden: {}, shown: { transition: { staggerChildren: 0.05 } } };
@@ -25,27 +25,52 @@ const item: Variants = {
   shown: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
-export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
-  const [active, setActive] = useState<string>("All");
+/**
+ * The template gallery and its product filter.
+ *
+ * The filter list is derived from the samples rather than typed out. It used to be a hardcoded
+ * English array, which broke in two directions at once: window decals were missing from it, so 96
+ * seeded templates could not be filtered to in either language, and on /es/portafolio - where the
+ * categories arrive as "Tarjetas de presentación" and the rest - not one button matched a sample,
+ * so every filter but "All" rendered disabled at count 0. Deriving the list means a category exists
+ * here exactly when there is something to show under it, whatever language it is named in.
+ */
+export function PortfolioGrid({
+  samples,
+  locale = "en",
+}: {
+  samples: PortfolioSample[];
+  locale?: Locale;
+}) {
+  const t = getDictionary(locale).portfolio;
+  const [active, setActive] = useState<string>(t.all);
   const reduce = useReducedMotion();
 
+  // First-appearance order. The pages interleave their samples product by product, so this comes
+  // out in the storefront's own product order without either side having to state it twice.
+  const categories = useMemo(() => {
+    const seen: string[] = [];
+    for (const s of samples) if (!seen.includes(s.category)) seen.push(s.category);
+    return [t.all, ...seen];
+  }, [samples, t.all]);
+
   const counts = useMemo(() => {
-    const map = new Map<string, number>([["All", samples.length]]);
+    const map = new Map<string, number>([[t.all, samples.length]]);
     for (const s of samples) map.set(s.category, (map.get(s.category) ?? 0) + 1);
     return map;
-  }, [samples]);
+  }, [samples, t.all]);
 
-  const visible = active === "All" ? samples : samples.filter((s) => s.category === active);
+  const visible = active === t.all ? samples : samples.filter((s) => s.category === active);
 
   return (
     <>
       {/* Segmented filter. Square trim to match the page's 2px shape system. */}
       <div
         role="group"
-        aria-label="Filter examples by product"
+        aria-label={t.filterLabel}
         className="mb-10 flex flex-wrap gap-2"
       >
-        {CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const count = counts.get(cat) ?? 0;
           const selected = active === cat;
           return (
@@ -79,13 +104,13 @@ export function PortfolioGrid({ samples }: { samples: PortfolioSample[] }) {
       {visible.length === 0 ? (
         <div className="edge border border-dashed border-kc-dark/20 bg-white px-6 py-16 text-center">
           <p className="text-[16.05px] text-kc-dark/70">
-            No {active.toLowerCase()} examples are published yet.
+            {t.empty.replace("{category}", active.toLowerCase())}
           </p>
           <Link
-            href="/contact"
+            href={localePath("/contact", locale)}
             className="mt-3 inline-block text-[14.98px] font-semibold text-kc-magenta-deep hover:text-kc-dark"
           >
-            Ask us for samples
+            {t.askForSamples}
           </Link>
         </div>
       ) : (

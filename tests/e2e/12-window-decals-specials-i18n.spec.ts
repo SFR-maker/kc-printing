@@ -290,3 +290,152 @@ test.describe("spanish site", () => {
     expect(res?.status()).toBe(404);
   });
 });
+
+/**
+ * Parity between the two languages.
+ *
+ * The Spanish site rendered perfectly while being a strictly lesser thing than the English one: the
+ * product pages were brochures with no configurator and no print price, the portfolio filters were
+ * all dead, the contact page had no form, and a handful of English strings sat in the middle of
+ * Spanish pages. None of that produces an error, a failed request or a 404 - which is exactly why it
+ * needs asserting rather than looking at.
+ */
+test.describe("spanish parity", () => {
+  test("every Spanish product page opens on the configurator, like its English twin", async ({ page }) => {
+    for (const [en, es] of Object.entries(SERVICE_SLUG_ES)) {
+      const problems = watchForErrors(page);
+      await page.goto(`/es/servicios/${es}`);
+
+      // The configurator, not a brochure: the same order summary the English page mounts.
+      await expect(page.locator('[data-testid="order-summary"]').first(), es).toBeAttached();
+
+      // The h1 is Spanish even though the controls beneath it are English - it is what the page is
+      // read and ranked on, and an English h1 would undo the reason /es has its own URLs.
+      const h1 = await page.getByRole("heading", { level: 1 }).first().innerText();
+      expect(h1.toLowerCase(), es).toContain(SERVICES_ES[en].name.toLowerCase());
+      expect(h1, es).toMatch(/^Pedir /);
+
+      expect(problems, es).toEqual([]);
+    }
+  });
+
+  test("a package chosen on the Spanish pricing page stays in Spanish", async ({ page }) => {
+    await page.goto("/es/precios");
+    const select = page.getByRole("link", { name: /^Elegir /i }).first();
+    await expect(select).toBeVisible();
+    await select.click();
+    // Not /services/<slug>/order: the Spanish reader keeps the Spanish URL and the Spanish content.
+    await expect(page).toHaveURL(/\/es\/servicios\/[a-z-]+\?package=/);
+  });
+
+  test("the Spanish portfolio filters actually filter", async ({ page }) => {
+    await page.goto("/es/portafolio");
+    const filters = page.getByRole("group", { name: /Filtrar ejemplos/i });
+    await expect(filters).toBeVisible();
+
+    // The filter list was hardcoded in English, so on this page every button but "Todos" matched
+    // nothing, showed a count of 0 and rendered disabled.
+    const buttons = filters.getByRole("button");
+    const count = await buttons.count();
+    expect(count, "the Spanish portfolio offers no product filters").toBeGreaterThan(1);
+
+    for (let i = 0; i < count; i++) {
+      await expect(buttons.nth(i), `filter ${i} is dead`).toBeEnabled();
+    }
+
+    // And picking one leaves something on screen.
+    await buttons.nth(1).click();
+    await expect(page.locator("main ul li").first()).toBeVisible();
+  });
+
+  test("the Spanish contact page takes a written enquiry", async ({ page }) => {
+    await page.goto("/es/contacto");
+    await expect(page.getByLabel(/^Nombre$/i)).toBeVisible();
+    await expect(page.getByLabel(/Correo electrónico/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Enviar mensaje/i })).toBeVisible();
+
+    // Validation speaks Spanish too, rather than falling back to the English resolver messages.
+    await page.getByRole("button", { name: /Enviar mensaje/i }).click();
+    await expect(page.getByText(/El nombre es obligatorio/i)).toBeVisible();
+  });
+
+  test("the Spanish enquiry is tagged so it comes back in Spanish", async ({ request }) => {
+    // Without RESEND_API_KEY the route accepts and no-ops, which is enough to prove the locale
+    // field is part of the contract rather than being rejected as an unknown key.
+    const res = await request.post("/api/contact", {
+      data: {
+        name: "Prueba",
+        email: "prueba@ejemplo.com",
+        service: "Postales",
+        message: "Quisiera cotizar mil postales para un reparto.",
+        locale: "es",
+      },
+    });
+    expect([200, 429]).toContain(res.status());
+  });
+
+  test("the Spanish homepage carries the sections the English one does", async ({ page }) => {
+    await page.goto("/es");
+    // `exact` matters: the FAQ accordion below contains "¿Cómo funciona el proceso de pedido?",
+    // which a loose match resolves to alongside the section heading.
+    for (const heading of ["Cómo funciona", "Preguntas frecuentes"]) {
+      await expect(
+        page.getByRole("heading", { name: heading, exact: true }),
+        heading,
+      ).toBeVisible();
+    }
+    await expect(page.getByRole("heading", { name: /¿Tiene la idea/i })).toBeVisible();
+
+    // One business, described twice - not two businesses. A second @id would split the local
+    // search signals the markup exists to consolidate.
+    const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+    const graph = blocks.flatMap((b) => JSON.parse(b)["@graph"] ?? []);
+    const business = graph.find((n: { "@type": string }) => n["@type"] === "LocalBusiness");
+    expect(business, "the Spanish homepage emits no LocalBusiness markup").toBeTruthy();
+    expect(business["@id"]).toMatch(/#business$/);
+    expect(graph.some((n: { "@type": string }) => n["@type"] === "FAQPage")).toBe(true);
+  });
+
+  test("no English interface strings leak onto Spanish pages", async ({ page }) => {
+    /*
+     * The strings that were hardcoded past the dictionary. Bounded to interface furniture: product
+     * photography alt text and customer testimonials are legitimately English, and the package tier
+     * names (Silver/Gold/Platinum) are the same word in both languages.
+     */
+    const LEAKS = [
+      "Open the design studio",
+      "Most popular",
+      "Available add-ons",
+      "See the offer",
+      "Filter examples by product",
+      "Ask us for samples",
+      "Terms of Service",
+      "Privacy Policy",
+    ];
+
+    /*
+     * English product names are a leak everywhere except inside the configurator, which is English
+     * on purpose - see ORDER_FLOW_LOCALE. On the product pages it sits at the top of the page, so
+     * those two routes check the marketing content and the footer around it rather than the whole
+     * body; everywhere else there is no configurator and the whole page must be Spanish.
+     */
+    const ENGLISH_PRODUCT_NAMES = Object.values(SERVICES).map((s) => s.name);
+
+    for (const es of [...Object.values(ROUTE_MAP), "/es/servicios/postales"]) {
+      if (!es.startsWith("/es")) continue;
+      await page.goto(es);
+
+      const isProductPage = /^\/es\/servicios\/./.test(es);
+      const body = await page.locator("body").innerText();
+      const outsideBuilder = isProductPage
+        ? (await page.locator("main > section, footer").allInnerTexts()).join("\n")
+        : body;
+
+      const found = [
+        ...LEAKS.filter((s) => body.includes(s)),
+        ...ENGLISH_PRODUCT_NAMES.filter((s) => outsideBuilder.includes(s)),
+      ];
+      expect(found, `${es} still shows English interface copy: ${found.join(", ")}`).toEqual([]);
+    }
+  });
+});

@@ -52,8 +52,8 @@ const CARDS: { slug: string; image: string; alt: string; description: string; hi
     slug: "rigid-signs",
     image: "/images/print/rigid-signs.webp",
     alt: "Cuatro letreros rígidos troquelados recargados en una pared de estudio",
-    description: "Señalización rígida troquelada en círculo, estrella, flecha, casa o cuadrado redondeado, en acrílico, aluminio, PVC, foam board o plástico corrugado.",
-    highlights: ["5 formas, 5 materiales", "Archivo con línea de corte incluido", "Hasta 8 revisiones incluidas"],
+    description: "Señalización rígida troquelada en trece formas, impresa en Yard Sign, plástico corrugado, PVC, foam board o aluminio.",
+    highlights: ["13 formas, 5 materiales", "Archivo con línea de corte incluido", "Hasta 8 revisiones incluidas"],
   },
   {
     slug: "window-decals",

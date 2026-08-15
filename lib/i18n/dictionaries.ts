@@ -20,6 +20,7 @@ const en = {
     portfolio: "Portfolio",
     about: "About",
     contact: "Contact",
+    faq: "FAQ",
     account: "My account",
     signIn: "Sign in",
     startDesigning: "Start designing",
@@ -63,6 +64,10 @@ const en = {
     choosePackage: "Choose your package",
     choosePackageBody: "Every package includes print-ready file delivery and revisions.",
     addOnsTitle: "Add-ons",
+    addOnsAvailable: "Available add-ons",
+    openStudio: "Open the design studio",
+    /** "Select {package}" - the tier name is substituted at render time. */
+    selectPackage: "Select {package}",
     /** "{product} questions" - the product name is substituted at render time. */
     questionsTitle: "{product} questions",
     readyHeading: "Ready to order your {product}?",
@@ -95,12 +100,29 @@ const en = {
     perProduct: "Per product",
     printSeparate: "Print priced separately at checkout",
   },
+  portfolio: {
+    filterLabel: "Filter examples by product",
+    all: "All",
+    /** "No {category} examples are published yet." - the filter name is substituted at render time. */
+    empty: "No {category} examples are published yet.",
+    askForSamples: "Ask us for samples",
+  },
   footer: {
     servicesHeading: "What we print",
     companyHeading: "Company",
     legalHeading: "Legal",
     areasHeading: "Where we work",
     rights: "All rights reserved.",
+    blurb:
+      "Business cards, postcards, banners, rigid signs, and window decals, designed by a real person and delivered print-ready. Ordered entirely online.",
+    terms: "Terms of Service",
+    privacy: "Privacy Policy",
+    refund: "Refund Policy",
+    /**
+     * Shown on Spanish pages only. The legal pages are the one part of the site that is
+     * deliberately not translated - see the note in components/layout/Footer.
+     */
+    legalEnglishNote: "",
   },
 } as const;
 
@@ -117,6 +139,7 @@ const es: Dictionary = {
     portfolio: "Portafolio",
     about: "Nosotros",
     contact: "Contacto",
+    faq: "Preguntas frecuentes",
     account: "Mi cuenta",
     signIn: "Iniciar sesión",
     startDesigning: "Empezar a diseñar",
@@ -160,6 +183,9 @@ const es: Dictionary = {
     choosePackage: "Elija su paquete",
     choosePackageBody: "Todos los paquetes incluyen entrega de archivos listos para imprenta y revisiones.",
     addOnsTitle: "Complementos",
+    addOnsAvailable: "Complementos disponibles",
+    openStudio: "Abrir el editor de diseño",
+    selectPackage: "Elegir {package}",
     questionsTitle: "Preguntas sobre {product}",
     readyHeading: "¿Listo para pedir sus {product}?",
     readyBody: "Elija un paquete, comparta los datos de su marca y su primera propuesta llega en 1 a 3 días hábiles.",
@@ -193,12 +219,26 @@ const es: Dictionary = {
     perProduct: "Por producto",
     printSeparate: "La impresión se cotiza aparte al pagar",
   },
+  portfolio: {
+    filterLabel: "Filtrar ejemplos por producto",
+    all: "Todos",
+    empty: "Todavía no hay ejemplos de {category} publicados.",
+    askForSamples: "Pídanos muestras",
+  },
   footer: {
     servicesHeading: "Lo que imprimimos",
     companyHeading: "Empresa",
     legalHeading: "Legal",
     areasHeading: "Dónde trabajamos",
     rights: "Todos los derechos reservados.",
+    blurb:
+      "Tarjetas de presentación, postales, lonas, letreros rígidos y calcomanías para ventanas, diseñados por una persona real y entregados listos para imprenta. Todo el pedido en línea.",
+    terms: "Términos de venta",
+    privacy: "Aviso de privacidad",
+    refund: "Política de reembolsos",
+    // The legal pages themselves are English. Saying so beside the links is more honest than a
+    // machine translation of a document that has to hold up if it is ever argued over.
+    legalEnglishNote: "Los documentos legales están en inglés.",
   },
 };
 

@@ -13,7 +13,16 @@ import { X } from "lucide-react";
  * visits works the same way. Two mechanisms doing the same thing the same way is simpler than a
  * client wrapper that exists only to hold one boolean.
  */
-export function PromoBarDismiss({ slug, domId }: { slug: string; domId: string }) {
+export function PromoBarDismiss({
+  slug,
+  domId,
+  label,
+}: {
+  slug: string;
+  domId: string;
+  /** Already translated by PromoBar, which knows the locale. */
+  label: string;
+}) {
   function dismiss() {
     try {
       window.localStorage.setItem(`kc-promo-dismissed-${slug}`, "1");
@@ -29,7 +38,7 @@ export function PromoBarDismiss({ slug, domId }: { slug: string; domId: string }
     <button
       type="button"
       onClick={dismiss}
-      aria-label="Dismiss this announcement"
+      aria-label={label}
       aria-controls={domId}
       className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
     >

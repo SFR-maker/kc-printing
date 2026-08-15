@@ -166,6 +166,24 @@ interface ProductBuilderProps {
   testCode?: string;
   /** Margin, flat fees and shipping tiers as configured in /admin/pricing. */
   pricing?: PricingSettings;
+  /**
+   * Overrides the "Order {product}" h1.
+   *
+   * Set by the Spanish product pages. The configurator's own controls stay English - see
+   * ORDER_FLOW_LOCALE - but this is the page's only h1 once the marketing hero is dropped, and an
+   * English h1 on a page whose title, description and body are Spanish undoes the reason the
+   * Spanish tree has its own URLs in the first place.
+   */
+  heading?: string;
+  /**
+   * Rendered under the h1, above the step rail. Carries the Spanish pages' warning that everything
+   * from here on is in English, at the point where the reader is about to rely on it.
+   *
+   * A string rather than a ReactNode: handing a Server Component's JSX element to this Client
+   * Component as a prop makes React treat it as an unkeyed child and log a key warning on every
+   * Spanish product page.
+   */
+  note?: string;
 }
 
 function draftKey(serviceSlug: string): string {
@@ -176,7 +194,7 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApproved = false, testCode, pricing = DEFAULT_PRICING }: ProductBuilderProps) {
+export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApproved = false, testCode, pricing = DEFAULT_PRICING, heading, note }: ProductBuilderProps) {
   const isBusinessCards = service.slug === "business-cards";
   const isBanners = service.slug === "banners";
   const isPostcards = service.slug === "postcards";
@@ -930,7 +948,10 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
       )}
     >
       <div className={cn(isConfigurator ? "mb-5" : "mb-8")}>
-        <h1 className="text-3xl font-black text-kc-dark mb-2">Order {service.name}</h1>
+        <h1 className="text-3xl font-black text-kc-dark mb-2">{heading ?? `Order ${service.name}`}</h1>
+        {note && (
+          <p className="mb-4 max-w-[70ch] text-[15.52px] leading-relaxed text-kc-dark/70">{note}</p>
+        )}
         {testCode && (
           // Deliberately loud. This mode reaches live Stripe and creates a real order row, so it
           // must never be mistaken for the normal flow by whoever is holding the link.

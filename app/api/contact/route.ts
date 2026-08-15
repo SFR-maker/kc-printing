@@ -7,6 +7,15 @@ const schema = z.object({
   phone: z.string().max(40).optional(),
   service: z.string().min(1).max(80),
   message: z.string().min(10).max(5000),
+  /**
+   * Which language the sender wrote in. Optional, and defaulted rather than required, so an older
+   * cached copy of the form still posts successfully.
+   *
+   * It exists to put a marker in the subject line. A Spanish enquiry answered in English is the
+   * failure the Spanish page spent a paragraph apologising for before it had a form at all, and the
+   * only thing standing between the two is whoever opens the email knowing which it is.
+   */
+  locale: z.enum(["en", "es"]).optional().default("en"),
 });
 
 /**
@@ -58,21 +67,42 @@ function clientKey(req: Request): string {
   return fwd?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "unknown";
 }
 
-export async function POST(req: Request) {
-  if (rateLimited(clientKey(req))) {
-    return NextResponse.json(
-      { error: "Too many messages. Please try again shortly, or call (816) 521-0462." },
-      { status: 429 }
-    );
-  }
+/**
+ * The two errors the sender actually reads, in the language they wrote in.
+ *
+ * The form renders whatever `error` comes back verbatim, so an English sentence here lands in the
+ * middle of the Spanish contact page - on the one screen where something has already gone wrong and
+ * the reader most needs to understand what to do next.
+ */
+const ERRORS = {
+  en: {
+    rateLimited: "Too many messages. Please try again shortly, or call (816) 521-0462.",
+    sendFailed:
+      "We could not send your message. Please email kansasdesigners@gmail.com or call (816) 521-0462.",
+  },
+  es: {
+    rateLimited: "Demasiados mensajes. Inténtelo de nuevo en un momento o llame al (816) 521-0462.",
+    sendFailed:
+      "No pudimos enviar su mensaje. Escriba a kansasdesigners@gmail.com o llame al (816) 521-0462.",
+  },
+} as const;
 
+export async function POST(req: Request) {
+  // Parsed before the rate-limit check, purely so the limiter's own message can be returned in the
+  // sender's language. What the limit protects is the email send below, which is still behind it.
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
 
-  const { name, email, phone, service, message } = parsed.data;
+  const { name, email, phone, service, message, locale } = parsed.data;
+  const isSpanish = locale === "es";
+  const errors = ERRORS[locale];
+
+  if (rateLimited(clientKey(req))) {
+    return NextResponse.json({ error: errors.rateLimited }, { status: 429 });
+  }
 
   if (process.env.RESEND_API_KEY) {
     try {
@@ -86,8 +116,9 @@ export async function POST(req: Request) {
           from: process.env.RESEND_FROM_EMAIL ?? "hello@611printing.com",
           to: [process.env.ADMIN_EMAIL ?? "kansasdesigners@gmail.com"],
           reply_to: email,
-          subject: `New Contact Form: ${service} from ${name}`,
+          subject: `${isSpanish ? "[ES] " : ""}New Contact Form: ${service} from ${name}`,
           html: `
+            ${isSpanish ? "<p><strong>Written in Spanish — reply in Spanish.</strong></p>" : ""}
             <p><strong>Name:</strong> ${escapeHtml(name)}</p>
             <p><strong>Email:</strong> ${escapeHtml(email)}</p>
             <p><strong>Phone:</strong> ${phone ? escapeHtml(phone) : "Not provided"}</p>
@@ -102,17 +133,11 @@ export async function POST(req: Request) {
       // sender still saw a success screen, so the enquiry vanished with nobody aware of it.
       if (!res.ok) {
         console.error("Resend rejected contact email:", res.status, await res.text().catch(() => ""));
-        return NextResponse.json(
-          { error: "We could not send your message. Please email kansasdesigners@gmail.com or call (816) 521-0462." },
-          { status: 502 }
-        );
+        return NextResponse.json({ error: errors.sendFailed }, { status: 502 });
       }
     } catch (err) {
       console.error("Failed to send contact email:", err);
-      return NextResponse.json(
-        { error: "We could not send your message. Please email kansasdesigners@gmail.com or call (816) 521-0462." },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: errors.sendFailed }, { status: 502 });
     }
   }
 

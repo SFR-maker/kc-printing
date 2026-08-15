@@ -96,6 +96,29 @@ export default function SpanishFaqPage() {
         secondary={{ label: "Ver lo que imprimimos", href: "/es/servicios" }}
         showContactDetails
       />
+
+      {/*
+        FAQPage markup, as on the English page. Without it the Spanish FAQ - which is the longer and
+        more useful of the two, since it answers the questions only a Spanish-speaking customer has -
+        was the one page of the pair with no chance of a rich result.
+      */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            inLanguage: "es-US",
+            mainEntity: FAQS.flatMap((group) =>
+              group.items.map((item) => ({
+                "@type": "Question",
+                name: item.q,
+                acceptedAnswer: { "@type": "Answer", text: item.a },
+              }))
+            ),
+          }),
+        }}
+      />
     </>
   );
 }

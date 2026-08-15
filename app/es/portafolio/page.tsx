@@ -139,7 +139,7 @@ export default async function SpanishPortfolioPage() {
       <section className="band-tight bg-kc-paper">
         <div className="container-tight">
           <h2 className="sr-only">Biblioteca de plantillas</h2>
-          <PortfolioGrid samples={samples} />
+          <PortfolioGrid samples={samples} locale="es" />
         </div>
       </section>
 

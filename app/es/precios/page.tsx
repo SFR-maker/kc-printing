@@ -4,7 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import { SERVICES_ES } from "@/lib/service-data-es";
-import { startingPriceLabel } from "@/lib/pricing/starting-prices";
+import { startingPriceLabel, STARTING_PRICES } from "@/lib/pricing/starting-prices";
 import { formatDollars } from "@/lib/utils";
 import { SERVICE_SLUG_ES } from "@/lib/i18n/config";
 import { localeAlternates } from "@/lib/i18n/metadata";
@@ -47,6 +47,49 @@ export default function SpanishPricingPage() {
         </div>
       </section>
 
+      {/*
+        Design and printing, named as two different things.
+
+        The English page carries this block because the page listing $39-$69 design packages sat
+        alongside a product page quoting $16.80 for 250 cards, and nothing said which was which - a
+        careful customer comparing the two concluded something was being hidden. That reading is
+        available in Spanish too, and this page had no equivalent explanation at all.
+      */}
+      <section className="band-tight bg-kc-bg">
+        <div className="container-tight">
+          <div className="rounded-2xl border-2 border-kc-border bg-white p-6">
+            <h2 className="text-lg font-bold text-kc-dark">
+              El diseño y la impresión se cobran por separado
+            </h2>
+            <p className="mt-2 max-w-2xl text-[16.59px] leading-relaxed text-kc-dark/75">
+              Los paquetes de abajo cubren únicamente el trabajo de diseño. Si ya tiene su arte, o si
+              lo hace usted mismo en nuestro editor gratuito, paga solo la impresión. La impresión
+              empieza en{" "}
+              {/* Leído de la tabla de precios, no escrito a mano: una cifra tecleada aquí se queda
+                  atrás en cuanto cambia el precio real que cobra el configurador. */}
+              <strong className="font-semibold text-kc-dark">
+                {formatDollars(STARTING_PRICES["business-cards"])} por 50 tarjetas de presentación
+              </strong>{" "}
+              y se cotiza en vivo en la página de cada producto mientras elige tamaño, papel y
+              cantidad.
+            </p>
+            <p className="mt-3 text-[15px] text-kc-dark/70">
+              Los complementos de un paquete - diseño urgente, un concepto extra, un código QR -
+              compran tiempo de diseñador. La rapidez con la que su trabajo sale de la imprenta es
+              una elección aparte, que se hace junto con el resto de las opciones de impresión en la
+              página del producto.
+            </p>
+            <p className="mt-3 text-[15px] text-kc-dark/70">
+              El envío y los impuestos se agregan al finalizar la compra. No se añade nada a su
+              pedido que usted no haya elegido.
+            </p>
+            <Button asChild className="mt-5 bg-kc-coral text-white hover:bg-kc-coral/90">
+              <Link href="/es/servicios/tarjetas-de-presentacion">Ver precios de impresión</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {ORDER.map((slug, index) => {
         const service = SERVICES_ES[slug];
         if (!service) return null;
@@ -85,7 +128,7 @@ export default function SpanishPricingPage() {
                         )}
                       </div>
                       <div className="mt-3 font-mono text-3xl font-black text-kc-dark">{formatDollars(pkg.price)}</div>
-                      <ul className="mt-5 space-y-2.5">
+                      <ul className="mt-5 flex-1 space-y-2.5">
                         {pkg.features.map((f) => (
                           <li key={f} className="flex items-start gap-2 text-[14.98px] leading-snug text-kc-dark/75">
                             <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-kc-teal" strokeWidth={2.25} />
@@ -93,6 +136,21 @@ export default function SpanishPricingPage() {
                           </li>
                         ))}
                       </ul>
+
+                      {/* The page listed fifteen prices and offered no way to act on any of them.
+                          Lands on the Spanish product page with the tier preselected. */}
+                      <Button
+                        asChild
+                        className={
+                          pkg.popular
+                            ? "edge mt-6 h-11 w-full bg-kc-coral text-[14.98px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep"
+                            : "edge mt-6 h-11 w-full border border-kc-dark/20 bg-transparent text-[14.98px] font-semibold text-kc-dark transition-colors hover:border-kc-dark/40 hover:bg-kc-dark/5"
+                        }
+                      >
+                        <Link href={`/es/servicios/${SERVICE_SLUG_ES[slug]}?package=${pkg.name.toLowerCase()}`}>
+                          {t.service.selectPackage.replace("{package}", pkg.name)}
+                        </Link>
+                      </Button>
                     </div>
                   </RevealItem>
                 ))}

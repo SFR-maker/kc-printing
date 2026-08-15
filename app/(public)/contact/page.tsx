@@ -1,78 +1,13 @@
-"use client";
+import { Phone, Mail, MessageSquare } from "lucide-react";
+import { ContactForm } from "@/components/contact/ContactForm";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Phone, Mail, MessageSquare, CheckCircle2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const schema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().optional(),
-  service: z.string().min(1, "Please select a service"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
-});
-
-type FormValues = z.infer<typeof schema>;
-
-const SERVICES = [
-  "Business Cards",
-  "Postcards",
-  "Banners",
-  "Rigid Signs",
-  "Other / Not Sure",
-];
-
-const FIELD =
-  "edge h-11 border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/70 focus-visible:border-kc-dark/40";
-
+/**
+ * The form itself lives in components/contact/ContactForm, which the Spanish page shares. Only the
+ * surrounding contact details are per-page, so this is a Server Component again - the whole page
+ * used to be a Client Component purely because react-hook-form lived in it, which is also why its
+ * metadata had to be exported from a sibling layout.tsx.
+ */
 export default function ContactPage() {
-  const [sent, setSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    // The service Select isn't a native input react-hook-form can auto-register, so without an
-    // explicit default it starts as `undefined` — which fails Zod's string type check with a raw
-    // "expected string, received undefined" message instead of the friendly one on .min(1, ...).
-    defaultValues: { service: "" },
-  });
-
-  const onSubmit = async (data: FormValues) => {
-    setLoading(true);
-    setSubmitError(null);
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        // The route now returns a specific message for rate limiting (429) and mail-provider
-        // failures (502); surface it instead of a generic "something went wrong".
-        const payload = await res.json().catch(() => null);
-        throw new Error(payload?.error ?? "Request failed");
-      }
-      setSent(true);
-    } catch (err) {
-      // Keep the entered data in place so the user doesn't have to retype it.
-      setSubmitError(
-        err instanceof Error && err.message !== "Request failed"
-          ? err.message
-          : "Something went wrong sending your message. Please try again, or reach us directly at (816) 521-0462."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <>
       <section className="bg-kc-bg">
@@ -124,17 +59,17 @@ export default function ContactPage() {
                     {item.label}
                   </dt>
                   <dd className="mt-0.5 pl-6">
-                      {item.href ? (
-                        <a
-                          href={item.href}
-                          className="text-[16.05px] font-medium text-kc-dark transition-colors hover:text-kc-magenta-deep"
-                        >
-                          {item.value}
-                        </a>
-                      ) : (
-                        <span className="text-[16.05px] font-medium text-kc-dark">{item.value}</span>
-                      )}
-                    </dd>
+                    {item.href ? (
+                      <a
+                        href={item.href}
+                        className="text-[16.05px] font-medium text-kc-dark transition-colors hover:text-kc-magenta-deep"
+                      >
+                        {item.value}
+                      </a>
+                    ) : (
+                      <span className="text-[16.05px] font-medium text-kc-dark">{item.value}</span>
+                    )}
+                  </dd>
                 </div>
               ))}
             </dl>
@@ -150,95 +85,7 @@ export default function ContactPage() {
           </div>
 
           <div>
-            {sent ? (
-              <div className="edge border border-kc-dark/12 bg-white p-8 sm:p-12">
-                <CheckCircle2 className="h-9 w-9 text-kc-coral" strokeWidth={1.5} />
-                <h2 className="display-tight mt-5 text-2xl text-kc-dark sm:text-[2.03rem]">
-                  Message sent
-                </h2>
-                <p className="mt-3 max-w-sm text-[16.59px] leading-relaxed text-kc-dark/75">
-                  We received your message and will get back to you within a few hours. You can also
-                  call or text us at (816) 521-0462.
-                </p>
-              </div>
-            ) : (
-              <form
-                onSubmit={handleSubmit(onSubmit)}
-                className="edge space-y-5 border border-kc-dark/12 bg-white p-6 sm:p-8"
-              >
-                {submitError && (
-                  <div
-                    role="alert"
-                    className="edge flex items-start gap-2.5 border border-red-300 bg-red-50 p-3.5 text-[14.98px] leading-snug text-red-800"
-                  >
-                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
-                    <span>{submitError}</span>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-[14.45px] font-medium text-kc-dark">
-                      Name
-                    </Label>
-                    <Input id="name" placeholder="Your full name" className={FIELD} {...register("name")} />
-                    {errors.name && <p className="text-[13.38px] text-red-700">{errors.name.message}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-[14.45px] font-medium text-kc-dark">
-                      Email
-                    </Label>
-                    <Input id="email" type="email" placeholder="you@example.com" className={FIELD} {...register("email")} />
-                    {errors.email && <p className="text-[13.38px] text-red-700">{errors.email.message}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-[14.45px] font-medium text-kc-dark">
-                      Phone (optional)
-                    </Label>
-                    <Input id="phone" type="tel" placeholder="(816) 555-0000" className={FIELD} {...register("phone")} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[14.45px] font-medium text-kc-dark">Service needed</Label>
-                    <Select onValueChange={(v) => { if (v) setValue("service", v as string); }}>
-                      <SelectTrigger aria-label="Service needed" className={FIELD}>
-                        <SelectValue placeholder="Select a service" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SERVICES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.service && <p className="text-[13.38px] text-red-700">{errors.service.message}</p>}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="message" className="text-[14.45px] font-medium text-kc-dark">
-                    Message
-                  </Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Tell us about your project, timeline, and any specific requirements"
-                    rows={6}
-                    className="edge border-kc-dark/20 text-[16.05px] text-kc-dark placeholder:text-kc-dark/70 focus-visible:border-kc-dark/40"
-                    {...register("message")}
-                  />
-                  {errors.message && <p className="text-[13.38px] text-red-700">{errors.message.message}</p>}
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="edge h-12 w-full bg-kc-coral text-[16.05px] font-semibold text-white transition-colors hover:bg-kc-magenta-deep disabled:opacity-60"
-                >
-                  {loading ? "Sending..." : "Send message"}
-                </Button>
-              </form>
-            )}
+            <ContactForm locale="en" />
           </div>
         </div>
       </section>

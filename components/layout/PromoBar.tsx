@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { PublicSpecial } from "@/lib/specials-shared";
 import { PromoBarDismiss } from "@/components/layout/PromoBarDismiss";
+import { localePath, type Locale } from "@/lib/i18n/config";
+import { getDictionary } from "@/lib/i18n/dictionaries";
 
 /**
  * The site-wide promotion strip.
@@ -20,10 +22,20 @@ import { PromoBarDismiss } from "@/components/layout/PromoBarDismiss";
  * preference the server has no use for, and a cookie would vary the cached HTML of every page for
  * the sake of one strip.
  */
-export function PromoBar({ special }: { special: PublicSpecial | null }) {
+export function PromoBar({
+  special,
+  locale = "en",
+}: {
+  special: PublicSpecial | null;
+  locale?: Locale;
+}) {
   if (!special) return null;
 
-  const href = special.ctaHref ?? `/specials#${special.slug}`;
+  const t = getDictionary(locale).specials;
+  // The fallback target is the offers page in the reader's own language. It was hardcoded to
+  // /specials, so the one link on every Spanish page that a promotion puts in front of the reader
+  // was the one link that dropped them back into English.
+  const href = special.ctaHref ?? `${localePath("/specials", locale)}#${special.slug}`;
   const domId = `promo-bar-${special.slug}`;
 
   return (
@@ -46,11 +58,11 @@ export function PromoBar({ special }: { special: PublicSpecial | null }) {
               href={href}
               className="ml-3 whitespace-nowrap font-semibold text-kc-yellow underline underline-offset-4 hover:text-white"
             >
-              {special.ctaLabel ?? "See the offer"}
+              {special.ctaLabel ?? t.seeOffer}
             </Link>
           </p>
         </div>
-        <PromoBarDismiss slug={special.slug} domId={domId} />
+        <PromoBarDismiss slug={special.slug} domId={domId} label={t.dismiss} />
       </div>
       {/*
         Runs before the browser paints, so a returning visitor never sees the bar they closed.

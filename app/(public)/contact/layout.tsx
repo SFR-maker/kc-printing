@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { localeAlternates } from "@/lib/i18n/metadata";
 
-// The contact page itself is a Client Component (react-hook-form), which cannot export `metadata`,
-// so it was silently inheriting the site-wide default title and description. This layout supplies
-// the page-specific values.
+// Holds the page's title and description. It lived here because the contact page used to be a
+// Client Component (react-hook-form) and so could not export `metadata` at all; the form has since
+// moved to components/contact/ContactForm and the page is a Server Component again, but the values
+// stay here rather than moving for the sake of moving.
 export const metadata: Metadata = {
   alternates: localeAlternates("/contact", "en"),
   title: "Contact 611 Printing - Get a Quote",

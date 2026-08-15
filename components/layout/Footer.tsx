@@ -2,29 +2,25 @@ import Link from "next/link";
 import { Phone, Mail, Globe } from "lucide-react";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { localePath, type Locale } from "@/lib/i18n/config";
-import { getDictionary } from "@/lib/i18n/dictionaries";
+import { getDictionary, type Dictionary } from "@/lib/i18n/dictionaries";
+import { SERVICES } from "@/lib/service-data";
+import { SERVICES_ES } from "@/lib/service-data-es";
 
-const SERVICES = [
-  { label: "Business Cards", href: "/services/business-cards" },
-  { label: "Postcards", href: "/services/postcards" },
-  { label: "Banners", href: "/services/banners" },
-  { label: "Rigid Signs", href: "/services/rigid-signs" },
-  { label: "Window Decals", href: "/services/window-decals" },
-];
+/**
+ * Product order in the footer. The names themselves are read from the service data rather than
+ * retyped, so the footer of the Spanish site cannot go on saying "Business Cards" - and cannot
+ * drift from what the product page calls the thing either.
+ */
+const SERVICE_SLUGS = ["business-cards", "postcards", "banners", "rigid-signs", "window-decals"];
 
-const COMPANY = [
-  { label: "About", href: "/about" },
-  { label: "Specials", href: "/specials" },
-  { label: "Portfolio", href: "/portfolio" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "FAQ", href: "/faq" },
-  { label: "Contact", href: "/contact" },
-];
-
-const LEGAL = [
-  { label: "Terms of Service", href: "/terms" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Refund Policy", href: "/refund-policy" },
+/** Company links, keyed to the nav dictionary both languages already fill. */
+const COMPANY: { key: keyof Dictionary["nav"]; href: string }[] = [
+  { key: "about", href: "/about" },
+  { key: "specials", href: "/specials" },
+  { key: "portfolio", href: "/portfolio" },
+  { key: "pricing", href: "/pricing" },
+  { key: "faq", href: "/faq" },
+  { key: "contact", href: "/contact" },
 ];
 
 const AREAS = [
@@ -39,10 +35,17 @@ const AREAS = [
  * the two read as one continuous block rather than a theme flip at the bottom of the page.
  */
 export function Footer({ locale = "en" }: { locale?: Locale } = {}) {
-  const t = getDictionary(locale).footer;
+  const dict = getDictionary(locale);
+  const t = dict.footer;
   // Every internal link is resolved through localePath, so the Spanish footer keeps the reader on
   // the Spanish site instead of dropping them back into English at the bottom of every page.
   const path = (href: string) => localePath(href, locale);
+  const products = locale === "es" ? SERVICES_ES : SERVICES;
+  const LEGAL = [
+    { label: t.terms, href: "/terms" },
+    { label: t.privacy, href: "/privacy" },
+    { label: t.refund, href: "/refund-policy" },
+  ];
   return (
     <footer className="bg-kc-ink text-white">
       <div className="container-tight px-4 py-16 sm:px-6 lg:px-8">
@@ -50,10 +53,7 @@ export function Footer({ locale = "en" }: { locale?: Locale } = {}) {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
             <Wordmark variant="inverse" className="mb-5" />
-            <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/55">
-              Business cards, postcards, banners, rigid signs, and window decals, designed by a real person and
-              delivered print-ready. Ordered entirely online.
-            </p>
+            <p className="mb-6 max-w-xs text-sm leading-relaxed text-white/55">{t.blurb}</p>
             <div className="space-y-2.5">
               <a
                 href="tel:+18165210462"
@@ -80,10 +80,13 @@ export function Footer({ locale = "en" }: { locale?: Locale } = {}) {
           </div>
 
           <FooterColumn title={t.servicesHeading}>
-            {SERVICES.map((s) => (
-              <li key={s.href}>
-                <Link href={path(s.href)} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
-                  {s.label}
+            {SERVICE_SLUGS.map((slug) => (
+              <li key={slug}>
+                <Link
+                  href={path(`/services/${slug}`)}
+                  className="text-[13.91px] text-white/60 transition-colors hover:text-white"
+                >
+                  {products[slug].name}
                 </Link>
               </li>
             ))}
@@ -93,7 +96,7 @@ export function Footer({ locale = "en" }: { locale?: Locale } = {}) {
             {COMPANY.map((c) => (
               <li key={c.href}>
                 <Link href={path(c.href)} className="text-[13.91px] text-white/60 transition-colors hover:text-white">
-                  {c.label}
+                  {dict.nav[c.key]}
                 </Link>
               </li>
             ))}
@@ -112,16 +115,21 @@ export function Footer({ locale = "en" }: { locale?: Locale } = {}) {
           <p className="text-xs text-white/50">
             {new Date().getFullYear()} 611 Printing. {t.rights}
           </p>
-          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+          <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
             {LEGAL.map((l) => (
               <Link
                 key={l.href}
+                // Not localised: these three pages exist only in English. The note beside them
+                // says so, which is the honest version of a link that changes language under you.
                 href={l.href}
                 className="text-xs text-white/50 transition-colors hover:text-white"
               >
                 {l.label}
               </Link>
             ))}
+            {t.legalEnglishNote && (
+              <span className="text-xs text-white/35">{t.legalEnglishNote}</span>
+            )}
           </nav>
         </div>
       </div>

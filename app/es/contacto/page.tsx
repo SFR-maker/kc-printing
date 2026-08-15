@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
+import { ContactForm } from "@/components/contact/ContactForm";
 import { localeAlternates } from "@/lib/i18n/metadata";
 
 export const metadata: Metadata = {
@@ -13,12 +14,13 @@ export const metadata: Metadata = {
 };
 
 /**
- * Contact details rather than a translated form.
+ * The phone number leads, and the form is underneath it.
  *
- * The English contact page posts to /api/contact, which routes the message to an inbox read in
- * English. Putting a Spanish form in front of that would take a message in Spanish and hand it to
- * someone who replies in English - so this page leads with the phone number, where the shop can
- * actually hold the conversation in Spanish, and offers email as the written alternative.
+ * The page used to offer no form at all, on the reasoning that a message written in Spanish would
+ * reach an inbox read in English. The form now sends its locale with the message and the
+ * notification is tagged accordingly, so the shop knows to answer in Spanish - which is a better
+ * answer than making anyone who prefers to type go and find another print shop. The phone is still
+ * first, because it is where the conversation can actually happen live in Spanish.
  */
 const CHANNELS = [
   {
@@ -81,6 +83,19 @@ export default function SpanishContactPage() {
               </RevealItem>
             ))}
           </RevealGroup>
+
+          <div className="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+            <div>
+              <h2 className="display-tight text-2xl text-kc-dark sm:text-[2.03rem]">
+                O escríbanos aquí
+              </h2>
+              <p className="mt-4 text-[16.59px] leading-relaxed text-kc-dark/70">
+                Llene el formulario en español y le respondemos en español, el mismo día hábil. Si
+                prefiere hablar, el teléfono de arriba es la vía más rápida.
+              </p>
+            </div>
+            <ContactForm locale="es" />
+          </div>
         </div>
       </section>
 

@@ -137,13 +137,15 @@ const COPY: Record<string, ServiceCopyEs> = {
     name: "Letreros Rígidos",
     tagline: "Señalización rígida troquelada en 13 formas, impresa en Yard Sign, plástico corrugado, PVC, foam board y aluminio.",
     description:
-      "Diseños de letreros rígidos cortados a la forma (círculo, estrella, flecha, casa o cuadrado redondeado) en el material adecuado para su uso. Los archivos incluyen rebase y una línea de corte limpia.",
+      "Diseños de letreros rígidos cortados a la forma en el material adecuado para su uso. Los archivos incluyen rebase y una línea de corte limpia.",
     specs: [
-      { label: "Formas", value: "Cuadrado redondeado, círculo, estrella, flecha, casa" },
+      // Las trece formas reales del selector, no un resumen de cinco: la lista corta describía un
+      // catálogo más chico del que se puede pedir, en la única página donde el cliente lo decide.
+      { label: "Formas", value: "Rectángulo, rectángulo redondeado, cuadrado, cuadrado redondeado, círculo, medio círculo, medio arco, óvalo, estrella, octágono, flecha, casa, edificio. Los Yard Sign vienen en nueve de las trece." },
       { label: "Materiales", value: "Yard Sign, plástico corrugado, PVC, foam board y aluminio" },
-      { label: "Tamaños", value: "Desde 12x12 pulg hasta 18x10 pulg según la forma, medidas a la orden disponibles" },
+      { label: "Tamaños", value: "Desde 5 x 18 pulg hasta 24 x 36 pulg según el material y la forma" },
       { label: "Rebase", value: "0.125 pulg en todos los lados" },
-      { label: "Zona segura", value: "0.5 a 0.75 pulg desde la línea de corte según la forma" },
+      { label: "Zona segura", value: "0.25 pulg desde la línea de corte" },
       { label: "Entrega", value: "PDF listo para imprenta con línea de corte, JPG en alta resolución" },
     ],
     packageFeatures: [

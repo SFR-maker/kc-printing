@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/prisma";
+import { SPECIALS_TAG } from "@/lib/cache-tags";
 import { slugifySpecial } from "@/lib/specials-shared";
 
 /**
@@ -114,6 +116,9 @@ export async function POST(req: Request) {
     userId: admin!.id, action: "special.create", entity: "Special", entityId: special.id,
     after: { slug, title: v.title }, ip: req.headers.get("x-forwarded-for") ?? undefined,
   });
+
+  // The promo bar and /specials are cached; without this a new promotion waits out the TTL.
+  revalidateTag(SPECIALS_TAG, "max");
 
   return NextResponse.json(special, { status: 201 });
 }

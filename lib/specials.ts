@@ -1,6 +1,8 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/prisma";
+import { SPECIALS_TAG } from "@/lib/cache-tags";
 import type { Special } from "@prisma/client";
 import type { PublicSpecial } from "./specials-shared";
 import type { Locale } from "@/lib/i18n/config";
@@ -89,3 +91,21 @@ export async function getBarSpecial(locale: Locale = "en", now: Date = new Date(
   });
   return row ? toPublic(row, locale) : null;
 }
+
+/**
+ * The same query, cached, for the two layouts that run it on every dynamic page render.
+ *
+ * A separate function rather than caching `getBarSpecial` directly, because that one takes `now` so
+ * tests can pin the clock - and a `Date` argument is a new cache key on every single call, which
+ * would produce a cache that never hits and quietly costs more than no cache at all. Here `now` is
+ * created inside the cached scope, and `locale` is the only argument, so the key space is two.
+ *
+ * Sixty seconds, not longer: the bar is how the shop announces a promotion, and an owner who
+ * switches one on wants to see it. The admin routes call `revalidateTag(SPECIALS_TAG)` so an edit
+ * lands immediately; the TTL is only the backstop for a write that happens somewhere else.
+ */
+export const getBarSpecialCached = unstable_cache(
+  async (locale: Locale) => getBarSpecial(locale, new Date()),
+  ["bar-special"],
+  { revalidate: 60, tags: [SPECIALS_TAG] },
+);

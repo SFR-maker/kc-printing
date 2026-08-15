@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/prisma";
+import { SPECIALS_TAG } from "@/lib/cache-tags";
 import { blankToNull, specialFields } from "../route";
 
 /**
@@ -78,6 +80,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     after: v, ip: req.headers.get("x-forwarded-for") ?? undefined,
   });
 
+  revalidateTag(SPECIALS_TAG, "max");
+
   return NextResponse.json(special);
 }
 
@@ -95,6 +99,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     before: { slug: before.slug, title: before.title },
     ip: req.headers.get("x-forwarded-for") ?? undefined,
   });
+
+  revalidateTag(SPECIALS_TAG, "max");
 
   return NextResponse.json({ success: true });
 }

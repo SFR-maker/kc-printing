@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/prisma";
+import { PRICING_TAG } from "@/lib/cache-tags";
 
 const schema = z.object({ price: z.number().positive() });
 
@@ -24,6 +26,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     after: { price: pkg.price },
     ip: req.headers.get("x-forwarded-for") ?? undefined,
   });
+
+  // Package prices are quoted from cached settings; invalidate so an edit shows at once.
+  revalidateTag(PRICING_TAG, "max");
 
   return NextResponse.json(pkg);
 }

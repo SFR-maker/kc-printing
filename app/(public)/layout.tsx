@@ -1,12 +1,12 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PromoBar } from "@/components/layout/PromoBar";
-import { getBarSpecial } from "@/lib/specials";
+import { getBarSpecialCached } from "@/lib/specials";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   // Read here rather than inside PromoBar so the strip is server-rendered into the HTML: a promotion
   // that appears a beat after the page has painted pushes the whole header down under the reader.
-  const special = await getBarSpecial();
+  const special = await getBarSpecialCached("en");
 
   return (
     <>

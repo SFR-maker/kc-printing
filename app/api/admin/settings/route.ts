@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 import { logAudit } from "@/lib/audit";
 import { db } from "@/lib/prisma";
+import { PRICING_TAG } from "@/lib/cache-tags";
 
 const schema = z.object({ key: z.string().min(1), value: z.string() });
 
@@ -27,6 +29,9 @@ export async function PATCH(req: Request) {
     after: { key: setting.key, value: setting.value },
     ip: req.headers.get("x-forwarded-for") ?? undefined,
   });
+
+  // SiteSetting backs getPricingSettings, which is cached for 5 minutes.
+  revalidateTag(PRICING_TAG, "max");
 
   return NextResponse.json(setting);
 }

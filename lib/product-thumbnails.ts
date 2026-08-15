@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/prisma";
+import { TEMPLATES_TAG } from "@/lib/cache-tags";
 
 export const PRODUCT_BY_SLUG = {
   "business-cards": "BUSINESS_CARD",
@@ -15,7 +17,20 @@ export interface ProductThumbnail {
   slug: string;
 }
 
-export async function getFeaturedThumbnails(slug: keyof typeof PRODUCT_BY_SLUG, take = 3): Promise<ProductThumbnail[]> {
+/**
+ * The three featured designs on each product page's "start from a design" rail.
+ *
+ * Cached across requests: the curation behind it changes when someone reseeds templates or edits
+ * `featured`, which is a handful of times a year, not per visitor. `slug` and `take` are arguments
+ * rather than closed over, so they form the cache key and each product gets its own entry.
+ */
+export const getFeaturedThumbnails = unstable_cache(
+  getFeaturedThumbnailsUncached,
+  ["featured-thumbnails"],
+  { revalidate: 3600, tags: [TEMPLATES_TAG] },
+);
+
+async function getFeaturedThumbnailsUncached(slug: keyof typeof PRODUCT_BY_SLUG, take = 3): Promise<ProductThumbnail[]> {
   const templates = await db.cardTemplate.findMany({
     where: { featured: true, active: true, product: PRODUCT_BY_SLUG[slug] },
     orderBy: { sortOrder: "asc" },

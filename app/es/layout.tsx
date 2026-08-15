@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { PromoBar } from "@/components/layout/PromoBar";
-import { getBarSpecial } from "@/lib/specials";
+import { getBarSpecialCached } from "@/lib/specials";
 
 /**
  * The Spanish site.
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SpanishLayout({ children }: { children: React.ReactNode }) {
-  const special = await getBarSpecial("es");
+  const special = await getBarSpecialCached("es");
 
   return (
     // The root layout's <body> is a flex column that the English layout's fragment participates in

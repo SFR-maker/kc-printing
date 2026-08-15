@@ -181,6 +181,7 @@ export function ArtworkStep({
         <Choice
           selected={false}
           icon={<Sparkles className="h-5 w-5" strokeWidth={1.75} />}
+          accent="teal"
           title="Create it with AI"
           body="Describe your business and get four different designs back in about a minute. Free to try, edit any of them afterwards."
           onClick={() => { window.location.href = `${designHref}?startAi=1`; }}
@@ -190,6 +191,7 @@ export function ArtworkStep({
         <Choice
           selected={false}
           icon={<LayoutTemplate className="h-5 w-5" strokeWidth={1.75} />}
+          accent="yellow"
           title="Start from a template"
           body="Pick a ready-made layout and change the text, colours and images in our free design studio."
           onClick={() => { window.location.href = designHref; }}
@@ -198,6 +200,7 @@ export function ArtworkStep({
       <Choice
         selected={false}
         icon={<Upload className="h-5 w-5" strokeWidth={1.75} />}
+        accent="sage"
         title="I have my own design"
         body={
           needsBack
@@ -209,6 +212,7 @@ export function ArtworkStep({
       <Choice
         selected={value.path === "DESIGN_SERVICE"}
         icon={<PenLine className="h-5 w-5" strokeWidth={1.75} />}
+        accent="coral"
         title="Design it for me"
         body="Tell us about your business and a real designer builds the layout. First draft in 1 to 3 business days."
         onClick={() => onChange({ ...EMPTY_ARTWORK, path: "DESIGN_SERVICE" })}
@@ -395,34 +399,78 @@ function SideUploader({
   );
 }
 
+/**
+ * Brand accent per option.
+ *
+ * The four cards were identical grey boxes with grey outline icons, so nothing distinguished the
+ * free routes from the paid one, or drew the eye to anything at all. Each option now carries one
+ * colour from the palette, used on a filled icon tile and a hairline rule, so the group reads as
+ * four choices rather than a wall of text.
+ *
+ * The tile is filled and the glyph is white because a coloured line icon on white does not hold at
+ * this size - yellow especially fails against paper. Card text stays kc-dark throughout, so the
+ * colour is decoration and contrast never depends on it.
+ */
+export type ChoiceAccent = "teal" | "yellow" | "sage" | "coral";
+
+// Written out in full rather than composed: Tailwind scans source text, so a class built at runtime
+// from `hover:${...}` is never generated and the hover border silently does nothing.
+const ACCENT: Record<ChoiceAccent, { tile: string; ring: string; hover: string; rule: string; tint: string }> = {
+  teal:   { tile: "bg-kc-teal",   ring: "border-kc-teal",   hover: "hover:border-kc-teal",   rule: "bg-kc-teal/70",  tint: "bg-kc-teal/[0.04]" },
+  yellow: { tile: "bg-kc-yellow", ring: "border-kc-yellow", hover: "hover:border-kc-yellow", rule: "bg-kc-yellow",   tint: "bg-kc-yellow/[0.07]" },
+  sage:   { tile: "bg-kc-sage",   ring: "border-kc-sage",   hover: "hover:border-kc-sage",   rule: "bg-kc-sage/70",  tint: "bg-kc-sage/[0.04]" },
+  coral:  { tile: "bg-kc-coral",  ring: "border-kc-coral",  hover: "hover:border-kc-coral",  rule: "bg-kc-coral/70", tint: "bg-kc-coral/[0.04]" },
+};
+
 function Choice({
   selected,
   icon,
   title,
   body,
   onClick,
+  accent = "teal",
 }: {
   selected: boolean;
   icon: React.ReactNode;
   title: string;
   body: string;
   onClick: () => void;
+  accent?: ChoiceAccent;
 }) {
+  const a = ACCENT[accent];
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={selected}
       className={cn(
-        "edge flex h-full flex-col items-start gap-3 border p-5 text-left transition-colors",
-        selected
-          ? "border-kc-coral bg-kc-coral/5"
-          : "border-kc-dark/15 bg-white hover:border-kc-dark/35"
+        "edge group relative flex h-full flex-col items-start gap-3 border-2 p-5 text-left transition-all",
+        "hover:-translate-y-0.5 hover:shadow-[0_10px_30px_-14px_rgba(12,10,9,0.35)]",
+        selected ? cn(a.ring, a.tint, "shadow-[0_10px_30px_-16px_rgba(12,10,9,0.3)]") : "border-kc-dark/12 bg-white",
+        !selected && a.hover
       )}
     >
-      <span className={selected ? "text-kc-coral" : "text-kc-dark/70"}>{icon}</span>
+      {/* Full-width rule in the accent, so the colour reads even before the card is chosen. */}
+      <span aria-hidden="true" className={cn("absolute inset-x-0 top-0 h-1", a.rule)} />
+
+      <span
+        aria-hidden="true"
+        className={cn(
+          "mt-1 flex h-10 w-10 items-center justify-center rounded-xl shadow-sm transition-transform group-hover:scale-105",
+          a.tile,
+          // Yellow is the one tile a white glyph disappears on, so it takes the ink colour instead.
+          accent === "yellow" ? "text-kc-ink" : "text-white"
+        )}
+      >
+        {icon}
+      </span>
+
       <span className="text-[16.59px] font-semibold text-kc-dark">{title}</span>
       <span className="text-[14.45px] leading-relaxed text-kc-dark/70">{body}</span>
+
+      {selected && (
+        <span className="mt-auto pt-2 text-[13.38px] font-semibold text-kc-magenta-deep">Selected</span>
+      )}
     </button>
   );
 }

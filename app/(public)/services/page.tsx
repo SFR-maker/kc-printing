@@ -48,8 +48,8 @@ const SERVICES = [
     image: "/images/print/rigid-signs.webp",
     alt: "Four die-cut rigid signs leaning against a studio wall",
     price: startingPriceLabel("rigid-signs"),
-    description: "Die-cut rigid signage in circle, star, arrow, house, or rounded-square shapes, available in acrylic, aluminum, PVC, foam board, or corrugated plastic.",
-    highlights: ["5 shapes, 5 materials", "Print-ready file with die line included", "Up to 8 revisions included"],
+    description: "Die-cut rigid signage in 13 shapes, printed on yard sign, corrugated plastic board, pvc board, foam board, aluminium board.",
+    highlights: ["13 shapes, 5 materials", "Print-ready file with die line included", "Up to 8 revisions included"],
   },
   {
     slug: "window-decals",

@@ -135,12 +135,12 @@ const COPY: Record<string, ServiceCopyEs> = {
   },
   "rigid-signs": {
     name: "Letreros Rígidos",
-    tagline: "Señalización rígida troquelada en formas y materiales a elegir: acrílico, aluminio, PVC, foam board y plástico corrugado.",
+    tagline: "Señalización rígida troquelada en 13 formas, impresa en Yard Sign, plástico corrugado, PVC, foam board y aluminio.",
     description:
       "Diseños de letreros rígidos cortados a la forma (círculo, estrella, flecha, casa o cuadrado redondeado) en el material adecuado para su uso. Los archivos incluyen rebase y una línea de corte limpia.",
     specs: [
       { label: "Formas", value: "Cuadrado redondeado, círculo, estrella, flecha, casa" },
-      { label: "Materiales", value: "Acrílico, aluminio, PVC, foam board, plástico corrugado" },
+      { label: "Materiales", value: "Yard Sign, plástico corrugado, PVC, foam board y aluminio" },
       { label: "Tamaños", value: "Desde 12x12 pulg hasta 18x10 pulg según la forma, medidas a la orden disponibles" },
       { label: "Rebase", value: "0.125 pulg en todos los lados" },
       { label: "Zona segura", value: "0.5 a 0.75 pulg desde la línea de corte según la forma" },
@@ -158,7 +158,7 @@ const COPY: Record<string, ServiceCopyEs> = {
       "Diagrama listo para imprenta de separadores o soportes de montaje",
     ],
     faqs: [
-      { q: "¿Qué material me conviene?", a: "El acrílico y el aluminio dan un aspecto premium y duradero para fachadas y oficinas. El PVC y el foam board son ligeros y económicos para interiores o exhibiciones temporales. El plástico corrugado es el más resistente a la intemperie y el más económico para letreros de jardín y eventos. Cuéntenos su caso y le recomendamos el material correcto." },
+      { q: "¿Qué material me conviene?", a: "El aluminio da un aspecto premium y duradero para fachadas y oficinas. El PVC y el foam board son ligeros y económicos para interiores o exhibiciones temporales. El plástico corrugado y el Yard Sign son los más resistentes a la intemperie y los más económicos para letreros de jardín y eventos. Cuéntenos su caso y le recomendamos el material correcto." },
       { q: "¿Puedo pedir una forma que no esté en la lista?", a: "Sí. Agregue el complemento de forma a medida y describa (o suba) el contorno que necesita. Creamos la línea de corte para que coincida." },
       { q: "¿Cómo funciona la línea de corte?", a: "Diseñamos sobre un lienzo rectangular estándar con espacio suficiente para su forma y luego aplicamos la forma como línea de corte precisa al exportar. Lo que usted diseña se traslada exactamente al letrero troquelado final, con 0.125 pulg de rebase para que el color llegue al borde sin espacios blancos." },
       { q: "¿Qué formato de archivo necesita la imprenta?", a: "Entregamos un PDF listo para imprenta con la línea de corte marcada, más una vista previa en JPG de alta resolución. Ambos incluyen guías de rebase y zona segura." },

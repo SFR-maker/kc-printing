@@ -24,7 +24,7 @@ const FAQS = [
   {
     category: "Design Process",
     items: [
-      { q: "How long does the design take?", a: "Standard turnaround is 2-4 business days for most projects. Rush delivery (24-48 hours) is available as an add-on." },
+      { q: "How long does the design take?", a: "Standard turnaround is 2-4 business days for most projects. Rush Design (24 hours) is available as an add-on, and Rush printing is a separate choice in Print Specs." },
       { q: "How do revisions work?", a: "After you receive your first draft, you can submit revision requests through your account dashboard. Each package includes a set number of revisions (4-8 depending on tier). Additional revisions beyond your included count are available at a flat rate." },
       { q: "What if I am not happy with the design?", a: "We work with you until you are satisfied within the included revisions. If you are still not happy after all revisions are used, we offer additional revisions at a discounted rate for existing customers." },
       { q: "Do I need to provide any materials?", a: "Not required but helpful. You can upload your logo, brand colors, photos, or inspiration images. If starting from scratch, our AI brief tool helps capture your brand vision. The more context you provide, the better the first draft." },

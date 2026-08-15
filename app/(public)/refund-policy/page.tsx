@@ -22,7 +22,7 @@ const SECTIONS: LegalSection[] = [
   {
     heading: "No refund situations",
     body: [
-      "Refunds are not available after the final design files have been delivered and approved by the client, or after all included revisions have been used. Rush delivery fees are non-refundable once work has started.",
+      "Refunds are not available after the final design files have been delivered and approved by the client, or after all included revisions have been used. Rush Design fees are non-refundable once work has started.",
     ],
   },
   {

@@ -233,7 +233,13 @@ export const RIGID_SIGN_SIZES: SizePreset[] = [
   { key: "house", label: "House 12 x 13 in", trimWidthIn: 12, trimHeightIn: 13, bleedIn: 0.125, safeZoneInsetIn: 0.5 },
 ];
 
-export const RIGID_SIGN_MATERIALS = ["Acrylic", "Aluminum", "PVC", "Foam Board", "Corrugated Plastic"] as const;
+/**
+ * Deliberately deleted rather than corrected.
+ *
+ * This listed Acrylic, which the shop has never sold, and nothing referenced it - so it was a
+ * plausible-looking constant waiting for someone to wire it into a page. The real list lives in
+ * RIGID_MATERIALS in lib/pricing/rigid-signs.ts, next to the prices that prove it.
+ */
 
 /**
  * Window graphic sizes you can design on, which are all sizes you can actually buy.

@@ -73,7 +73,7 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
         quantity: item.quantity,
         price: item.price,
         specs: [
-          spec?.rush ? "Rush turnaround" : null,
+          spec?.rush ? "Rush printing" : null,
           spec?.roundCorners ? "Rounded corners" : null,
           spec?.manualProof ? "Manual proof review" : null,
         ].filter((x): x is string => Boolean(x)),

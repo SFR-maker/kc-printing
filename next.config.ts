@@ -69,11 +69,20 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
+    /*
+     * Hosts next/image is allowed to fetch from. An unlisted host is a 400, not a fallback, so a
+     * missing entry is a broken image in production and nothing else.
+     *
+     * `*.ufs.sh` is the host UploadThing v7 actually serves uploads from - it was present in the
+     * CSP and in both server-side allowlists but missing here, so any admin-uploaded specials or
+     * portfolio image rendered through next/image was failing. `res.cloudinary.com` went the other
+     * way: nothing in this repo has ever produced a Cloudinary URL.
+     */
     remotePatterns: [
       { protocol: "https", hostname: "utfs.io" },
       { protocol: "https", hostname: "uploadthing.com" },
       { protocol: "https", hostname: "*.uploadthing.com" },
-      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "*.ufs.sh" },
       { protocol: "https", hostname: "img.clerk.com" },
       { protocol: "https", hostname: "images.clerk.dev" },
     ],

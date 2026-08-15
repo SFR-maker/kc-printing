@@ -66,10 +66,10 @@ export async function GET(req: Request) {
       /*
        * Thumbnails are deliberately not selected.
        *
-       * They are stored as base64 data URIs, and returning them inlined made this response 3.3 MB
-       * for business cards - 0.9 MB of which was the back thumbnail the gallery never renders. The
-       * gallery now points an <img> at /api/card-templates/[slug]/thumbnail, so the browser can
-       * lazy-load and cache them like any other image.
+       * They were once stored as base64 data URIs, and returning them inlined made this response
+       * 3.3 MB for business cards - 0.9 MB of which was the back thumbnail the gallery never
+       * renders. They are files now, and the gallery builds the URL from the slug itself
+       * (components/business-card/template-gallery.tsx), so it never needs the column at all.
        */
       // Whether there is an image to point at, without carrying the image.
       thumbnailFront: false,

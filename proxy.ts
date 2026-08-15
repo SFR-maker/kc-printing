@@ -61,6 +61,49 @@ export default async function middleware(req: NextRequest, evt: unknown) {
   }
 }
 
+/**
+ * Exactly the paths that need Clerk auth context, and nothing else.
+ *
+ * This was the Next default-broad matcher, which meant this function ran on every request the site
+ * serves: every prerendered page, every ISR hit that the CDN could otherwise have answered alone,
+ * every static asset request that slipped the extension list, and every /api/* route including both
+ * webhooks. On Vercel the proxy runs *before* the CDN cache is consulted, so a cache hit still cost
+ * an invocation - it set a floor on billing that no amount of caching downstream could lower.
+ *
+ * The list below is derived from the call sites, not guessed: every file under app/ and lib/ that
+ * calls auth(), requireAuth(), requireAdmin(), ensureUser() or currentUser(). Two of them are easy
+ * to miss and expensive to get wrong:
+ *
+ *   - /api/uploadthing. lib/uploadthing.ts calls a bare auth() and throws "Unauthorized" with no
+ *     safeClerkUserId wrapper, so dropping it here breaks every customer file upload outright.
+ *   - /services/<product>/design/<designId>. lib/business-card/load-editor-design.ts calls a bare
+ *     auth(). It is try/caught, so this fails quietly rather than loudly: a signed-in customer
+ *     would simply find their saved designs missing.
+ *
+ * And two deliberate exclusions:
+ *
+ *   - /api/card-designs/export is unauthenticated by design (see the route), so it is carved out of
+ *     the /api/card-designs prefix rather than swept in with it.
+ *   - Both webhooks verify their own signatures (svix for Clerk, the Stripe SDK for Stripe) and
+ *     never call auth(). They are not listed.
+ *
+ * tests/unit/proxy-matcher.test.ts asserts every entry here, so a future route that needs auth and
+ * does not get it fails a test rather than failing a customer.
+ */
 export const config = {
-  matcher: ["/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)","/(api|trpc)(.*)"],
+  matcher: [
+    "/account/:path*",
+    "/admin/:path*",
+    "/api/admin/:path*",
+    "/api/ai-design",
+    "/api/ai/generate",
+    "/api/card-designs",
+    // Matches /api/card-designs/<id> but not /api/card-designs/export.
+    "/api/card-designs/((?!export).*)",
+    "/api/coupons/validate",
+    "/api/orders",
+    "/api/stripe/checkout",
+    "/api/uploadthing/:path*",
+    "/services/:product/design/:designId",
+  ],
 };

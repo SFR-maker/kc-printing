@@ -1,7 +1,23 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
-import { categoriesForQuery, queryTokens } from "@/lib/business-card/templates/occupations";
 
+/**
+ * The template list for one product.
+ *
+ * This route used to accept `industry`, `style` and `q` as well, building an OR of roughly
+ * seventeen unindexed `contains` predicates for a three-word query. Nothing ever sent them: the
+ * gallery and the editor's template switcher both request only `product` (and the gallery,
+ * `orientation`), and every filter a customer actually operates runs client-side over the loaded
+ * set. So the expensive half of this query was dead weight that would have become a sequential
+ * scan over a much larger table as the library grows - the kind of thing that is free until it
+ * suddenly is not. Filtering was removed rather than indexed, deliberately: if server-side search
+ * ever comes back it should arrive with a GIN index on `tags` and pg_trgm for the ILIKEs, as a
+ * decision rather than an inheritance.
+ *
+ * `orientation` stays a server filter because it is cheap and indexed-adjacent, but the response is
+ * cached per product, so the gallery now asks for the whole product set once and narrows in memory
+ * - see the comment in template-gallery.
+ */
 const PRODUCT_MAP: Record<string, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIGID_SIGN" | "WINDOW_DECAL"> = {
   "business-card": "BUSINESS_CARD",
   postcard: "POSTCARD",
@@ -12,46 +28,14 @@ const PRODUCT_MAP: Record<string, "BUSINESS_CARD" | "POSTCARD" | "BANNER" | "RIG
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const industry = searchParams.get("industry");
-  const style = searchParams.get("style");
   const orientation = searchParams.get("orientation");
-  const q = searchParams.get("q");
   const product = PRODUCT_MAP[searchParams.get("product") ?? "business-card"] ?? "BUSINESS_CARD";
 
   const templates = await db.cardTemplate.findMany({
     where: {
       active: true,
       product,
-      ...(industry && industry !== "all" ? { industry } : {}),
-      ...(style && style !== "all" ? { style } : {}),
       ...(orientation ? { orientation } : {}),
-      // Occupation terms are expanded to categories here as well as on the client, so a
-      // server-filtered fetch and the in-page filter cannot disagree about what "plumber" means.
-      /*
-       * Whole phrase first, then each word.
-       *
-       * Matching only the whole string meant "spring sale" found nothing while "sale" found 26, and
-       * "flower shop" missed every florist card. Those are the phrasings customers reach for first,
-       * so a phrase has to behave like a search rather than an exact lookup. Mirrors matchesQuery on
-       * the client so a server-filtered fetch and the in-page filter agree.
-       */
-      ...(q
-        ? {
-            OR: [
-              { title: { contains: q, mode: "insensitive" } },
-              { description: { contains: q, mode: "insensitive" } },
-              { industry: { contains: q, mode: "insensitive" } },
-              { tags: { has: q.toLowerCase() } },
-              ...queryTokens(q).flatMap((t) => [
-                { title: { contains: t, mode: "insensitive" as const } },
-                { description: { contains: t, mode: "insensitive" as const } },
-                { industry: { contains: t, mode: "insensitive" as const } },
-                { tags: { has: t } },
-              ]),
-              ...(categoriesForQuery(q).length ? [{ industry: { in: categoriesForQuery(q) } }] : []),
-            ],
-          }
-        : {}),
     },
     select: {
       id: true,
@@ -80,5 +64,19 @@ export async function GET(req: Request) {
     orderBy: [{ featured: "desc" }, { sortOrder: "asc" }, { createdAt: "asc" }],
   });
 
-  return NextResponse.json({ templates, count: templates.length });
+  /*
+   * Cacheable at the edge, because the response is the same for everybody.
+   *
+   * Nothing here is personalised and nothing depends on a session, so a CDN can answer this without
+   * waking a function or touching Railway. The key space is small - five products, plus the two
+   * orientation variants banners use - and Vercel's route-handler cache is deployment-scoped, so a
+   * reseed followed by a redeploy invalidates it naturally rather than needing a purge.
+   *
+   * stale-while-revalidate is generous on purpose: a template library that is one revision out of
+   * date for a few seconds is not a problem worth a cold database read per gallery visit.
+   */
+  return NextResponse.json(
+    { templates, count: templates.length },
+    { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" } },
+  );
 }

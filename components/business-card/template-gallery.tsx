@@ -20,6 +20,8 @@ interface TemplateSummary {
   style: string;
   tags: string[];
   palette: string[];
+  /** "landscape" | "portrait" on banners; null on products where it does not apply. */
+  orientation: string | null;
 }
 
 function recentKeyFor(product: DesignProduct): string {
@@ -65,8 +67,6 @@ export function TemplateGallery({
   const [style, setStyle] = useState("all");
   const [q, setQ] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
-  /** True when the requested orientation had no templates and the unfiltered set is being shown. */
-  const [orientationUnavailable, setOrientationUnavailable] = useState(false);
   const routeSegment = PRODUCT_ROUTE_SEGMENT[product];
   const thumbAspect = THUMB_ASPECT[product];
   const supportsAi = product !== "rigid-sign";
@@ -81,32 +81,24 @@ export function TemplateGallery({
     let cancelled = false;
 
     /*
-     * Falls back to the unfiltered set when an orientation matches nothing.
+     * One request for the whole product, always. Orientation is narrowed in memory below.
      *
-     * Every banner template in the library is currently landscape, so filtering to vertical
-     * returned an empty gallery - which is a worse answer than the unfiltered one, and reads as
-     * though the site is broken rather than as though the library is thin. Showing everything with
-     * a note is honest and still useful; the note goes away on its own once portrait designs exist.
+     * This used to fetch the orientation-filtered set and then, when that came back empty, fetch
+     * the unfiltered set as well - so the case that needed the *most* help paid for two round
+     * trips. Every banner template is currently landscape, which is exactly the case that
+     * triggered it, so asking for vertical banners was reliably the slowest thing the gallery did.
+     *
+     * Fetching unfiltered instead means one request, and one cache key per product rather than
+     * three, which matters now the response carries s-maxage: the orientation variants would each
+     * have been a separate entry to fill and re-fill.
      */
     async function load() {
-      const url = (o?: string) => `/api/card-templates?product=${product}${o ? `&orientation=${o}` : ""}`;
       try {
-        const res = await fetch(url(orientation));
+        const res = await fetch(`/api/card-templates?product=${product}`);
         if (!res.ok) throw new Error("failed");
         const data = await res.json();
-        let list: TemplateSummary[] = data.templates ?? [];
-        let fellBack = false;
-
-        if (orientation && list.length === 0) {
-          const all = await fetch(url());
-          if (all.ok) {
-            list = (await all.json()).templates ?? [];
-            fellBack = list.length > 0;
-          }
-        }
         if (cancelled) return;
-        setTemplates(list);
-        setOrientationUnavailable(fellBack);
+        setTemplates(data.templates ?? []);
       } catch {
         if (!cancelled) setError(true);
       }
@@ -116,13 +108,31 @@ export function TemplateGallery({
     return () => {
       cancelled = true;
     };
-    // orientation is a dependency: without it the first fetch wins and switching orientation
-    // silently keeps showing the previous set.
-  }, [product, orientation]);
+    // Only `product` now: orientation no longer changes what is fetched, only what is displayed.
+  }, [product]);
+
+  /*
+   * Narrow to the requested orientation, or fall back to everything and say so.
+   *
+   * The fallback is the point, not an edge case: every banner template is currently landscape, so
+   * a customer configuring a vertical banner would otherwise be shown an empty gallery and conclude
+   * the site is broken rather than that the library is thin. Showing all of them with a note is
+   * honest and still useful, and the note disappears on its own once portrait designs exist.
+   *
+   * Derived rather than stored, now that the fetch no longer varies by orientation - state here
+   * would just be a second copy of something the loaded list already answers.
+   */
+  const { forOrientation, orientationUnavailable } = useMemo(() => {
+    const all = templates ?? [];
+    if (!orientation) return { forOrientation: all, orientationUnavailable: false };
+    const matching = all.filter((t) => t.orientation === orientation);
+    if (matching.length > 0) return { forOrientation: matching, orientationUnavailable: false };
+    return { forOrientation: all, orientationUnavailable: all.length > 0 };
+  }, [templates, orientation]);
 
   const filtered = useMemo(() => {
     if (!templates) return [];
-    return templates.filter((t) => {
+    return forOrientation.filter((t) => {
       if (industry !== "all" && t.industry !== industry) return false;
       if (style !== "all" && t.style !== style) return false;
       if (q.trim()) {
@@ -146,16 +156,16 @@ export function TemplateGallery({
       }
       return true;
     });
-  }, [templates, industry, style, q]);
+  }, [templates, forOrientation, industry, style, q]);
 
   // Derived from the loaded set rather than a fixed list, so the filter only ever offers industries
   // that have templates for this product. Hidden entirely below two, where it would be noise.
   const industries = useMemo(
-    () => [...new Set((templates ?? []).map((t) => t.industry).filter(Boolean))].sort(),
-    [templates]
+    () => [...new Set(forOrientation.map((t) => t.industry).filter(Boolean))].sort(),
+    [forOrientation]
   );
 
-  const recentTemplates = (templates ?? []).filter((t) => recent.includes(t.slug));
+  const recentTemplates = forOrientation.filter((t) => recent.includes(t.slug));
 
   if (error) {
     return (

@@ -330,7 +330,7 @@
   }
 
   /* ── Option tiles (components/builder/OptionGroup) ─────────────────────────
-     Three rules that keep a tile honest at any width. They live here rather than on the component
+     Four rules that keep a tile honest at any width. They live here rather than on the component
      because they are about the tile surviving a container narrower than its own text — a condition
      the component cannot see — and they are written against the radiogroup's own ARIA structure, so
      they hold for every product picker without a new class having to be threaded through.
@@ -345,7 +345,16 @@
         corner and was printing straight over the end of the word ("Horizontal", "Front + grey
         back"). The reserve is on every tile rather than only the selected one, so choosing an
         option does not reflow the row it is in; and only on the first row, because the tick is 20px
-        tall and never reaches the sublabel. */
+        tall and never reaches the sublabel.
+     4. flex-wrap on the first row — the label and the badge share that row, and the badge is
+        `shrink-0`. Rules 1 and 2 make the label shrinkable to nothing, so the badge won a fight the
+        label could not lose gracefully: at every width from 1,024px up, deselecting the popular
+        card size brought back its 90px "Most popular" badge and squeezed "2″ × 3.5″" into a 0-19px
+        column, which `overflow-wrap: anywhere` then set one character per line — a 192px-tall tile
+        reading "2 / ″ / × / 3 / . / 5 / ″" with the badge printed across the top of it. Wrapping
+        the row fixes it at the cause: flex line-breaking happens before flex shrinking, so a badge
+        that cannot sit beside the label takes its own line and the label keeps a full-width one.
+        Wrapping never triggers where the two already fit, so a wide tile is unchanged. */
   [role="radiogroup"] [role="radio"] {
     min-width: 0;
   }
@@ -357,6 +366,17 @@
      in (px-3.5), so 24px of reserve leaves an 8px gap between tick and text. */
   [role="radiogroup"] [role="radio"] > span:first-child {
     padding-right: 1.5rem;
+    flex-wrap: wrap;
+  }
+  /* The badge, once it can be on a line of its own.
+     margin-inline-start: auto keeps it hard right there, which is what `justify-between` was saying
+     while the two shared a line — `space-between` puts a lone item at the start, so without this the
+     badge would jump to the left edge the moment it wrapped. flex-shrink: 1 overrides the
+     component's `shrink-0` only as a floor: a badge longer than the whole tile now wraps its own
+     text instead of painting outside the border and lengthening the document. */
+  [role="radiogroup"] [role="radio"] > span:first-child > span + span {
+    flex-shrink: 1;
+    margin-inline-start: auto;
   }
 
   /* A select trigger is `w-fit whitespace-nowrap`, so a long option value ("13 oz. Premium Scrim

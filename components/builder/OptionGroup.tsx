@@ -110,10 +110,32 @@ export function OptionGroup({
 
         <div
           className={cn(
+            /*
+             * Columns have a minimum width, rather than a fixed count.
+             *
+             * A fixed count lets a column become narrower than the word inside it, and the tile's
+             * last-resort `overflow-wrap: anywhere` then shatters that word: "Horizontal" was
+             * rendering as "Horizont / al", and "1.75in x 3.5in" broke across two lines, at ordinary
+             * desktop widths. auto-fit with a floor means a column is never narrower than the
+             * longest label plus the tick's reserve, so the escape hatch stays unused and only fires
+             * where it genuinely has to.
+             *
+             * 10rem, not less. At 7.5rem two columns fit again and the crush returns, because the
+             * standard size has to hold "2in x 3.5in" alongside a 90px "Most popular" badge. One
+             * readable column is not the cost it looks like either: the tiles measured 49-69px tall
+             * against 114-192px when crushed, so the group ends up about the same height and is
+             * legible instead of set one character per line.
+             */
             "grid grid-cols-1 gap-2",
-            columns === 2 && "sm:grid-cols-2",
-            columns === 3 && "sm:grid-cols-3",
-            columns === 4 && "sm:grid-cols-2 lg:grid-cols-4",
+            /*
+             * No lg: override. The first attempt kept `lg:grid-cols-4`, which re-applies a fixed
+             * count at exactly the widths the bug appears at, so the floor never governed and
+             * "Horizontal" went on breaking. auto-fit already caps the row: a 4-option group on a
+             * wide screen still lands on one row because the columns grow to fill it.
+             */
+            columns === 2 && "sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]",
+            columns === 3 && "sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]",
+            columns === 4 && "sm:grid-cols-[repeat(auto-fit,minmax(10rem,1fr))]",
           )}
         >
           {options.map((o) => {

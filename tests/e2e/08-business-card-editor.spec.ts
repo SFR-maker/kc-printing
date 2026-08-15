@@ -126,6 +126,25 @@ test.describe("Business card design studio", () => {
     expect(text.includes("notes above")).toBe(notesShown > 0);
   });
 
+  test("31c - the save indicator never claims saved over work the server does not have", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name === "mobile-chrome", "Desktop TopCommandBar; the mobile bar carries no save indicator");
+    /*
+     * Opening a template used to be greeted with "Saved as guest" — before a keystroke, with
+     * nothing on the server. A pristine design is not dirty, and not-dirty was being read as saved.
+     */
+    await page.goto("/services/business-cards/design/t-real-estate-centered-stack");
+    await page.waitForSelector("canvas", { timeout: 30000 });
+    await page.waitForTimeout(800);
+
+    const status = page.getByTestId("save-status");
+    await expect(status).toHaveText("Not saved yet");
+
+    // Make a change; it must not claim saved until an autosave has actually succeeded.
+    await page.getByRole("button", { name: "Heading", exact: true }).click();
+    await expect(status).toHaveText("Not saved yet");
+    await expect(status).toHaveText("All changes saved as guest", { timeout: 15000 });
+  });
+
   test("32 - business card service page links to the design studio", async ({ page }) => {
     await page.goto("/services/business-cards");
     // Assert the destination, not the label. CTA copy is deliberately standardised across the site

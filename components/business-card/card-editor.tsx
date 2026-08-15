@@ -22,20 +22,10 @@ import { MobileAddBar } from "./mobile/mobile-add-bar";
 import { MobilePropertiesSheet } from "./mobile/mobile-properties-sheet";
 import { MobileZoomPill } from "./mobile/mobile-zoom-pill";
 import { baselineFromDesign, findPlaceholderDetails, placeholderLabel, type TemplateBaseline } from "./placeholder-details";
+import { deriveSaveStatus } from "./save-status";
 
 const LOCAL_KEY = "draft";
 const AUTOSAVE_DEBOUNCE_MS = 1500;
-
-/**
- * What the save indicator is actually saying.
- *
- * It used to be derived inline from `dirty` and `isSignedIn`, which gave one slot two meanings: a
- * guest with unsaved work read "Unsaved changes", and the same guest a moment later read "Saved as
- * guest" — while a *failed* save also read "Saved as guest", because the autosave marked the design
- * clean whether or not the request had succeeded. A design that only exists in this browser must
- * never be described as saved.
- */
-type SaveStatus = "saving" | "unsaved" | "saved" | "failed";
 
 /** Where a template's original wording is parked so it survives the t-{slug} → design-id remount. */
 function baselineKey(templateId: string): string {
@@ -76,8 +66,17 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const [confirming, setConfirming] = useState(false);
   /** Surfaced on the proof screen when the save that must precede checkout fails. */
   const [saveError, setSaveError] = useState<string | null>(null);
-  /** True when the last attempt to save to the server did not succeed — see SaveStatus. */
+  /** True when the last attempt to save to the server did not succeed — see save-status.ts. */
   const [saveFailed, setSaveFailed] = useState(false);
+  /**
+   * Whether the server has ever had this design.
+   *
+   * Arriving from a template there is no saved design behind the editor, and a pristine template is
+   * not dirty — so reading cleanliness as savedness greeted every customer with "All changes saved
+   * as guest" over work that existed nowhere but their browser. An id in the URL means a real saved
+   * design was opened; anything else has to earn the claim by actually saving.
+   */
+  const [savedOnce, setSavedOnce] = useState(initialDesignId != null);
   const [resumeAvailable, setResumeAvailable] = useState(false);
   const [propertiesSheetOpen, setPropertiesSheetOpen] = useState(false);
   const [templateBaseline, setTemplateBaseline] = useState<TemplateBaseline | null>(null);
@@ -113,7 +112,10 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
       // a dropped connection produced a design the editor described as saved and the server had
       // never heard of.
       setSaveFailed(!saved);
-      if (saved) markSaved();
+      if (saved) {
+        setSavedOnce(true);
+        markSaved();
+      }
     }, AUTOSAVE_DEBOUNCE_MS);
     return () => {
       if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
@@ -151,7 +153,10 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
     setSaveFailed(!saved);
     // The design is only clean once the server has it. Marking it saved regardless was what let the
     // indicator say "Saved" over work that existed nowhere but this browser.
-    if (saved) markSaved();
+    if (saved) {
+      setSavedOnce(true);
+      markSaved();
+    }
     setSaving(false);
     return saved ? effectiveId : null;
   }, [design, designId, router, markSaved, product, routeSegment]);
@@ -198,7 +203,7 @@ export function CardEditor({ initialDesign, designId: initialDesignId, isSignedI
   const warnings = validateDesign(design.front, design.back);
   const errorCount = warnings.filter((w) => w.severity === "error").length;
 
-  const saveStatus: SaveStatus = saving ? "saving" : saveFailed ? "failed" : dirty ? "unsaved" : "saved";
+  const saveStatus = deriveSaveStatus({ saving, saveFailed, dirty, savedOnce });
 
   const placeholders = useMemo(
     () => findPlaceholderDetails(design, templateBaseline),

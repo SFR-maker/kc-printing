@@ -302,3 +302,57 @@ test.describe("Business card editor — editing text by touch", () => {
     expect(after.height).toBeLessThanOrEqual(heightBefore * 1.1);
   });
 });
+
+/**
+ * Double-clicking a line of text on a template, with a mouse, at a laptop size.
+ *
+ * This template is a full-card background rectangle with every line of text sitting on top of it —
+ * the arrangement a shop owner hit when she tried to change the phone number and got Fill, Stroke
+ * and Corner radius instead. Two separate faults produced that:
+ *
+ *  - the pointer was resolved against where the canvas had ended up *after* the first click made
+ *    the quick toolbar appear and pushed the artwork down 26px, so the second click was read
+ *    against the line above the one she aimed at; and
+ *  - Konva's own `click`, which fires after `pointerup`, then overwrote whatever the double-click
+ *    handler had correctly worked out.
+ *
+ * Between them, double-clicking the phone line selected the background shape, and double-clicking
+ * the website line opened the phone line. Each line is checked here by name.
+ */
+test.describe("Business card editor — double-clicking text on a template", () => {
+  test.use({ viewport: { width: 1024, height: 768 } });
+
+  test.beforeEach(({}, testInfo) => {
+    test.skip(testInfo.project.name === "mobile-chrome", "Mouse double-click at laptop size; the touch gesture is covered by tests 47-50");
+  });
+
+  /** The template's own geometry, in inches on a 3.6 x 2.1in document. */
+  const LINES: { label: string; xIn: number; yIn: number; expected: string }[] = [
+    { label: "the name", xIn: 1.8, yIn: 0.625, expected: "Dana Whitfield" },
+    { label: "the job title", xIn: 1.8, yIn: 0.885, expected: "Realtor · Whitfield & Co. Realty" },
+    { label: "the phone and email line", xIn: 1.8, yIn: 1.335, expected: "(816) 555-0142   •   dana@whitfieldrealty.com" },
+    { label: "the website line", xIn: 1.8, yIn: 1.535, expected: "whitfieldrealty.com" },
+    // Inside the line's box but clear of the glyphs — still that line, as far as the customer is
+    // concerned, and the full-card shape is what used to answer here.
+    { label: "the name's box, left of the words", xIn: 0.4, yIn: 0.625, expected: "Dana Whitfield" },
+  ];
+
+  for (const { label, xIn, yIn, expected } of LINES) {
+    test(`51 - double-clicking ${label} opens that line's own wording`, async ({ page }) => {
+      await page.goto("/services/business-cards/design/t-real-estate-bordered-frame");
+      await page.waitForSelector("canvas", { timeout: 30000 });
+      await page.waitForTimeout(1500);
+
+      const box = await page.locator("canvas").first().boundingBox();
+      expect(box).not.toBeNull();
+      const pxPerIn = box!.width / 3.6;
+      await page.mouse.dblclick(box!.x + xIn * pxPerIn, box!.y + yIn * pxPerIn);
+      await page.waitForTimeout(700);
+
+      // The properties panel's text box is the answer to "what did that select?".
+      await expect(page.locator("#element-text")).toHaveValue(expected);
+      // And it must not be answering with a shape's controls.
+      await expect(page.locator('label:text-is("Corner radius")')).toHaveCount(0);
+    });
+  }
+});

@@ -168,8 +168,21 @@ export function CardCanvas() {
     transformer.getLayer()?.batchDraw();
   }, [selectedIds, side.elements]);
 
+  /**
+   * Deadline until which Konva's own click must not change the selection.
+   *
+   * A pointer gesture fires `pointerup` before `click`. The double-tap handler below runs on
+   * `pointerup`, works out which text the customer aimed at, and selects it — and then Konva's
+   * `click` arrived a few milliseconds later and selected whatever was under the cursor *after* the
+   * quick toolbar had appeared and pushed the canvas down 26px, overwriting the right answer with
+   * the line above it. Whatever the double-tap handler concluded is the conclusion of the whole
+   * gesture; the trailing click is the same gesture, not a new instruction.
+   */
+  const selectionSettledUntil = useRef(0);
+
   const handleSelect = useCallback(
     (id: string, additive: boolean) => {
+      if (Date.now() < selectionSettledUntil.current) return;
       if (additive) {
         const s = useCardEditorStore.getState();
         setSelected(s.selectedIds.includes(id) ? s.selectedIds.filter((x) => x !== id) : [...s.selectedIds, id]);
@@ -354,7 +367,7 @@ export function CardCanvas() {
    * Detecting it ourselves also lets us ignore the Transformer when deciding what was tapped, and
    * hit-test the elements directly instead.
    */
-  const lastTapRef = useRef<{ t: number; x: number; y: number } | null>(null);
+  const lastTapRef = useRef<{ t: number; x: number; y: number; left: number; top: number } | null>(null);
 
   const handleContainerPointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -364,7 +377,10 @@ export function CardCanvas() {
 
       const now = Date.now();
       const prev = lastTapRef.current;
-      lastTapRef.current = { t: now, x: e.clientX, y: e.clientY };
+      // Where the canvas was at the instant of this tap, kept with the tap it belongs to. Which
+      // canvas a tap was aimed at is part of what the tap *was*, and it cannot be recovered later.
+      const rectNow = container.getBoundingClientRect();
+      lastTapRef.current = { t: now, x: e.clientX, y: e.clientY, left: rectNow.left, top: rectNow.top };
 
       /*
        * Compared in screen coordinates, not canvas coordinates.
@@ -377,14 +393,28 @@ export function CardCanvas() {
        * The same slop a browser allows itself: close in both time and place, so a quick tap on two
        * neighbouring elements is still two taps.
        */
-      const isDouble = prev != null && now - prev.t < 400 && Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < 24;
+      if (prev == null) return;
+      const isDouble = now - prev.t < 400 && Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < 24;
       if (!isDouble) return;
       lastTapRef.current = null;
 
-      // Resolved against where the canvas is *now*, after any shift the first tap caused.
-      const rect = container.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / zoom;
-      const y = (e.clientY - rect.top) / zoom;
+      /*
+       * Resolved against the *first* tap: its position, on the canvas as it stood at that moment.
+       *
+       * The canvas moves between the two taps. Selecting anything reveals the quick toolbar, which
+       * on desktop is in the flow above the canvas and pushes it down, and on mobile shifts it by
+       * about 112px. Reading the pointer against where the canvas ended up therefore answered a
+       * question nobody asked - what is under the cursor *now* - and since the card slid down, that
+       * was consistently the line above the one the customer had aimed at: double-clicking the
+       * website line opened the phone line, double-clicking the job title opened the name, and
+       * double-clicking a line with a gap above it found no text at all and left the background
+       * shape selected, showing Fill and Corner radius in answer to "change this wording".
+       *
+       * The first tap is the one the customer aimed with, taken against the layout they were
+       * looking at when they aimed. That pair is self-consistent no matter what moves afterwards.
+       */
+      const x = (prev.x - prev.left) / zoom;
+      const y = (prev.y - prev.top) / zoom;
 
       /* Topmost text element under the pointer, Transformer excluded. */
       const hit = [...side.elements]
@@ -403,7 +433,11 @@ export function CardCanvas() {
        * requiring a direct hit would fail the gesture most of the time.
        */
       const id = hit?.id ?? (selectedIds.length === 1 ? selectedIds[0] : null);
-      if (id) startEditText(id);
+      if (!id) return;
+      // Long enough to outlast the `click` this same gesture is about to raise, short enough that
+      // the customer's next, separate click is never ignored.
+      selectionSettledUntil.current = Date.now() + 350;
+      startEditText(id);
     },
     [side.elements, selectedIds, startEditText, zoom]
   );

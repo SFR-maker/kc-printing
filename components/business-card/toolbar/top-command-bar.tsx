@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCardEditorStore } from "@/lib/business-card/store";
 import { LogoTile } from "@/components/layout/Wordmark";
+import { saveStatusLabel, type SaveStatus } from "../save-status";
 
 
 /**
@@ -20,8 +21,13 @@ const ZOOM_STEP = 1.25;
 interface TopCommandBarProps {
   onSave: () => void;
   saving: boolean;
-  /** The one state of the design, told in one place — see SaveStatus in card-editor.tsx. */
-  saveStatus?: "saving" | "unsaved" | "saved" | "failed";
+  /**
+   * The one state of the design, told in one place — see save-status.ts.
+   *
+   * Required, not optional: the bar has no way to tell a design the server has from one it does
+   * not, so anything it guessed here would be a claim it could not stand behind.
+   */
+  saveStatus: SaveStatus;
   onExport: () => void;
   exporting: boolean;
   onContinue?: () => void;
@@ -42,7 +48,6 @@ export function TopCommandBar({ onSave, saving, saveStatus, onExport, exporting,
   const toggleGuides = useCardEditorStore((s) => s.toggleGuides);
   const showGrid = useCardEditorStore((s) => s.showGrid);
   const toggleGrid = useCardEditorStore((s) => s.toggleGrid);
-  const dirty = useCardEditorStore((s) => s.dirty);
   const clearBack = useCardEditorStore((s) => s.clearBack);
   /**
    * A back with nothing on it is "front only".
@@ -53,10 +58,6 @@ export function TopCommandBar({ onSave, saving, saveStatus, onExport, exporting,
    */
   const backIsEmpty = useCardEditorStore((s) => s.design.back.elements.length === 0);
   const [confirmingRemoveBack, setConfirmingRemoveBack] = useState(false);
-
-  // Falls back to the store's own dirty flag if no status was passed, so the bar can never invent a
-  // "saved" it wasn't told about.
-  const effectiveStatus = saveStatus ?? (saving ? "saving" : dirty ? "unsaved" : "saved");
 
   return (
     <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-kc-border bg-white px-4 py-2.5">
@@ -187,21 +188,18 @@ export function TopCommandBar({ onSave, saving, saveStatus, onExport, exporting,
 
       <div className="flex items-center gap-2">
         {/*
-          One slot, one meaning.
+          One slot, one meaning — decided in save-status.ts, not here.
 
-          It used to read "Saved as guest" whenever a guest's design was not dirty - including
-          straight after a save that had failed, because the editor marked the design clean whether
-          or not the request succeeded - and "Unsaved changes" for the same guest a moment earlier.
-          Two labels for one state, and one of them was a claim the tool could not stand behind. The
-          status now comes from what actually happened to the design, and never says "saved" unless
-          the server has it.
+          It used to read "Saved as guest" whenever a guest's design was not dirty, which covered
+          three states that are not saved at all: straight after a failed request, and - worst -
+          the moment a template was opened, before a single keystroke, with nothing on the server.
         */}
         <span
           data-testid="save-status"
           aria-live="polite"
-          className={`text-xs ${effectiveStatus === "failed" ? "font-semibold text-red-600" : "text-kc-muted"}`}
+          className={`text-xs ${saveStatus === "failed" ? "font-semibold text-red-600" : "text-kc-muted"}`}
         >
-          {saveStatusLabel(effectiveStatus, isSignedIn)}
+          {saveStatusLabel(saveStatus, isSignedIn)}
         </span>
         <Button variant="outline" size="sm" onClick={onSave} disabled={saving} className="border-kc-border">
           <Save className="mr-1.5 h-3.5 w-3.5" /> Save
@@ -217,19 +215,6 @@ export function TopCommandBar({ onSave, saving, saveStatus, onExport, exporting,
       </div>
     </div>
   );
-}
-
-/**
- * Says what is true of the design right now, in words a customer can act on.
- *
- * "Saved as guest" is only ever used for a design the server has actually accepted; work that has
- * not made it that far says so, and a failed save says so loudest.
- */
-function saveStatusLabel(status: "saving" | "unsaved" | "saved" | "failed", isSignedIn?: boolean): string {
-  if (status === "saving") return "Saving...";
-  if (status === "failed") return "Not saved - we'll keep trying";
-  if (status === "unsaved") return "Not saved yet";
-  return isSignedIn === false ? "All changes saved as guest" : "All changes saved";
 }
 
 function IconButton({ label, onClick, disabled, active, children }: { label: string; onClick: () => void; disabled?: boolean; active?: boolean; children: React.ReactNode }) {

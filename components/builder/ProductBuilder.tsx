@@ -71,7 +71,14 @@ const bcSpecSchema = z.object({
 // reaches checkout having silently accepted 250 cards.
 const DEFAULT_BC_SPEC: BusinessCardSpec = { sizeId: 101, paperId: 1, colorId: 1, quantity: 0, rush: false, roundCorners: false, manualProof: false };
 
-const schema = z.object({
+/**
+ * The order form's shape and its conditional rules.
+ *
+ * Exported so the rules can be tested directly. They are conditional on which route the
+ * customer took, which is exactly the kind of logic that breaks silently when a new route is
+ * added - and did.
+ */
+export const orderFormSchema = z.object({
   selectedOption: z.record(z.string(), z.string()).optional(),
   // Required for postcards/banners (checked in goNext, since it's optional here so business cards
   // — where "design it yourself" is a valid, free choice — aren't forced to pick a package).
@@ -81,6 +88,14 @@ const schema = z.object({
   // Required only on the design path - see the superRefine below. Someone uploading finished
   // artwork has no brief to write, and Stripe collects their name and address at checkout.
   businessName: z.string(),
+  /**
+   * True when the customer arrived with a design they built in the studio.
+   *
+   * Mirrored into the form from the same `studioDesign` value that removes the Details step,
+   * so the schema and the step list cannot disagree about whether a business name will ever
+   * be asked for. See the superRefine below.
+   */
+  usesStudioDesign: z.boolean().optional(),
   phone: z.string().optional(),
   email: z.string().optional(),
   website: z.string().optional(),
@@ -137,10 +152,26 @@ const schema = z.object({
     back: z.any(),
   }),
 }).superRefine((v, ctx) => {
-  // Enforced here rather than on the field so it can depend on the chosen route. Without this the
-  // upload path could never submit: businessName is only collected on the Details step, which that
-  // path skips, so the form failed validation against a field the customer was never shown.
-  if (v.artwork?.path !== "UPLOAD" && !v.businessName?.trim()) {
+  /*
+   * Enforced here rather than on the field so it can depend on the chosen route.
+   *
+   * businessName is a brief for a designer, and it is only ever collected on the Details step. Two
+   * routes skip that step because there is nothing for a designer to do: uploading a finished file,
+   * and arriving with a design already built in the studio. Both must therefore be exempt.
+   *
+   * The upload case was handled; the studio case was not, and it produced the worst possible
+   * symptom - "Business name is required" on an order that never shows a business name field, with
+   * no way forward. The two conditions are kept in step with the step list itself via
+   * `usesStudioDesign`, which the component mirrors from the same value that drops the Details step.
+   * Deriving both from one source is the point: this broke because the step list learned about
+   * studio designs and the validation did not.
+   */
+  // `usesStudioDesign` rather than artwork.path === "STUDIO": that path is only assigned inside
+  // the submit handler, which runs *after* validation, so at this point a studio design still
+  // carries whatever the restored draft had. STUDIO is accepted too, for when it is set.
+  const suppliedOwnArtwork =
+    v.artwork?.path === "UPLOAD" || v.artwork?.path === "STUDIO" || v.usesStudioDesign === true;
+  if (!suppliedOwnArtwork && !v.businessName?.trim()) {
     ctx.addIssue({ code: "custom", path: ["businessName"], message: "Business name is required" });
   }
   if (!v.acceptedTerms) {
@@ -148,7 +179,7 @@ const schema = z.object({
   }
 });
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<typeof orderFormSchema>;
 
 type StepKey = "package" | "options" | "specs" | "design" | "details" | "payment";
 
@@ -273,7 +304,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
   const [detailsExpanded, setDetailsExpanded] = useState(!cardDesignId);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(orderFormSchema),
     defaultValues: (() => {
       if (typeof window !== "undefined") {
         const saved = window.sessionStorage.getItem(draftKey(service.slug));
@@ -301,6 +332,7 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
         brandFiles: [],
         quantity: 1,
         businessName: "",
+        usesStudioDesign: false,
         acceptedTerms: false,
         bcSpec: DEFAULT_BC_SPEC,
         colorPaletteId: AI_PALETTE_AUTO_ID,
@@ -332,6 +364,18 @@ export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApp
    * "Upload a file instead" clears it back to the normal uploader, so the escape hatch still exists.
    */
   const studioDesign = Boolean(cardDesignId) && !uploadInstead;
+
+  /*
+   * Kept in the form as well as in a local, because the validation schema needs it.
+   *
+   * A studio design skips the Details step, so businessName is never asked for - and the
+   * schema has to know that, or it rejects the order for a missing field the customer was
+   * never shown. Mirroring it here rather than duplicating the condition means the step list
+   * and the schema are reading the same fact.
+   */
+  useEffect(() => {
+    setValue("usesStudioDesign", studioDesign);
+  }, [studioDesign, setValue]);
 
   /**
    * The artwork summary shows for an upload only once there is a file *and* an approved proof.

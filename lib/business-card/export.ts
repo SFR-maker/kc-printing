@@ -133,9 +133,40 @@ function withWatermark(svg: string, widthIn: number, heightIn: number, on: boole
   return svg.replace(/<\/svg>\s*$/, `${watermarkOverlay(widthIn, heightIn)}</svg>`);
 }
 
+/**
+ * The most pixels a single PNG export may rasterize to.
+ *
+ * 300 DPI is right for a business card and ruinous for a banner. The largest size this shop
+ * actually sells is a 6ft x 20ft banner - 72in x 240in - which at 300 DPI is 21,600 x 72,000, or
+ * 1.56 billion pixels. libvips holds that as roughly 5.8 GB, so the export did not degrade on large
+ * format: it exhausted the function's memory and died. That is a legitimate customer ordering a
+ * legitimate product, not an adversarial input.
+ *
+ * 80 megapixels is about 320 MB of raster, which a serverless function can hold. Everything up to
+ * roughly 30in x 30in still renders at the full 300 DPI, so cards, postcards, decals and rigid
+ * signs are untouched; only genuinely large format scales down.
+ *
+ * The resulting DPI for a 20ft banner is about 68, which is normal for its viewing distance -
+ * commercial large-format is routinely printed well under 100 DPI at full size. Note that this is a
+ * different question from MIN_PRINT_DPI in print-spec, which governs whether a customer's uploaded
+ * photograph has enough detail for the size it has been placed at.
+ */
+export const MAX_EXPORT_PIXELS = 80_000_000;
+
+/**
+ * The DPI an export can afford at this physical size: 300 whenever that fits the budget, less when
+ * it does not. Never below 1, so a nonsensical size cannot produce a zero-dimension raster.
+ */
+export function effectiveExportDpi(widthIn: number, heightIn: number): number {
+  const area = widthIn * heightIn;
+  if (!Number.isFinite(area) || area <= 0) return DPI;
+  return Math.max(1, Math.min(DPI, Math.floor(Math.sqrt(MAX_EXPORT_PIXELS / area))));
+}
+
 export async function exportSidePng(side: CardSide, watermark = false): Promise<RasterExportResult> {
   const resolved = await resolveSideImages(side);
-  const svg = withWatermark(renderSideToSvg(resolved, DPI), side.physicalWidthIn, side.physicalHeightIn, watermark);
+  const exportDpi = effectiveExportDpi(side.physicalWidthIn, side.physicalHeightIn);
+  const svg = withWatermark(renderSideToSvg(resolved, exportDpi), side.physicalWidthIn, side.physicalHeightIn, watermark);
   /*
    * Stamp the real resolution into the file.
    *
@@ -148,15 +179,17 @@ export async function exportSidePng(side: CardSide, watermark = false): Promise<
    */
   const buffer = await sharp(Buffer.from(svg))
     .flatten({ background: "#FFFFFF" })
-    .withMetadata({ density: DPI })
+    // The *actual* density, not the nominal 300. A file that claims a resolution it does not have
+    // is the same prepress problem as the 72 DPI one this comment block exists for, in reverse.
+    .withMetadata({ density: exportDpi })
     .png()
     .toBuffer();
   const meta = await sharp(buffer).metadata();
   return {
     buffer,
-    widthPx: meta.width ?? Math.round(side.physicalWidthIn * DPI),
-    heightPx: meta.height ?? Math.round(side.physicalHeightIn * DPI),
-    dpi: DPI,
+    widthPx: meta.width ?? Math.round(side.physicalWidthIn * exportDpi),
+    heightPx: meta.height ?? Math.round(side.physicalHeightIn * exportDpi),
+    dpi: exportDpi,
   };
 }
 

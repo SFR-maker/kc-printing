@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PRINT_SPEC } from "./print-spec";
+import { MAX_PHYSICAL_IN, PRINT_SPEC } from "./print-spec";
 
 export const SCHEMA_VERSION = 1 as const;
 
@@ -90,8 +90,20 @@ export const CardElementSchema = z.discriminatedUnion("type", [
 ]);
 
 export const CardSideSchema = z.object({
-  physicalWidthIn: z.number().positive().default(PRINT_SPEC.trimWidthIn + PRINT_SPEC.bleedIn * 2),
-  physicalHeightIn: z.number().positive().default(PRINT_SPEC.trimHeightIn + PRINT_SPEC.bleedIn * 2),
+  /*
+   * Bounded, not just positive.
+   *
+   * These come from an unauthenticated endpoint (POST /api/card-designs/export) and drive how large
+   * a raster the server allocates. Unbounded, a request claiming a 500ft side was an out-of-memory
+   * kill for the cost of one HTTP call.
+   *
+   * The renderer clamps its own resolution as well (see effectiveExportDpi), which is what protects
+   * the *legitimate* large sizes - a real 6ft x 20ft banner is 1.56 billion pixels at 300 DPI. This
+   * bound is the other half: a size no product comes in has no business being accepted at all.
+   * 300in is 25ft, comfortably past the 20ft largest banner plus its bleed.
+   */
+  physicalWidthIn: z.number().positive().max(MAX_PHYSICAL_IN).default(PRINT_SPEC.trimWidthIn + PRINT_SPEC.bleedIn * 2),
+  physicalHeightIn: z.number().positive().max(MAX_PHYSICAL_IN).default(PRINT_SPEC.trimHeightIn + PRINT_SPEC.bleedIn * 2),
   bleedIn: z.number().min(0).default(PRINT_SPEC.bleedIn),
   safeZoneInsetIn: z.number().min(0).default(PRINT_SPEC.safeZoneInsetIn),
   // Only meaningful for die-cut products (rigid signs) — clips the rendered/exported output to a

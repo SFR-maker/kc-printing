@@ -19,28 +19,39 @@ export interface ProductThumbnail {
 }
 
 /**
- * The three featured designs on each product page's "start from a design" rail.
+ * The rows behind the rail, exactly as stored. Cached across requests.
  *
- * Cached across requests: the curation behind it changes when someone reseeds templates or edits
- * `featured`, which is a handful of times a year, not per visitor. `slug` and `take` are arguments
- * rather than closed over, so they form the cache key and each product gets its own entry.
+ * The curation changes when someone reseeds templates or edits `featured` - a handful of times a
+ * year, not per visitor. `slug` and `take` are arguments rather than closed over, so they form the
+ * cache key and each product gets its own entry.
+ *
+ * Note what is *not* in here: the CDN origin. This cache is written to .next/cache and survives a
+ * restart, so anything env-dependent baked into it outlives the environment that produced it - the
+ * paths were cached before NEXT_PUBLIC_ASSET_CDN_BASE was set and kept being replayed afterwards,
+ * pointing at files no longer in the deployment. Cache the data; build the URL per render.
  */
-export const getFeaturedThumbnails = unstable_cache(
-  getFeaturedThumbnailsUncached,
+const getFeaturedRows = unstable_cache(
+  async (slug: keyof typeof PRODUCT_BY_SLUG, take: number) =>
+    db.cardTemplate.findMany({
+      where: { featured: true, active: true, product: PRODUCT_BY_SLUG[slug] },
+      orderBy: { sortOrder: "asc" },
+      select: { slug: true, title: true, thumbnailFront: true },
+      take,
+    }),
   ["featured-thumbnails"],
   { revalidate: 3600, tags: [TEMPLATES_TAG] },
 );
 
-async function getFeaturedThumbnailsUncached(slug: keyof typeof PRODUCT_BY_SLUG, take = 3): Promise<ProductThumbnail[]> {
-  const templates = await db.cardTemplate.findMany({
-    where: { featured: true, active: true, product: PRODUCT_BY_SLUG[slug] },
-    orderBy: { sortOrder: "asc" },
-    select: { slug: true, title: true, thumbnailFront: true },
-    take,
-  });
+/** The three featured designs on each product page's "start from a design" rail. */
+export async function getFeaturedThumbnails(
+  slug: keyof typeof PRODUCT_BY_SLUG,
+  take = 3,
+): Promise<ProductThumbnail[]> {
+  const templates = await getFeaturedRows(slug, take);
   return templates
     .filter((t) => t.thumbnailFront)
     .map((t) => ({
+      // Resolved here, outside the cache, so the origin always matches this deployment.
       url: assetUrl(t.thumbnailFront!),
       // Titles are stored as "Real Estate: Bold Block"; the industry prefix repeats down a rail.
       title: t.title.includes(": ") ? t.title.slice(t.title.indexOf(": ") + 2) : t.title,

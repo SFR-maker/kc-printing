@@ -73,6 +73,20 @@ export const MIN_PRINT_DPI = 150;
 export const RECOMMENDED_DPI = 300;
 export const MIN_FONT_SIZE_PT = 6;
 
+/**
+ * The largest side dimension any product can legitimately have, in inches.
+ *
+ * 25ft, set against the biggest thing the shop sells - a 6ft x 20ft banner - with room for its
+ * bleed. It exists because physicalWidthIn/physicalHeightIn arrive from an unauthenticated export
+ * endpoint and decide how much memory the server allocates; unbounded, a claimed 500ft side was an
+ * out-of-memory kill for the price of one request.
+ *
+ * Distinct from the renderer's own pixel ceiling (MAX_EXPORT_PIXELS in export.ts), which handles
+ * the sizes that *are* real: a genuine 20ft banner is 1.56 billion pixels at 300 DPI, so it has to
+ * be rendered at a lower resolution rather than refused.
+ */
+export const MAX_PHYSICAL_IN = 300;
+
 export type DesignProduct = "business-card" | "postcard" | "banner" | "rigid-sign" | "window-decal";
 
 export interface SizePreset {

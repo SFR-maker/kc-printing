@@ -64,8 +64,38 @@ test-results/
 scripts/_audit/
 .walk*.cjs
 
-# Build intermediates: card beds are the raw generations, card-art is what ships
+# Build intermediates: card beds are the raw generations that seed-photo-cards crops
+# into card-art. Neither ships now - see the R2 note below.
 public/images/card-beds/
 
 # agent scratch
 tmp-*.mjs
+
+# ---------------------------------------------------------------------------
+# Template artwork lives in Cloudflare R2, not in the deployment.
+#
+# ~92MB across ~4,250 files, and it grew with the catalogue rather than the
+# code. The cost was not bandwidth: lib/business-card/resolve-images-server
+# reads artwork through a computed path, which Next's file tracer cannot
+# resolve, so it pulled ALL of public/ into every function that could reach one
+# - putting the export and print-file Lambdas at half of Vercel's 250MB limit
+# with the catalogue still growing.
+#
+# Serve from cdn.611printing.com; push new artwork with
+#   node --env-file=.env.local scripts/upload-assets-to-r2.mjs
+# ---------------------------------------------------------------------------
+public/images/thumbs/*
+public/images/card-art/*
+public/images/product-art/*
+public/images/templates/*
+
+# Three exceptions, kept in the repo because tests read them off disk. They are
+# the fixtures for the arbitrary-file-read confinement, the WebP-renders-blank
+# regression, and the CDN fall-through - none of which can be asserted against a
+# file that is not there. Note the pattern: a negation cannot re-include a file
+# whose parent directory is excluded, so each level is opened in turn.
+!public/images/thumbs/banner-grand-opening-1.webp
+!public/images/card-art/solar/
+public/images/card-art/solar/*
+!public/images/card-art/solar/01-angled-split.webp
+!public/images/templates/business-card-texture-1.jpg

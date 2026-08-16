@@ -13,16 +13,35 @@
  * Run after `npx next build`:
  *   node scripts/audit-bundles.mjs
  *
- * card-beds is excluded: it is gitignored, so it inflates the local trace by ~54 MB but never
- * reaches Vercel. The printed figure is what actually deploys.
+ * Gitignored files are excluded, because they exist locally and never reach Vercel: card-beds
+ * (raw generations) and, since the R2 move, the template artwork itself. Without that filter this
+ * would report ~98 MB of images that are not in the deployment at all, and the number would never
+ * change no matter how much was offloaded. The printed figure is what actually deploys.
  */
 import fs from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 
 const LIMIT_MB = 250;
 const SERVER_DIR = path.join(".next", "server");
-/** Present locally, never deployed - see .gitignore. */
-const LOCAL_ONLY = "/public/images/card-beds/";
+
+/**
+ * Everything git ignores under public/ - present on this machine, absent from the deployment.
+ *
+ * Resolved once via `git check-ignore` over the whole directory rather than per file, because the
+ * traces name thousands of paths and one process per path would take longer than the build.
+ */
+function gitIgnoredUnderPublic() {
+  try {
+    const all = execSync("git ls-files --others --ignored --exclude-standard -- public", {
+      maxBuffer: 1024 * 1024 * 256,
+    }).toString().split(String.fromCharCode(10)).map((f) => f.trim()).filter(Boolean);
+    return new Set(all.map((f) => path.resolve(f).split(path.sep).join("/")));
+  } catch {
+    return new Set();
+  }
+}
+const IGNORED = gitIgnoredUnderPublic();
 
 const mb = (bytes) => bytes / 1048576;
 const fmt = (bytes) => mb(bytes).toFixed(1).padStart(6) + " MB";
@@ -67,7 +86,7 @@ for (const trace of traces) {
     }
     const posix = abs.split(path.sep).join("/");
     if (posix.includes("/public/")) {
-      if (posix.includes(LOCAL_ONLY)) continue;
+      if (IGNORED.has(posix)) continue;
       publicBytes += size;
       publicCount += 1;
     } else {

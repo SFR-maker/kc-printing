@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 // The parameter NAME only. isTestOrderCode is server-only (node:crypto) and must never be
 // imported into this client component - doing so fails the build, which is the correct outcome.
 import { TEST_ORDER_PARAM } from "@/lib/pricing/test-order";
+import { DRAFT_PREFIX, rememberPendingOrder } from "@/lib/cart/pending";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -265,7 +266,7 @@ interface ProductBuilderProps {
 }
 
 function draftKey(serviceSlug: string): string {
-  return `kc-order-draft-${serviceSlug}`;
+  return DRAFT_PREFIX + serviceSlug;
 }
 
 function round2(n: number): number {
@@ -356,7 +357,7 @@ export function ProductBuilder({ service, pricing = DEFAULT_PRICING, heading, no
     resolver: zodResolver(orderFormSchema),
     defaultValues: (() => {
       if (typeof window !== "undefined") {
-        const saved = window.sessionStorage.getItem(draftKey(service.slug));
+        const saved = window.localStorage.getItem(draftKey(service.slug));
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
@@ -478,7 +479,7 @@ export function ProductBuilder({ service, pricing = DEFAULT_PRICING, heading, no
   // doesn't throw away everything the customer just filled in.
   useEffect(() => {
     const sub = form.watch((v) => {
-      window.sessionStorage.setItem(draftKey(service.slug), JSON.stringify(v));
+      window.localStorage.setItem(draftKey(service.slug), JSON.stringify(v));
     });
     return () => sub.unsubscribe();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -844,7 +845,13 @@ export function ProductBuilder({ service, pricing = DEFAULT_PRICING, heading, no
         return;
       }
 
-      window.sessionStorage.removeItem(draftKey(service.slug));
+      /*
+       * Recorded before the redirect, not after. Once the browser leaves for Stripe this code does
+       * not run again, and a customer who abandons payment there is exactly the one who needs to
+       * find the order later - so the note has to be written while we still can.
+       */
+      rememberPendingOrder({ orderId: result.orderId, service: service.slug, total: price?.total ?? 0 });
+      window.localStorage.removeItem(draftKey(service.slug));
       window.location.href = checkout.url;
     } catch {
       setSubmitError("Something went wrong. Please check your connection and try again, or contact us at (816) 521-0462.");

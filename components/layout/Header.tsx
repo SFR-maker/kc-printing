@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/layout/Wordmark";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { CartButton } from "@/components/layout/CartButton";
 import { localeFromPath, localePath, type Locale } from "@/lib/i18n/config";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
@@ -161,6 +162,8 @@ export function Header() {
             (816) 521-0462
           </a>
           <LanguageSwitcher className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[13.38px] font-medium text-kc-dark/70 transition-colors hover:text-kc-magenta-deep" />
+          {/* Renders nothing unless there is an unfinished order to return to. */}
+          <CartButton className="shrink-0" />
           {CLERK_KEY ? (
             <ClerkAuthDesktop nav={nav} />
           ) : (
@@ -206,6 +209,9 @@ export function Header() {
               </Link>
             ))}
             <LanguageSwitcher className="flex items-center gap-2 border-b border-kc-dark/8 py-3 text-sm font-medium text-kc-dark transition-colors hover:text-kc-magenta-deep" />
+            <div className="flex items-center border-b border-kc-dark/8 py-3">
+              <CartButton className="text-sm font-medium text-kc-dark" />
+            </div>
           </nav>
           <div className="mt-4 flex flex-col gap-2">
             <a

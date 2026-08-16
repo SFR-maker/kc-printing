@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, HelpCircle, Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { listPendingOrders, forgetPendingOrder } from "@/lib/cart/pending";
 import type { VerifyResult } from "@/app/api/checkout-session/route";
 
 /**
@@ -42,6 +43,19 @@ export function OrderStatus() {
       .catch(() => { if (!cancelled) setVerified("unverifiable"); });
     return () => { cancelled = true; };
   }, [sessionId]);
+
+  /*
+   * A confirmed payment clears the cart reminder.
+   *
+   * The Stripe webhook marks the order PAID server-side, but nothing tells this browser - so
+   * without this the customer would land on "Order Confirmed" with a cart still insisting they owe
+   * money for it. The session id is not the order id, so every outstanding local record is cleared
+   * on a confirmed payment; /api/orders/pending re-adds anything genuinely still unpaid.
+   */
+  useEffect(() => {
+    if (result !== "paid") return;
+    for (const o of listPendingOrders()) forgetPendingOrder(o.orderId);
+  }, [result]);
 
   if (result === null) return <Checking />;
   if (result === "paid") return <Paid />;

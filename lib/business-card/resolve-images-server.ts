@@ -1,24 +1,61 @@
 import fs from "fs/promises";
 import path from "path";
 import sharp from "sharp";
+import { assetUrl } from "@/lib/asset-url";
+import { isAllowedRemote } from "@/lib/security/allowed-remote-hosts";
 import type { CardElement, CardSide } from "./schema";
 
-/**
- * Hosts a design may reference. Matches the uploader's own domains and nothing else, so a design
- * can only point at files this shop actually stores.
- */
-const ALLOWED_REMOTE_HOSTS = [/^utfs\.io$/, /^uploadthing\.com$/, /\.uploadthing\.com$/, /\.ufs\.sh$/];
+export { isAllowedRemote };
+
 const REMOTE_TIMEOUT_MS = 20_000;
 const MAX_REMOTE_BYTES = 32 * 1024 * 1024;
 
-export function isAllowedRemote(src: string): boolean {
-  try {
-    const u = new URL(src);
-    // https only: http would allow a downgrade to a plaintext internal address.
-    if (u.protocol !== "https:") return false;
-    return ALLOWED_REMOTE_HOSTS.some((re) => re.test(u.hostname));
-  } catch {
-    return false;
+/**
+ * How many distinct remote images one side may pull.
+ *
+ * The schema permits 150 image elements per side and a PDF resolves both sides, so an adversarial
+ * design could drive 300 outbound fetches from a single unauthenticated export. A real card has one
+ * or two. The cap bounds the amplification without touching anything a customer would ever build;
+ * elements past it keep their original src and simply do not render, which is the same outcome as a
+ * fetch that fails.
+ */
+const MAX_REMOTE_PER_SIDE = 32;
+
+/**
+ * Transcoded artwork, kept between requests on a warm instance.
+ *
+ * Moving assets to R2 turned a ~1ms disk read into a network round trip plus a sharp transcode, on
+ * a path that renders every thumbnail and every PDF. The saving grace is that the same few hundred
+ * pieces of template artwork are reused across the whole catalogue - so a warm Lambda answers almost
+ * everything from here after the first hit.
+ *
+ * Bounded by total bytes rather than entry count, because the entries are images and their sizes
+ * differ by two orders of magnitude. Insertion order is eviction order (a Map iterates in insertion
+ * order), and a hit re-inserts to move itself to the back, which makes this a plain LRU.
+ */
+const CACHE_MAX_BYTES = 96 * 1024 * 1024;
+const cache = new Map<string, { dataUri: string; bytes: number }>();
+let cacheBytes = 0;
+
+function cacheGet(key: string): string | null {
+  const hit = cache.get(key);
+  if (!hit) return null;
+  cache.delete(key);
+  cache.set(key, hit);
+  return hit.dataUri;
+}
+
+function cachePut(key: string, dataUri: string): void {
+  const bytes = dataUri.length;
+  // A single item larger than the whole budget would evict everything and still not fit.
+  if (bytes > CACHE_MAX_BYTES) return;
+  cache.set(key, { dataUri, bytes });
+  cacheBytes += bytes;
+  for (const [k, v] of cache) {
+    if (cacheBytes <= CACHE_MAX_BYTES) break;
+    if (k === key) continue;
+    cache.delete(k);
+    cacheBytes -= v.bytes;
   }
 }
 
@@ -63,16 +100,60 @@ async function toRasterizerSafe(
   }
 }
 
+/**
+ * Fetches an allowlisted remote image and returns it as a data URI, or null.
+ *
+ * Null rather than throwing, because every caller's correct response to a failure is the same: fall
+ * back to whatever it would have done anyway.
+ */
+async function fetchRemoteAsDataUri(url: string): Promise<string | null> {
+  const cached = cacheGet(url);
+  if (cached) return cached;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(REMOTE_TIMEOUT_MS) });
+    if (!res.ok) return null;
+    if (Number(res.headers.get("content-length") ?? 0) > MAX_REMOTE_BYTES) return null;
+    const raw = Buffer.from(await res.arrayBuffer());
+    if (raw.byteLength > MAX_REMOTE_BYTES) return null;
+    const declaredType = res.headers.get("content-type") ?? "image/png";
+    if (!declaredType.startsWith("image/")) return null;
+    // Customers upload WebP, and so does our own CDN; both fail in the same silent way untranscoded.
+    const { buf, contentType } = await toRasterizerSafe(raw, declaredType.split(";")[0].trim());
+    const dataUri = `data:${contentType};base64,${buf.toString("base64")}`;
+    cachePut(url, dataUri);
+    return dataUri;
+  } catch {
+    return null;
+  }
+}
+
 /** Inlines image srcs as base64 data URIs so server-side rasterizers (sharp/pdfkit) don't need
  * network access. Split out from render-svg.ts (which is also imported by client components for
  * renderSideToSvg) because this file touches Node's fs module. */
 export async function resolveSideImages(side: CardSide): Promise<CardSide> {
+  let remoteBudget = MAX_REMOTE_PER_SIDE;
+
   const elements = await Promise.all(
     side.elements.map(async (el): Promise<CardElement> => {
       if (el.type !== "image" || el.src.startsWith("data:")) return el;
-      // A "/"-prefixed src (our own bundled template assets under public/) has no origin to fetch()
-      // against outside a running server request — read it straight off disk instead.
+      // A "/"-prefixed src (our own template assets) is either on the CDN or on local disk.
       if (el.src.startsWith("/")) {
+        /*
+         * CDN first, disk second - and the order matters in both directions.
+         *
+         * Once the files are removed from public/ the CDN is the only copy, so it has to be tried.
+         * But it is attempted *before* the disk read rather than instead of it, and any failure -
+         * unset CDN, 404, timeout, DNS - falls straight through to the original local path. That
+         * keeps this correct at every stage of the migration: with the env var unset it behaves
+         * exactly as it always did, and during the window where both copies exist an R2 outage
+         * degrades to the old behaviour instead of blank artwork.
+         */
+        const remote = assetUrl(el.src);
+        if (remote !== el.src && isAllowedRemote(remote) && remoteBudget > 0) {
+          remoteBudget -= 1;
+          const dataUri = await fetchRemoteAsDataUri(remote);
+          if (dataUri) return { ...el, src: dataUri };
+        }
         try {
           /*
            * Confined to public/, and verified after resolution.
@@ -109,21 +190,10 @@ export async function resolveSideImages(side: CardSide): Promise<CardSide> {
        * is the real fix; the timeout and cap stop the amplification.
        */
       if (!isAllowedRemote(el.src)) return el;
-      try {
-        const res = await fetch(el.src, { signal: AbortSignal.timeout(REMOTE_TIMEOUT_MS) });
-        if (!res.ok) return el;
-        const declared = Number(res.headers.get("content-length") ?? 0);
-        if (declared > MAX_REMOTE_BYTES) return el;
-        const raw = Buffer.from(await res.arrayBuffer());
-        if (raw.byteLength > MAX_REMOTE_BYTES) return el;
-        const declaredType = res.headers.get("content-type") ?? "image/png";
-        if (!declaredType.startsWith("image/")) return el;
-        // Customers upload WebP too, and it fails in exactly the same silent way.
-        const { buf, contentType } = await toRasterizerSafe(raw, declaredType.split(";")[0].trim());
-        return { ...el, src: `data:${contentType};base64,${buf.toString("base64")}` };
-      } catch {
-        return el;
-      }
+      if (remoteBudget <= 0) return el;
+      remoteBudget -= 1;
+      const dataUri = await fetchRemoteAsDataUri(el.src);
+      return dataUri ? { ...el, src: dataUri } : el;
     })
   );
   return { ...side, elements };

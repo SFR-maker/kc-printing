@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAllowedRemote } from "@/lib/security/allowed-remote-hosts";
 import { z } from "zod";
 import { inspectArtwork, ArtworkRejectedError, assertAcceptedFormat } from "@/lib/business-card/inspect-artwork";
 import { printSpec } from "@/lib/print/spec";
@@ -19,25 +20,18 @@ const schema = z.object({
   trimHeightIn: z.number().positive().max(600).optional(),
 });
 
-/**
+/*
  * Only files we put in storage ourselves are fetchable. Without this the endpoint is an SSRF
  * primitive: an attacker could point it at internal addresses and learn about them from the
- * different error shapes. UploadThing serves from these hosts.
+ * different error shapes.
+ *
+ * The host list used to be a verbatim copy of the one in lib/business-card/resolve-images-server.
+ * Two copies of a security allowlist drift, and the copy nobody remembers to update is the one
+ * still accepting a host the other has dropped — so both now import lib/security/allowed-remote-hosts.
  */
-const ALLOWED_HOSTS = [/^utfs\.io$/, /^uploadthing\.com$/, /\.uploadthing\.com$/, /\.ufs\.sh$/];
 
 /** UploadThing caps uploads at 32MB; refuse anything larger rather than buffering it. */
 const MAX_BYTES = 32 * 1024 * 1024;
-
-function hostAllowed(raw: string): boolean {
-  try {
-    const u = new URL(raw);
-    if (u.protocol !== "https:") return false;
-    return ALLOWED_HOSTS.some((re) => re.test(u.hostname));
-  } catch {
-    return false;
-  }
-}
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -48,7 +42,7 @@ export async function POST(req: Request) {
 
   const { url, fileName, roundCorners, product, trimWidthIn, trimHeightIn } = parsed.data;
 
-  if (!hostAllowed(url)) {
+  if (!isAllowedRemote(url)) {
     return NextResponse.json({ error: "That file location isn't supported." }, { status: 400 });
   }
 

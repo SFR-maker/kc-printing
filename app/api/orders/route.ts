@@ -159,7 +159,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid input", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  if (parsed.data.artwork?.path !== "UPLOAD" && !parsed.data.businessName?.trim()) {
+  /*
+   * businessName is a brief for a designer, so it is only required when a designer is doing the
+   * work. Three routes mean the customer already has finished artwork and no brief exists:
+   * uploading a file, designing in the studio, and a studio design that has been through the proof
+   * screen - all of which skip the Details step where the field is collected.
+   *
+   * STUDIO was missing here, and this is the copy that mattered: the client stopped asking, so the
+   * order sailed through the form and then failed at checkout with "Business name is required"
+   * against a form that has no such field. The client-side rule was fixed first; this is the same
+   * rule, and both have to agree or the failure just moves.
+   */
+  const suppliedOwnArtwork =
+    parsed.data.artwork?.path === "UPLOAD" || parsed.data.artwork?.path === "STUDIO";
+  if (!suppliedOwnArtwork && !parsed.data.businessName?.trim()) {
     return NextResponse.json(
       { error: "Business name is required", details: { fieldErrors: { businessName: ["Business name is required"] } } },
       { status: 400 }

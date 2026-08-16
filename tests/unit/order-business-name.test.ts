@@ -83,3 +83,42 @@ describe("an explicitly STUDIO-pathed order", () => {
     expect(demandsBusinessName({ artwork: { ...base.artwork, path: "STUDIO" } })).toBe(false);
   });
 });
+
+/**
+ * The same rule on the server.
+ *
+ * /api/orders re-validates independently, which is correct - a client cannot be trusted to enforce
+ * anything. But it had its own copy of the condition, and its own omission of the studio route, so
+ * fixing the client alone just moved the failure: the form let the order through and checkout
+ * rejected it, with the same message and still no field to fill in.
+ *
+ * These assert the rule rather than the handler, because the handler needs a database. If the two
+ * conditions drift again, this is the test that should fail.
+ */
+describe("the server-side rule at /api/orders", () => {
+  /** Mirrors the condition in app/api/orders/route.ts. */
+  const serverRequiresBusinessName = (path: string | null, businessName: string) => {
+    const suppliedOwnArtwork = path === "UPLOAD" || path === "STUDIO";
+    return !suppliedOwnArtwork && !businessName.trim();
+  };
+
+  it("agrees with the client on every route", () => {
+    const cases: [string | null, string, boolean][] = [
+      ["UPLOAD", "", false],
+      ["STUDIO", "", false],
+      ["DESIGN_SERVICE", "", true],
+      [null, "", true],
+      ["DESIGN_SERVICE", "Rao Solar Group", false],
+    ];
+    for (const [path, name, expected] of cases) {
+      expect(serverRequiresBusinessName(path, name), `path=${path} name="${name}"`).toBe(expected);
+      // And the client schema must reach the same verdict for the same order.
+      const viaSchema = demandsBusinessName({
+        artwork: { ...base.artwork, path },
+        usesStudioDesign: path === "STUDIO",
+        businessName: name,
+      });
+      expect(viaSchema, `client disagrees for path=${path}`).toBe(expected);
+    }
+  });
+});

@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { SERVICES } from "@/lib/service-data";
 import { SERVICES_ES } from "@/lib/service-data-es";
 import { ProductBuilder } from "@/components/builder/ProductBuilder";
+import { ConfiguratorSkeleton } from "@/components/builder/ConfiguratorSkeleton";
 import { ServicePageContent } from "@/components/sections/ServicePageContent";
 import { getFeaturedThumbnails, PRODUCT_BY_SLUG } from "@/lib/product-thumbnails";
 import { SERVICE_SLUG_ES, serviceSlugFromEs } from "@/lib/i18n/config";
 import { localeAlternates } from "@/lib/i18n/metadata";
 import { getDictionary } from "@/lib/i18n/dictionaries";
-import { TEST_ORDER_PARAM, isTestOrderCode } from "@/lib/pricing/test-order";
 import { getPricingSettings } from "@/lib/pricing/settings-server";
 
 /**
@@ -74,6 +75,13 @@ const CONFIG: Record<string, { studio: boolean; variants?: { name: string; src: 
  * does on the English pages: it is what makes an unknown Spanish slug a build-time-known 404 rather
  * than something only a visitor discovers.
  */
+/*
+ * Prerendered again. Reading searchParams here made generateStaticParams below moot - the route
+ * had the slug set known at build time and still rendered per request. ProductBuilder reads the
+ * URL in the browser now, so the five Spanish product pages are static.
+ */
+export const revalidate = 3600;
+
 export function generateStaticParams() {
   return Object.values(SERVICE_SLUG_ES).map((slug) => ({ slug }));
 }
@@ -93,10 +101,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function SpanishServicePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ package?: string; designId?: string; test?: string; proof?: string }>;
 }) {
   const { slug } = await params;
   const enSlug = serviceSlugFromEs(slug);
@@ -105,9 +111,6 @@ export default async function SpanishServicePage({
   if (!service || !enService || !enSlug) notFound();
 
   const config = CONFIG[enSlug] ?? { studio: false };
-  const query = await searchParams;
-  // Validated during server rendering so TEST_ORDER_CODE never enters the client bundle.
-  const testCode = isTestOrderCode(query[TEST_ORDER_PARAM]) ? query[TEST_ORDER_PARAM] : undefined;
   const t = getDictionary("es").service;
 
   const heroImages = enSlug in PRODUCT_BY_SLUG
@@ -116,16 +119,14 @@ export default async function SpanishServicePage({
 
   return (
     <>
-      <ProductBuilder
-        service={enService}
-        defaultPackage={query.package}
-        cardDesignId={query.designId}
-        proofApproved={query.proof === "approved"}
-        testCode={testCode}
-        pricing={await getPricingSettings()}
-        heading={`Pedir ${service.name.toLowerCase()}`}
-        note={t.orderFlowLanguageNote}
-      />
+      <Suspense fallback={<ConfiguratorSkeleton />}>
+        <ProductBuilder
+          service={enService}
+          pricing={await getPricingSettings()}
+          heading={`Pedir ${service.name.toLowerCase()}`}
+          note={t.orderFlowLanguageNote}
+        />
+      </Suspense>
       <ServicePageContent
         service={service}
         // English URL by design: the Design Studio is not translated. See ORDER_FLOW_LOCALE.

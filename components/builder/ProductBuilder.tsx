@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+// The parameter NAME only. isTestOrderCode is server-only (node:crypto) and must never be
+// imported into this client component - doing so fails the build, which is the correct outcome.
+import { TEST_ORDER_PARAM } from "@/lib/pricing/test-order";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -183,18 +187,61 @@ type FormValues = z.infer<typeof orderFormSchema>;
 
 type StepKey = "package" | "options" | "specs" | "design" | "details" | "payment";
 
+/**
+ * Everything the configurator takes from the URL.
+ *
+ * Read here rather than passed down from the page, because a Server Component that awaits
+ * searchParams is dynamically rendered on every request - and these five product pages are the
+ * busiest on the site. Reading them in the browser instead lets the pages be prerendered and served
+ * from the CDN, which is the whole point of the change.
+ *
+ *   package   - preselects a tier, from the "Select Gold" links on the pricing page
+ *   designId  - a design handed over from the Design Studio
+ *   proof     - "approved", set by the studio's proof screen
+ *   test      - an unlisted free-order link; see useTestOrderCode below
+ */
+function useOrderParams() {
+  const params = useSearchParams();
+  return {
+    defaultPackage: params.get("package") ?? undefined,
+    cardDesignId: params.get("designId") ?? undefined,
+    proofApproved: params.get("proof") === "approved",
+    rawTestCode: params.get(TEST_ORDER_PARAM) ?? undefined,
+  };
+}
+
+/**
+ * Confirms an unlisted test-order code with the server before treating the run as free.
+ *
+ * The code cannot be checked in the browser - `isTestOrderCode` compares against a server-only
+ * environment variable using node:crypto, and importing it here would fail the build, correctly.
+ * So the page used to validate it during server rendering, which is exactly what made these routes
+ * dynamic for a parameter no real customer ever sends.
+ *
+ * Deliberately does *not* trust the URL on its own. Accepting any `?test=` value would show a $0
+ * order to anyone who guessed the parameter name, and they would then be refused at checkout - a
+ * worse experience than never showing it. The request only happens when the parameter is present,
+ * so ordinary traffic makes no extra call at all.
+ *
+ * None of this decides what is charged. /api/orders re-validates the code and rejects an invalid
+ * one; this only decides what the configurator displays.
+ */
+function useTestOrderCode(raw: string | undefined): string | undefined {
+  const [confirmed, setConfirmed] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (!raw) return;
+    let cancelled = false;
+    fetch(`/api/test-order/validate?code=${encodeURIComponent(raw)}`)
+      .then((r) => (r.ok ? r.json() : { valid: false }))
+      .then((d) => { if (!cancelled && d?.valid) setConfirmed(raw); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [raw]);
+  return confirmed;
+}
+
 interface ProductBuilderProps {
   service: ServiceDef;
-  defaultPackage?: string;
-  cardDesignId?: string;
-  /** Set by the Design Studio's proof screen once the review checkbox has been ticked. */
-  proofApproved?: boolean;
-  /**
-   * Present only when the page was opened with a valid test link. Turns the order into a free
-   * end-to-end run of the upload -> proof -> checkout path against live Stripe. Sent back to
-   * /api/orders, which re-validates it before zeroing anything.
-   */
-  testCode?: string;
   /** Margin, flat fees and shipping tiers as configured in /admin/pricing. */
   pricing?: PricingSettings;
   /**
@@ -225,7 +272,9 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-export function ProductBuilder({ service, defaultPackage, cardDesignId, proofApproved = false, testCode, pricing = DEFAULT_PRICING, heading, note }: ProductBuilderProps) {
+export function ProductBuilder({ service, pricing = DEFAULT_PRICING, heading, note }: ProductBuilderProps) {
+  const { defaultPackage, cardDesignId, proofApproved, rawTestCode } = useOrderParams();
+  const testCode = useTestOrderCode(rawTestCode);
   const isBusinessCards = service.slug === "business-cards";
   const isBanners = service.slug === "banners";
   const isPostcards = service.slug === "postcards";

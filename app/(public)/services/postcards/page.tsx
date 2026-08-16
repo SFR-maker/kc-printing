@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { SERVICES } from "@/lib/service-data";
 import { ProductBuilder } from "@/components/builder/ProductBuilder";
+import { ConfiguratorSkeleton } from "@/components/builder/ConfiguratorSkeleton";
 import { ServicePageContent } from "@/components/sections/ServicePageContent";
 import { getFeaturedThumbnails } from "@/lib/product-thumbnails";
 import { localeAlternates } from "@/lib/i18n/metadata";
-import { TEST_ORDER_PARAM, isTestOrderCode } from "@/lib/pricing/test-order";
 import { getPricingSettings } from "@/lib/pricing/settings-server";
 
 const service = SERVICES["postcards"];
+
+/*
+ * Prerendered and revalidated, not rendered per request.
+ *
+ * The page took its shape from searchParams, which forced a function invocation for every view of
+ * the busiest pages on the site. ProductBuilder reads those in the browser now. Pricing comes from
+ * a tagged cache that /admin/pricing invalidates, so an owner's edit still appears at once.
+ */
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   alternates: localeAlternates("/services/postcards", "en"),
@@ -28,26 +38,14 @@ export const metadata: Metadata = {
  * The marketing content stays underneath rather than being deleted: it carries the FAQ, the spec
  * table and the structured data the page ranks on.
  */
-export default async function PostcardsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ package?: string; designId?: string; test?: string; proof?: string }>;
-}) {
+export default async function PostcardsPage() {
   if (!service) notFound();
-  const params = await searchParams;
-  // Validated during server rendering so TEST_ORDER_CODE never enters the client bundle.
-  const testCode = isTestOrderCode(params[TEST_ORDER_PARAM]) ? params[TEST_ORDER_PARAM] : undefined;
 
-  return (
+return (
     <>
-      <ProductBuilder
-        service={service}
-        defaultPackage={params.package}
-        cardDesignId={params.designId}
-        proofApproved={params.proof === "approved"}
-        testCode={testCode}
-        pricing={await getPricingSettings()}
-      />
+      <Suspense fallback={<ConfiguratorSkeleton />}>
+        <ProductBuilder service={service} pricing={await getPricingSettings()} />
+      </Suspense>
       <ServicePageContent
         service={service}
         designStudioHref="/services/postcards/design"

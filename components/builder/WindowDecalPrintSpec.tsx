@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchQuote, type QuoteJson } from "@/lib/pricing/quote-client";
 import { useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,12 +70,7 @@ export function WindowDecalPrintSpec({
       // never flashes "Pricing…" before the answer arrives.
       setPrice((prev) => ({ ...prev, loading: true }));
       try {
-        const res = await fetch("/api/price/window-decals", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(spec),
-        });
-        const json = await res.json();
+        const json = await fetchQuote<QuoteJson>("/api/price/window-decals", spec);
         if (ticket !== latest.current) return;
         setPrice({ valid: !!json.valid, total: Number(json.total) || 0, error: json.error, loading: false });
       } catch {

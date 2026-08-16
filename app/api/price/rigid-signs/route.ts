@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { calculateRigidSignPrice } from "@/lib/pricing/rigid-signs-server";
+import { quoteError, quoteResponse, specFromSearchParams } from "@/lib/pricing/quote-response";
 import type { RigidMaterialId, RigidSignSpec } from "@/lib/pricing/rigid-signs";
 
 /**
@@ -30,23 +30,20 @@ const schema = z.object({
   quantity: z.number().int().positive().max(100_000),
 });
 
-export async function POST(req: Request) {
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    // A quantity of 0 is the picker's "not chosen yet" sentinel, so it lands here as a failed
-    // positive() check. "Invalid request" told the customer nothing about what to do next.
-    const missingQuantity = !body || typeof body !== "object" || !Number((body as Record<string, unknown>).quantity);
-    return NextResponse.json(
-      {
-        valid: false,
-        total: 0,
-        error: missingQuantity ? "Choose a quantity to see your price." : "That combination isn't available.",
-      },
-      { status: 400 },
-    );
-  }
+const NUMERIC = ["sizeId", "shapeId", "quantity"] as const;
 
-  const price = calculateRigidSignPrice(parsed.data as RigidSignSpec);
-  return NextResponse.json(price);
+function quote(input: unknown, cacheable: boolean) {
+  const parsed = schema.safeParse(input);
+  if (!parsed.success) return quoteError(input);
+  return quoteResponse(calculateRigidSignPrice(parsed.data as RigidSignSpec), cacheable);
+}
+
+/** Cacheable: the quote is a pure function of the query string. See quote-response. */
+export async function GET(req: Request) {
+  return quote(specFromSearchParams(req.url, NUMERIC), true);
+}
+
+/** Kept so an older cached client bundle keeps working after the GET migration. */
+export async function POST(req: Request) {
+  return quote(await req.json().catch(() => null), false);
 }

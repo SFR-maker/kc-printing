@@ -1,5 +1,6 @@
 "use client";
 
+import { fetchQuote, type QuoteJson } from "@/lib/pricing/quote-client";
 import { useEffect, useRef, useState } from "react";
 import { OptionGroup, type Option } from "@/components/builder/OptionGroup";
 import {
@@ -79,12 +80,7 @@ export function RigidSignPrintSpec({
       // never flashes "Pricing…" before the answer arrives.
       setPrice((prev) => ({ ...prev, loading: true }));
       try {
-        const res = await fetch("/api/price/rigid-signs", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(spec),
-        });
-        const json = await res.json();
+        const json = await fetchQuote<QuoteJson>("/api/price/rigid-signs", spec);
         if (ticket !== latest.current) return;
         setPrice({ valid: !!json.valid, total: Number(json.total) || 0, error: json.error, loading: false });
       } catch {

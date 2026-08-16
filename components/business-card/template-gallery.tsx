@@ -10,6 +10,7 @@ import { STYLE_TAGS } from "@/lib/business-card/templates/categories";
 import { PRODUCT_ROUTE_SEGMENT, type DesignProduct } from "@/lib/business-card/print-spec";
 import { CreateWithAiDialog } from "@/components/business-card/create-with-ai-dialog";
 import { titleCaseSlug } from "@/lib/utils";
+import { assetUrl } from "@/lib/asset-url";
 
 interface TemplateSummary {
   id: string;
@@ -276,7 +277,7 @@ function TemplateGrid({ templates, product, routeSegment, thumbAspect }: { templ
               learn a name it already had. A gallery of 947 cards meant up to 947 such queries.
               Measured 50.2ms through the route against 1.56ms for the static file.
             */
-            src={`/images/thumbs/${encodeURIComponent(t.slug)}.webp`}
+            src={assetUrl(`/images/thumbs/${encodeURIComponent(t.slug)}.webp`)}
               alt={t.title}
               className="h-full w-full object-cover"
               loading="lazy"

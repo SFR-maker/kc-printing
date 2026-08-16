@@ -5,6 +5,7 @@ import { db } from "@/lib/prisma";
 import { Reveal } from "@/components/motion/Reveal";
 import { PortfolioGrid, type PortfolioSample } from "@/components/portfolio/portfolio-grid";
 import { localeAlternates } from "@/lib/i18n/metadata";
+import { assetUrl } from "@/lib/asset-url";
 
 export const metadata: Metadata = {
   title: "Ejemplos de diseño",
@@ -114,7 +115,7 @@ export default async function SpanishPortfolioPage() {
     .map((t) => ({
       slug: t.slug,
       title: t.title.includes(": ") ? t.title.slice(t.title.indexOf(": ") + 2) : t.title,
-      thumbnail: t.thumbnailFront!,
+      thumbnail: assetUrl(t.thumbnailFront!),
       category: CATEGORY_LABEL[t.product] ?? t.product,
       industry: industryLabel(t.industry),
       // The editor is English-only, so these deep-link to the English studio route.

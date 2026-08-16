@@ -5,6 +5,7 @@ import { db } from "@/lib/prisma";
 import { Reveal } from "@/components/motion/Reveal";
 import { PortfolioGrid, type PortfolioSample } from "@/components/portfolio/portfolio-grid";
 import { localeAlternates } from "@/lib/i18n/metadata";
+import { assetUrl } from "@/lib/asset-url";
 
 export const metadata: Metadata = {
   alternates: localeAlternates("/portfolio", "en"),
@@ -104,7 +105,7 @@ export default async function PortfolioPage() {
       // Template titles are stored as "Real Estate: Bottom Band". The industry moves down to the
       // meta line so a grid of same-industry templates doesn't read as the same word 12 times.
       title: t.title.includes(": ") ? t.title.slice(t.title.indexOf(": ") + 2) : t.title,
-      thumbnail: t.thumbnailFront!,
+      thumbnail: assetUrl(t.thumbnailFront!),
       category: CATEGORY_LABEL[t.product] ?? t.product,
       industry: industryLabel(t.industry),
       href: `/services/${ROUTE_SEGMENT[t.product] ?? "business-cards"}/design/t-${t.slug}`,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { assetUrl } from "@/lib/asset-url";
 
 /**
  * Minimal image loader for Konva.Image — avoids pulling in the `use-image` package for one hook.
@@ -18,7 +19,7 @@ export function useHtmlImage(src: string | undefined): [HTMLImageElement | undef
     img.crossOrigin = "anonymous";
     img.onload = () => setLoaded({ src, image: img });
     img.onerror = () => setFailedSrc(src);
-    img.src = src;
+    img.src = assetUrl(src);
     return () => {
       img.onload = null;
       img.onerror = null;

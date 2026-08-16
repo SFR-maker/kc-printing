@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/prisma";
 import { TEMPLATES_TAG } from "@/lib/cache-tags";
+import { assetUrl } from "@/lib/asset-url";
 
 export const PRODUCT_BY_SLUG = {
   "business-cards": "BUSINESS_CARD",
@@ -40,7 +41,7 @@ async function getFeaturedThumbnailsUncached(slug: keyof typeof PRODUCT_BY_SLUG,
   return templates
     .filter((t) => t.thumbnailFront)
     .map((t) => ({
-      url: t.thumbnailFront!,
+      url: assetUrl(t.thumbnailFront!),
       // Titles are stored as "Real Estate: Bold Block"; the industry prefix repeats down a rail.
       title: t.title.includes(": ") ? t.title.slice(t.title.indexOf(": ") + 2) : t.title,
       slug: t.slug,

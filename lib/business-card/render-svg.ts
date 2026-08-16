@@ -1,6 +1,7 @@
 import type { CardElement, CardSide, ImageElement, QrElement, ShapeElement, TextElement } from "./schema";
 import { buildQrModuleMatrix, QUIET_ZONE_MODULES } from "./qr";
 import { shapeClipPath } from "./shape-paths";
+import { assetUrl } from "@/lib/asset-url";
 
 /**
  * Renders a CardSide to an SVG string. The viewBox is always "0 0 W H" in
@@ -120,7 +121,7 @@ function renderImage(el: ImageElement): string {
   const clip = rx > 0 ? `<clipPath id="${clipId}"><rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" rx="${rx}"/></clipPath>` : "";
   const clipAttr = rx > 0 ? ` clip-path="url(#${clipId})"` : "";
   const border = el.borderWidthPx > 0 ? `<rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" rx="${rx}" fill="none" stroke="${esc(el.borderColor)}" stroke-width="${el.borderWidthPx / 300}"/>` : "";
-  return `${clip}<image x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" href="${esc(el.src)}" preserveAspectRatio="xMidYMid slice"${clipAttr}/>${border}`;
+  return `${clip}<image x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" href="${esc(assetUrl(el.src))}" preserveAspectRatio="xMidYMid slice"${clipAttr}/>${border}`;
 }
 
 function renderShape(el: ShapeElement): string {

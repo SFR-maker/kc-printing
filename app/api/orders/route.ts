@@ -178,6 +178,16 @@ export async function POST(req: Request) {
       { status: 400 }
     );
   }
+  // Same exemption as businessName above, and the same reason this can't live on the field itself:
+  // the client only ever asks for phone on the same Details step that asks for businessName, so an
+  // upload or studio order has none to send. The client already enforces this (ProductBuilder's
+  // superRefine); this is the server not trusting that a request actually came from that form.
+  if (!suppliedOwnArtwork && !parsed.data.phone?.trim()) {
+    return NextResponse.json(
+      { error: "Phone number is required", details: { fieldErrors: { phone: ["Phone number is required"] } } },
+      { status: 400 }
+    );
+  }
 
   if (!user && !parsed.data.guestEmail) {
     return NextResponse.json({ error: "Email is required to check out as a guest", details: { fieldErrors: { guestEmail: ["Email is required"] } } }, { status: 400 });

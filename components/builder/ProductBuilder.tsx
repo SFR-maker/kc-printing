@@ -179,6 +179,11 @@ export const orderFormSchema = z.object({
   if (!suppliedOwnArtwork && !v.businessName?.trim()) {
     ctx.addIssue({ code: "custom", path: ["businessName"], message: "Business name is required" });
   }
+  // Same exemption as businessName: the Details step where phone is collected is skipped
+  // entirely on the upload and studio-design paths, so there is nothing to require there.
+  if (!suppliedOwnArtwork && !v.phone?.trim()) {
+    ctx.addIssue({ code: "custom", path: ["phone"], message: "Phone number is required" });
+  }
   if (!v.acceptedTerms) {
     ctx.addIssue({ code: "custom", path: ["acceptedTerms"], message: "Please accept the Terms of Sale" });
   }
@@ -340,6 +345,9 @@ export function ProductBuilder({ service, pricing = DEFAULT_PRICING, heading, no
   // Local rather than form.setError: this is set from goNext, outside a validation pass, and
   // RHF drops errors that its resolver did not produce on the next render.
   const [detailsError, setDetailsError] = useState<string | null>(null);
+  // Same reasoning as detailsError, kept separate so the message renders next to Phone rather than
+  // Business Name - the two fields fail independently and a shared string can only point at one.
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   /**
    * The heading of the step being shown.
    *
@@ -935,6 +943,17 @@ export function ProductBuilder({ service, pricing = DEFAULT_PRICING, heading, no
       return;
     }
     setDetailsError(null);
+    // Same rationale as businessName above: phone is required whenever this step is shown, and
+    // needs the same manual check since superRefine only runs once the whole object parses.
+    if (currentStep === "details" && !values.phone?.trim()) {
+      setPhoneError("Phone number is required.");
+      // The collapsed "using contact info from your design" summary hides the input entirely, so
+      // without this the error above sets state nothing on screen renders - the same silent-failure
+      // shape the businessName accessibility fix above exists to prevent.
+      setDetailsExpanded(true);
+      return;
+    }
+    setPhoneError(null);
 
     const fields = STEP_FIELDS[currentStep];
     const valid = fields.length === 0 || (await trigger(fields));
@@ -1675,16 +1694,29 @@ export function ProductBuilder({ service, pricing = DEFAULT_PRICING, heading, no
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Contact Info for Design (optional)</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-kc-muted">Contact Info for Design</Label>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {/*
                       aria-label as well as the placeholder. A placeholder is not a label: it is
                       dropped from the accessible name the moment the field has a value, so these
                       five read as "edit, blank" with nothing to say which one they were.
                     */}
-                    <Input aria-label="Phone" placeholder="Phone" {...register("phone")} />
-                    <Input aria-label="Email" placeholder="Email" {...register("email")} />
-                    <Input aria-label="Website" placeholder="Website" {...register("website")} />
+                    <div className="space-y-1">
+                      <Input
+                        aria-label="Phone"
+                        placeholder="Phone *"
+                        aria-invalid={Boolean(errors.phone || phoneError) || undefined}
+                        aria-describedby={errors.phone || phoneError ? "phone-error" : undefined}
+                        {...register("phone")}
+                      />
+                      {(errors.phone || phoneError) && (
+                        <p id="phone-error" role="alert" className="text-xs text-red-600">
+                          {errors.phone?.message ?? phoneError}
+                        </p>
+                      )}
+                    </div>
+                    <Input aria-label="Email (optional)" placeholder="Email (optional)" {...register("email")} />
+                    <Input aria-label="Website (optional)" placeholder="Website (optional)" {...register("website")} />
                     <Input aria-label="LinkedIn (optional)" placeholder="LinkedIn (optional)" {...register("linkedin")} />
                   </div>
                 </div>

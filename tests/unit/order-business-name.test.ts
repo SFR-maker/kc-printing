@@ -61,7 +61,9 @@ describe("business name is only required when a designer is doing the work", () 
   });
 
   it("accepts the design route once a business name is given", () => {
-    expect(errorsFor({ artwork: { ...base.artwork, path: "DESIGN_SERVICE" }, businessName: "Rao Solar Group" })).toEqual([]);
+    expect(
+      errorsFor({ artwork: { ...base.artwork, path: "DESIGN_SERVICE" }, businessName: "Rao Solar Group", phone: "(816) 555-0000" })
+    ).toEqual([]);
   });
 });
 

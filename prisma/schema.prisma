@@ -256,6 +256,14 @@ model Order {
   trackingNumber       String?
   shippedAt            DateTime?
 
+  // Set the first time an admin opens this order's detail page. Null means nobody on staff has
+  // looked at it yet - what the 24-hour reminder cron checks for. Separate from `status` because an
+  // order can be looked at without changing status, and from OrderEvent because this is read-derived
+  // state, not something worth its own timeline row.
+  adminViewedAt        DateTime?
+  // Set once the "nobody has opened this order" reminder goes out, so the cron never sends it twice.
+  reminderSentAt       DateTime?
+
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
@@ -269,6 +277,9 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([stripeSessionId])
+  // The reminder cron scans for unviewed orders past a certain age; narrows that scan to orders
+  // that could possibly still qualify.
+  @@index([adminViewedAt, reminderSentAt, createdAt])
   // Production looks orders up by the design they are printing.
   @@index([cardDesignId])
 }

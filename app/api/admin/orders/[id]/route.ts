@@ -129,6 +129,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   });
 
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // First time anyone on staff opens this order. This is what the 24-hour "nobody has looked at
+  // this" reminder checks for, so it's stamped here rather than on the admin list page - opening
+  // the detail view is the actual signal that someone handled it, not just saw it in a list.
+  if (!order.adminViewedAt) {
+    await db.order.update({ where: { id }, data: { adminViewedAt: new Date() } }).catch(() => {});
+  }
+
   return NextResponse.json(order);
 }
 

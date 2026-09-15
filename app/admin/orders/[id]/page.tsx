@@ -40,6 +40,12 @@ export default async function AdminOrderDetailPage({ params }: { params: Promise
 
   if (!order) notFound();
 
+  // This page load is what "someone looked at the order" means for the 24-hour reminder cron - it's
+  // stamped here, not on the /admin/orders list, because being listed isn't being looked at.
+  if (!order.adminViewedAt) {
+    await db.order.update({ where: { id }, data: { adminViewedAt: new Date() } }).catch(() => {});
+  }
+
   const isTest = order.items.some((i) => (i.config as ItemConfig)?.testOrder === true);
   const shippingLines = [
     order.shippingName,

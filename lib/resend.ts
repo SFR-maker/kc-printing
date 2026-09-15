@@ -78,7 +78,7 @@ function button(href: string, label: string): string {
  * Sends one email. Never throws: a failed receipt must not roll back a payment webhook already
  * acknowledged to Stripe, nor abort a status change an admin has already made.
  */
-async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+async function sendEmail(to: string | string[], subject: string, html: string): Promise<boolean> {
   if (!process.env.RESEND_API_KEY) {
     console.warn(`RESEND_API_KEY not set - skipped "${subject}" to ${to}`);
     return false;
@@ -99,6 +99,18 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
     console.error(`Could not send "${subject}" to ${to}:`, err);
     return false;
   }
+}
+
+/** ADMIN_EMAIL as a deduped list of addresses, typed by hand into a dashboard. */
+function adminEmails(): string[] {
+  return Array.from(
+    new Set(
+      (process.env.ADMIN_EMAIL ?? "")
+        .split(",")
+        .map((e) => e.trim())
+        .filter(Boolean)
+    )
+  );
 }
 
 export interface OrderEmailData {
@@ -225,9 +237,8 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<boole
 }
 
 export async function sendAdminNewOrder(data: OrderEmailData): Promise<boolean> {
-  // ADMIN_EMAIL is a comma-separated list; the first entry is the shop's working inbox.
-  const to = process.env.ADMIN_EMAIL?.split(",")[0]?.trim();
-  if (!to) {
+  const to = adminEmails();
+  if (!to.length) {
     console.warn("ADMIN_EMAIL not set - no new-order alert sent");
     return false;
   }
@@ -323,6 +334,50 @@ export async function sendStatusUpdate(data: StatusEmailData): Promise<boolean> 
       data.heading,
       `<p style="color:${BRAND.muted};line-height:1.6">Hi ${esc(data.customerName)}, ${esc(data.message)}</p>
        ${button(`${APP_URL}/account/orders`, "View your order")}`
+    )
+  );
+}
+
+export interface OrderReminderEmailData {
+  orderId: string;
+  serviceName: string;
+  packageName: string;
+  total: number;
+  customerName: string;
+  customerEmail: string;
+  placedAt: Date;
+}
+
+/**
+ * Nudge sent once, roughly 24 hours after a paid order comes in, if nobody on staff has opened its
+ * admin detail page yet (Order.adminViewedAt is still null - see app/admin/orders/[id]/page.tsx and
+ * app/api/cron/order-reminders/route.ts). A paid order nobody has looked at is the shop's actual
+ * failure mode, not a missed status update, so this goes to every admin address rather than a
+ * single inbox that might be the one not being watched.
+ */
+export async function sendAdminOrderReminder(data: OrderReminderEmailData): Promise<boolean> {
+  const to = adminEmails();
+  if (!to.length) {
+    console.warn("ADMIN_EMAIL not set - no unopened-order reminder sent");
+    return false;
+  }
+  const hours = Math.round((Date.now() - data.placedAt.getTime()) / (60 * 60 * 1000));
+  return sendEmail(
+    to,
+    `Still unopened: order #${data.orderId.slice(-8)} - ${money(data.total)}`,
+    layout(
+      "An order hasn't been opened yet",
+      `<p style="color:${BRAND.muted};line-height:1.6">
+         Nobody has opened this order in admin, and it's been about ${hours} hours since it was placed.
+       </p>
+       ${panel(
+         detailRow("Product", data.serviceName) +
+         detailRow("Package", data.packageName) +
+         detailRow("Total", money(data.total)) +
+         detailRow("Customer", `${data.customerName} <${data.customerEmail}>`) +
+         detailRow("Order number", `#${data.orderId.slice(-8)}`)
+       )}
+       ${button(`${APP_URL}/admin/orders/${data.orderId}`, "Open in admin")}`
     )
   );
 }
